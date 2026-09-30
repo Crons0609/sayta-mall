@@ -148,26 +148,26 @@ export function DashboardSettingsView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           {/* Opción Español */}
           <button
             type="button"
             onClick={() => handleSelectLanguage('es')}
-            className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
               language === 'es'
                 ? 'bg-[#30d158]/10 border-[#30d158] shadow-lg shadow-[#30d158]/10'
                 : 'bg-white/[0.02] border-white/[0.08] hover:border-white/[0.18]'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🇳🇮</span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl sm:text-2xl">🇳🇮</span>
               <div>
                 <h4 className="text-xs font-bold text-white">Español</h4>
-                <p className="text-[11px] text-[#86868b]">América Latina / Nicaragua</p>
+                <p className="text-[10px] text-[#86868b]">Latinoamérica</p>
               </div>
             </div>
             {language === 'es' && (
-              <span className="w-5 h-5 rounded-full bg-[#30d158] text-black flex items-center justify-center font-bold">
+              <span className="w-5 h-5 rounded-full bg-[#30d158] text-black flex items-center justify-center font-bold shrink-0">
                 <Check className="w-3 h-3 stroke-[3]" />
               </span>
             )}
@@ -177,21 +177,45 @@ export function DashboardSettingsView() {
           <button
             type="button"
             onClick={() => handleSelectLanguage('en')}
-            className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
               language === 'en'
                 ? 'bg-[#2997ff]/10 border-[#2997ff] shadow-lg shadow-[#2997ff]/10'
                 : 'bg-white/[0.02] border-white/[0.08] hover:border-white/[0.18]'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🇺🇸</span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl sm:text-2xl">🇺🇸</span>
               <div>
                 <h4 className="text-xs font-bold text-white">English</h4>
-                <p className="text-[11px] text-[#86868b]">United States / Global</p>
+                <p className="text-[10px] text-[#86868b]">Global / US</p>
               </div>
             </div>
             {language === 'en' && (
-              <span className="w-5 h-5 rounded-full bg-[#2997ff] text-white flex items-center justify-center font-bold">
+              <span className="w-5 h-5 rounded-full bg-[#2997ff] text-white flex items-center justify-center font-bold shrink-0">
+                <Check className="w-3 h-3 stroke-[3]" />
+              </span>
+            )}
+          </button>
+
+          {/* Opción Chino Simplificado */}
+          <button
+            type="button"
+            onClick={() => handleSelectLanguage('zh')}
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+              language === 'zh'
+                ? 'bg-[#ff453a]/15 border-[#ff453a] shadow-lg shadow-[#ff453a]/15'
+                : 'bg-white/[0.02] border-white/[0.08] hover:border-white/[0.18]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl sm:text-2xl">🇨🇳</span>
+              <div>
+                <h4 className="text-xs font-bold text-white">中文 (简体)</h4>
+                <p className="text-[10px] text-[#86868b]">简体中文 / China</p>
+              </div>
+            </div>
+            {language === 'zh' && (
+              <span className="w-5 h-5 rounded-full bg-[#ff453a] text-white flex items-center justify-center font-bold shrink-0">
                 <Check className="w-3 h-3 stroke-[3]" />
               </span>
             )}

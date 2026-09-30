@@ -8,7 +8,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { useAuth } from './AuthProvider';
 
 export type DashboardTheme = 'obsidian' | 'midnight' | 'emerald' | 'purple' | 'titanium';
-export type DashboardLanguage = 'es' | 'en';
+export type DashboardLanguage = 'es' | 'en' | 'zh';
 
 // Definición de temas
 export interface ThemeConfig {
@@ -112,6 +112,7 @@ const TRANSLATIONS: Record<DashboardLanguage, Record<string, string>> = {
     settings_lang_label: 'Idioma de tu Dashboard',
     settings_lang_es: 'Español (Latinoamérica)',
     settings_lang_en: 'English (United States)',
+    settings_lang_zh: '中文简体 (Chino Simplificado)',
     settings_applied: '¡Preferencias actualizadas con éxito!',
 
     // Acciones y estados comunes
@@ -126,6 +127,29 @@ const TRANSLATIONS: Record<DashboardLanguage, Record<string, string>> = {
     status_connected: 'En Línea',
     search_placeholder: 'Buscar...',
     logout: 'Cerrar Sesión',
+
+    // Dock Móvil y Badges
+    tab_summary: 'Resumen',
+    tab_products: 'Productos',
+    tab_chat: 'Chat',
+    tab_owners: 'Dueños',
+    tab_delivery: 'Delivery',
+    tab_menu: 'Menú',
+    tab_station: 'Mi Estación',
+    tab_store: 'Tienda',
+    tab_employees: 'Empleados',
+    back_to_store: 'Volver a la Tienda',
+    view_public_store: 'Ver Tienda Pública',
+    collapse_sidebar: 'Colapsar barra lateral',
+    expand_sidebar: 'Expandir barra lateral',
+    superadmin: 'Superadmin',
+    role_owner: 'Dueño',
+    role_employee: 'Empleado',
+    badge_live: 'En Vivo',
+    badge_inventory: 'Inventario',
+    badge_catalog: 'Catálogo',
+    badge_management: 'Gestión',
+    badge_shipping: 'Envíos',
   },
   en: {
     // Navigation
@@ -150,6 +174,7 @@ const TRANSLATIONS: Record<DashboardLanguage, Record<string, string>> = {
     settings_lang_label: 'Dashboard Language',
     settings_lang_es: 'Spanish (Latin America)',
     settings_lang_en: 'English (United States)',
+    settings_lang_zh: 'Chinese Simplified (中文简体)',
     settings_applied: 'Preferences saved successfully!',
 
     // Common actions and status
@@ -164,6 +189,91 @@ const TRANSLATIONS: Record<DashboardLanguage, Record<string, string>> = {
     status_connected: 'Online',
     search_placeholder: 'Search...',
     logout: 'Sign Out',
+
+    // Mobile Dock and Badges
+    tab_summary: 'Summary',
+    tab_products: 'Products',
+    tab_chat: 'Chat',
+    tab_owners: 'Owners',
+    tab_delivery: 'Delivery',
+    tab_menu: 'Menu',
+    tab_station: 'My Station',
+    tab_store: 'Store',
+    tab_employees: 'Employees',
+    back_to_store: 'Back to Store',
+    view_public_store: 'View Public Store',
+    collapse_sidebar: 'Collapse sidebar',
+    expand_sidebar: 'Expand sidebar',
+    superadmin: 'Superadmin',
+    role_owner: 'Owner',
+    role_employee: 'Employee',
+    badge_live: 'Live',
+    badge_inventory: 'Inventory',
+    badge_catalog: 'Catalog',
+    badge_management: 'Management',
+    badge_shipping: 'Shipping',
+  },
+  zh: {
+    // Navigation
+    nav_dashboard_programmer: '开发控制中心',
+    nav_dashboard_owner: '管理执行面板',
+    nav_dashboard_employee: '员工工作台',
+    nav_chat_team: '团队通讯聊天',
+    nav_chat_staff: '员工沟通频道',
+    nav_products: '商品与折扣管理',
+    nav_categories: '商品分类体系',
+    nav_owners: '分店店长管理',
+    nav_employees: '员工岗位管理',
+    nav_delivery: '配送合作企业',
+    nav_catalog: '商城商品目录',
+    nav_settings: '工作台个人设置',
+
+    // Settings
+    settings_title: '工作台偏好设置',
+    settings_subtitle: '专为您当前的账号配置视觉主题与系统显示语言。',
+    settings_notice: '此设置完全独立，仅对您个人界面生效，绝不会影响商城公开端或其他同事的工作面板。',
+    settings_theme_label: '面板视觉配色主题',
+    settings_lang_label: '系统显示语言',
+    settings_lang_es: '西班牙语 (Español)',
+    settings_lang_en: '英语 (English)',
+    settings_lang_zh: '中文简体 (Simplified Chinese)',
+    settings_applied: '个人偏好设置已成功保存！',
+
+    // Common actions and status
+    btn_save: '保存偏好设置',
+    btn_close: '关闭窗口',
+    btn_open_chat: '打开即时聊天',
+    btn_copy_link: '复制推广链接',
+    btn_pause_shift: '暂停当前班次',
+    btn_resume_shift: '恢复工作班次',
+    status_on_duty: '正在当班',
+    status_paused: '暂时离岗',
+    status_connected: '在线状态',
+    search_placeholder: '搜索商品、人员或记录...',
+    logout: '退出账号登录',
+
+    // Mobile Dock and Badges
+    tab_summary: '概览',
+    tab_products: '商品',
+    tab_chat: '聊天',
+    tab_owners: '店长',
+    tab_delivery: '配送',
+    tab_menu: '菜单',
+    tab_station: '工作台',
+    tab_store: '商城',
+    tab_employees: '员工',
+    back_to_store: '返回公开商城',
+    view_public_store: '浏览商城首页',
+    collapse_sidebar: '收起侧边栏',
+    expand_sidebar: '展开侧边栏',
+    superadmin: '超级管理员',
+    role_owner: '分店店长',
+    role_employee: '正式员工',
+    badge_live: '实时',
+    badge_inventory: '库存',
+    badge_catalog: '目录',
+    badge_management: '管理',
+    badge_shipping: '物流',
   },
 };
 
@@ -198,12 +308,27 @@ export function DashboardPreferencesProvider({ children }: { children: ReactNode
       if (savedTheme && DASHBOARD_THEMES[savedTheme]) {
         setThemeState(savedTheme);
       }
-      const savedLang = localStorage.getItem(storageLangKey) as DashboardLanguage;
+      const savedLang = (localStorage.getItem(storageLangKey) || localStorage.getItem('sayta_global_lang')) as DashboardLanguage;
       if (savedLang && TRANSLATIONS[savedLang]) {
         setLanguageState(savedLang);
+        if (typeof document !== 'undefined') {
+          document.documentElement.lang = savedLang === 'zh' ? 'zh-CN' : savedLang;
+        }
       }
     } catch {}
   }, [storageThemeKey, storageLangKey]);
+
+  // Sincronizar evento de cambio de idioma global
+  useEffect(() => {
+    const handleGlobalLangChange = (e: any) => {
+      const newLang = e?.detail as DashboardLanguage;
+      if (newLang && TRANSLATIONS[newLang] && newLang !== language) {
+        setLanguageState(newLang);
+      }
+    };
+    window.addEventListener('sayta_lang_change', handleGlobalLangChange);
+    return () => window.removeEventListener('sayta_lang_change', handleGlobalLangChange);
+  }, [language]);
 
   // Cambiar tema
   const setTheme = useCallback((newTheme: DashboardTheme) => {
@@ -218,6 +343,12 @@ export function DashboardPreferencesProvider({ children }: { children: ReactNode
     setLanguageState(newLang);
     try {
       localStorage.setItem(storageLangKey, newLang);
+      localStorage.setItem('sayta_global_lang', newLang);
+      localStorage.setItem('sayta_dashboard_lang', newLang);
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = newLang === 'zh' ? 'zh-CN' : newLang;
+        window.dispatchEvent(new CustomEvent('sayta_lang_change', { detail: newLang }));
+      }
     } catch {}
   }, [storageLangKey]);
 

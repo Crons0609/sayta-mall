@@ -24,6 +24,8 @@ import {
   Sun,
   Moon,
   Monitor,
+  Languages,
+  Check,
 } from 'lucide-react';
 import { PhoneVerificationModal } from '@/components/auth/PhoneVerificationModal';
 
@@ -43,6 +45,85 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState<'es' | 'en' | 'zh'>('es');
+
+  // Cargar y sincronizar preferencia de idioma
+  React.useEffect(() => {
+    try {
+      const saved = (localStorage.getItem('sayta_global_lang') || localStorage.getItem('sayta_dashboard_lang')) as 'es' | 'en' | 'zh';
+      if (saved && ['es', 'en', 'zh'].includes(saved)) {
+        setCurrentLang(saved);
+        if (typeof document !== 'undefined') {
+          document.documentElement.lang = saved === 'zh' ? 'zh-CN' : saved;
+        }
+      }
+    } catch {}
+
+    const handleLangSync = (e: any) => {
+      const lang = e?.detail as 'es' | 'en' | 'zh';
+      if (lang && ['es', 'en', 'zh'].includes(lang)) {
+        setCurrentLang(lang);
+      }
+    };
+    window.addEventListener('sayta_lang_change', handleLangSync);
+    return () => window.removeEventListener('sayta_lang_change', handleLangSync);
+  }, []);
+
+  const handleSelectLang = (newLang: 'es' | 'en' | 'zh') => {
+    setCurrentLang(newLang);
+    setLangDropdownOpen(false);
+    try {
+      localStorage.setItem('sayta_global_lang', newLang);
+      localStorage.setItem('sayta_dashboard_lang', newLang);
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = newLang === 'zh' ? 'zh-CN' : newLang;
+        window.dispatchEvent(new CustomEvent('sayta_lang_change', { detail: newLang }));
+      }
+    } catch {}
+  };
+
+  const navLabels = {
+    es: {
+      home: 'Inicio',
+      catalog: 'Catálogo',
+      search: 'Buscar',
+      cart: 'Cesta',
+      account: 'Mi Cuenta',
+      login: 'Entrar',
+      branch: 'Sucursal',
+      change: 'Cambiar',
+      visualTheme: 'Tema Visual',
+      language: 'Idioma',
+      langName: 'Español',
+    },
+    en: {
+      home: 'Home',
+      catalog: 'Catalog',
+      search: 'Search',
+      cart: 'Cart',
+      account: 'My Account',
+      login: 'Sign In',
+      branch: 'Branch',
+      change: 'Change',
+      visualTheme: 'Visual Theme',
+      language: 'Language',
+      langName: 'English',
+    },
+    zh: {
+      home: '商城首页',
+      catalog: '商品目录',
+      search: '搜索商品',
+      cart: '购物车',
+      account: '我的账户',
+      login: '登录',
+      branch: '当前分店',
+      change: '切换分店',
+      visualTheme: '视觉配色主题',
+      language: '显示语言',
+      langName: '中文 (简体)',
+    },
+  }[currentLang];
 
   const themeOptions = [
     { value: 'light', label: 'Modo Claro', icon: Sun },
@@ -51,8 +132,8 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
   ];
 
   const navLinks = [
-    { label: 'Inicio', href: '/' },
-    { label: 'Catálogo', href: '/catalogo' },
+    { label: navLabels.home, href: '/' },
+    { label: navLabels.catalog, href: '/catalogo' },
   ];
 
   return (
@@ -173,6 +254,58 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
             >
               <Monitor className="w-3.5 h-3.5" />
             </button>
+          </div>
+
+          {/* Selector de Idioma: Español / English / 中文 (简体) */}
+          <div className="relative">
+            <button
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              type="button"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs text-white transition-all cursor-pointer"
+              title="Idioma / Language / 语言"
+              aria-label="Seleccionar Idioma"
+            >
+              <Languages className="w-3.5 h-3.5 text-[#2997ff]" />
+              <span className="font-semibold text-[11px] hidden sm:inline">
+                {currentLang === 'zh' ? '🇨🇳 中文' : currentLang === 'en' ? '🇺🇸 EN' : '🇳🇮 ES'}
+              </span>
+              <span className="sm:hidden text-xs">
+                {currentLang === 'zh' ? '🇨🇳' : currentLang === 'en' ? '🇺🇸' : '🇳🇮'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-[#86868b]" />
+            </button>
+
+            {langDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-[#1c1c1e] border border-white/[0.12] shadow-2xl p-1.5 z-50 animate-fade-in backdrop-blur-xl">
+                <button
+                  onClick={() => handleSelectLang('es')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                    currentLang === 'es' ? 'bg-[#30d158]/15 text-[#30d158] font-bold' : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><span>🇳🇮</span> Español</span>
+                  {currentLang === 'es' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
+                <button
+                  onClick={() => handleSelectLang('en')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                    currentLang === 'en' ? 'bg-[#2997ff]/15 text-[#2997ff] font-bold' : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><span>🇺🇸</span> English</span>
+                  {currentLang === 'en' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
+                <button
+                  onClick={() => handleSelectLang('zh')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
+                    currentLang === 'zh' ? 'bg-[#ff453a]/15 text-[#ff453a] font-bold' : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><span>🇨🇳</span> 中文 (简体)</span>
+                  {currentLang === 'zh' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Bolsa de compras: solo activa para usuarios autenticados */}
@@ -348,7 +481,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
           {/* Selector de tema en móvil */}
           <div className="pt-3 border-t border-white/[0.08]">
             <p className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider mb-2">
-              Tema Visual
+              {navLabels.visualTheme}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {themeOptions.map(({ value, label, icon: Icon }) => {
@@ -372,8 +505,132 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
               })}
             </div>
           </div>
+
+          {/* Selector de idioma en móvil (incluyendo Chino Simplificado) */}
+          <div className="pt-3 border-t border-white/[0.08]">
+            <p className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider mb-2">
+              {navLabels.language}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleSelectLang('es')}
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl text-xs transition-all ${
+                  currentLang === 'es'
+                    ? 'bg-[#30d158]/20 text-[#30d158] font-bold border border-[#30d158]/30'
+                    : 'bg-white/[0.04] text-[#86868b] hover:text-white'
+                }`}
+              >
+                <span className="text-base">🇳🇮</span>
+                <span className="text-[10px]">Español</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectLang('en')}
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl text-xs transition-all ${
+                  currentLang === 'en'
+                    ? 'bg-[#2997ff]/20 text-[#2997ff] font-bold border border-[#2997ff]/30'
+                    : 'bg-white/[0.04] text-[#86868b] hover:text-white'
+                }`}
+              >
+                <span className="text-base">🇺🇸</span>
+                <span className="text-[10px]">English</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectLang('zh')}
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl text-xs transition-all ${
+                  currentLang === 'zh'
+                    ? 'bg-[#ff453a]/20 text-[#ff453a] font-bold border border-[#ff453a]/30'
+                    : 'bg-white/[0.04] text-[#86868b] hover:text-white'
+                }`}
+              >
+                <span className="text-base">🇨🇳</span>
+                <span className="text-[10px]">中文(简体)</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Barra de navegación inferior para visitantes y compradores móviles (Estilo App) */}
+      <nav
+        aria-label="Navegación móvil pública"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#000000]/95 backdrop-blur-2xl border-t border-white/[0.1] safe-bottom px-2 py-1 flex items-center justify-around shadow-2xl"
+      >
+        <Link
+          href="/"
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+            pathname === '/' ? 'text-white font-bold' : 'text-[#86868b] hover:text-white'
+          }`}
+        >
+          <div className="w-5 h-5 rounded-lg overflow-hidden flex items-center justify-center">
+            <Image src="/images/logo.png" alt="Sayta" width={20} height={20} className="w-full h-full object-contain" />
+          </div>
+          <span className="text-[10px] mt-0.5">{navLabels.home}</span>
+        </Link>
+
+        <Link
+          href="/catalogo"
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+            pathname === '/catalogo' ? 'text-[#2997ff] font-bold' : 'text-[#86868b] hover:text-white'
+          }`}
+        >
+          <Package className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">{navLabels.catalog}</span>
+        </Link>
+
+        <button
+          onClick={onOpenSearch}
+          type="button"
+          className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-[#86868b] hover:text-white transition-all"
+        >
+          <Search className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">{navLabels.search}</span>
+        </button>
+
+        <button
+          onClick={toggleCart}
+          type="button"
+          className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-[#86868b] hover:text-white transition-all relative"
+        >
+          <ShoppingBag className="w-5 h-5" />
+          <span className="text-[10px] mt-0.5">{navLabels.cart}</span>
+          {totalItems > 0 && (
+            <span className="absolute top-0 right-2 w-4 h-4 rounded-full bg-[#2997ff] text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-black">
+              {totalItems}
+            </span>
+          )}
+        </button>
+
+        {user ? (
+          <Link
+            href={
+              claims?.role === 'programmer'
+                ? '/programador/dashboard'
+                : claims?.role === 'owner'
+                ? '/dueno/dashboard'
+                : claims?.role === 'employee'
+                ? '/empleado/dashboard'
+                : '/login'
+            }
+            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+              pathname.includes('/dashboard') ? 'text-[#30d158] font-bold' : 'text-[#86868b] hover:text-white'
+            }`}
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">{navLabels.account}</span>
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-[#2997ff] hover:text-[#2997ff]/80 transition-all font-semibold"
+          >
+            <LogIn className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">{navLabels.login}</span>
+          </Link>
+        )}
+      </nav>
 
       {/* Modal de Verificación Telefónica () */}
       <PhoneVerificationModal

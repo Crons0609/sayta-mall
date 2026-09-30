@@ -69,10 +69,10 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <meta name="darkreader-lock" content="darkreader-lock" />
-        {/* Script crítico: aplica el tema ANTES de que React hidrate para evitar parpadeo */}
+        {/* Script crítico: aplica el tema e idioma ANTES de que React hidrate para evitar parpadeo */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('sayta_theme');var e=t&&['light','dark','system'].includes(t)?t:'dark';var d;if(e==='system'){d=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}else{d=e;}document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(d);document.documentElement.setAttribute('data-theme',d);document.documentElement.style.colorScheme=d;}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('sayta_theme');var e=t&&['light','dark','system'].includes(t)?t:'dark';var d;if(e==='system'){d=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}else{d=e;}document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(d);document.documentElement.setAttribute('data-theme',d);document.documentElement.style.colorScheme=d;var l=localStorage.getItem('sayta_global_lang')||localStorage.getItem('sayta_dashboard_lang');if(l&&['es','en','zh'].includes(l)){document.documentElement.lang=l==='zh'?'zh-CN':l;}}catch(e){}})();`,
           }}
         />
       </head>

@@ -236,19 +236,19 @@ export default function CatalogoPage() {
         onOpenBranchModal={() => setIsBranchModalOpen(true)}
       />
 
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-        <div className="mb-8 text-left">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+      <main className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 md:py-16 pb-28 md:pb-16">
+        <div className="mb-6 sm:mb-8 text-left">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
             Catálogo de Productos
           </h1>
           {currentBranch && (
-            <p className="text-xs sm:text-sm text-[#86868b] mt-1 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#30d158]" />
-              <span>Mostrando productos de <strong>{currentBranch.name}</strong></span>
+            <p className="text-xs sm:text-sm text-[#86868b] mt-1 flex items-center gap-1.5 flex-wrap">
+              <MapPin className="w-3.5 h-3.5 text-[#30d158] shrink-0" />
+              <span>Mostrando productos de <strong className="text-white">{currentBranch.name}</strong></span>
               {branchCount >= 2 && (
                 <button
                   onClick={() => setIsBranchModalOpen(true)}
-                  className="text-[#2997ff] hover:underline ml-2"
+                  className="text-[#2997ff] hover:underline"
                 >
                   (Cambiar)
                 </button>
@@ -258,9 +258,9 @@ export default function CatalogoPage() {
         </div>
 
         {/* Barra de Filtros */}
-        <div className="p-4 rounded-2xl bg-[#161617] border border-white/[0.08] mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="p-3 sm:p-4 rounded-2xl bg-[#161617] border border-white/[0.08] mb-6 sm:mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           {/* Chips de Categorías */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar touch-pan-x -mx-1 px-1">
             {categories.map((cat) => {
               const isAdultChip = cat === ADULT_CATEGORY_NAME;
               const isSelected = selectedCategory === cat;

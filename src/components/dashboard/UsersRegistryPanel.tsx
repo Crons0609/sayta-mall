@@ -28,6 +28,11 @@ import {
   ChevronDown,
   Edit3,
   X,
+  LayoutGrid,
+  Table,
+  SlidersHorizontal,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { FullRegisteredUser } from '@/app/api/registered-users/route';
 
@@ -111,6 +116,17 @@ export function UsersRegistryPanel() {
   const [users, setUsers] = useState<FullRegisteredUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modo de visualización: Tarjetas táctiles (ideal móvil) o Tabla (ideal desktop/tablet)
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+  const [showMobileDateFilters, setShowMobileDateFilters] = useState(false);
+
+  // Detección automática de dispositivo móvil al montar
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode('cards');
+    }
+  }, []);
 
   // Filtros
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,7 +217,6 @@ export function UsersRegistryPanel() {
       });
       const data = await res.json();
       if (data.success) {
-        // Actualizar usuario en estado local
         setUsers((prev) =>
           prev.map((u) =>
             u.uid === editingUser.uid
@@ -353,69 +368,100 @@ export function UsersRegistryPanel() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* ── Encabezado Principal ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-blue-950/30 to-black border border-white/[0.08]">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in text-left">
+      {/* ── Encabezado Principal Responsivo ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-blue-950/30 to-black border border-white/[0.08]">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3" />
-              Acceso Exclusivo Programador
+              Solo Programador
             </span>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#2997ff]/15 text-[#2997ff] border border-[#2997ff]/25">
               Supervisión de Registros
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5 mt-1">
-            <Users className="w-6 h-6 text-[#2997ff]" />
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5 mt-1">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#2997ff] shrink-0" />
             Directorio de Usuarios Registrados
           </h2>
-          <p className="text-xs text-[#86868b] max-w-2xl">
-            Control integral de todas las cuentas registradas en la plataforma: nombre, correo, edad,
-            dirección, credencial de contraseña, historial de cambios de clave y fecha de alta.
+          <p className="text-xs text-[#86868b] max-w-2xl leading-relaxed">
+            Control integral de todas las cuentas: nombre, correo, edad, dirección, contraseña,
+            historial de cambios y fecha de alta.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start lg:self-center">
+        {/* Acciones y Selector de Modo de Visualización (Tarjetas vs Tabla) */}
+        <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
+          {/* Switch Tarjetas / Tabla */}
+          <div className="flex items-center p-1 bg-black/60 rounded-2xl border border-white/[0.1] shadow-inner">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all ${
+                viewMode === 'cards'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+              title="Vista en tarjetas táctiles (ideal móviles)"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Tarjetas</span>
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all ${
+                viewMode === 'table'
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+              title="Vista en tabla con columnas"
+            >
+              <Table className="w-3.5 h-3.5" />
+              <span>Tabla</span>
+            </button>
+          </div>
+
           <button
             onClick={handleExportCSV}
-            className="px-3.5 py-2 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-xs font-semibold text-white flex items-center gap-2 transition-all shadow-sm"
+            className="px-3 py-2 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-xs font-semibold text-white flex items-center gap-1.5 transition-all shadow-sm"
             title="Descargar lista filtrada en formato CSV"
           >
             <Download className="w-3.5 h-3.5 text-[#2997ff]" />
-            <span>Exportar CSV</span>
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden">CSV</span>
           </button>
+
           <button
             onClick={loadUsers}
             disabled={loading}
-            className="px-4 py-2 rounded-2xl bg-[#2997ff] hover:bg-[#2997ff]/90 text-xs font-semibold text-white flex items-center gap-2 transition-all shadow-lg shadow-[#2997ff]/25 disabled:opacity-50"
+            className="px-3.5 py-2 rounded-2xl bg-[#2997ff] hover:bg-[#2997ff]/90 text-xs font-semibold text-white flex items-center gap-1.5 transition-all shadow-lg shadow-[#2997ff]/25 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Actualizar</span>
+            <span className="hidden sm:inline">Actualizar</span>
           </button>
         </div>
       </div>
 
       {/* ── Tarjetas de Resumen & Filtros Rápidos de Rol ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         {/* Todos */}
         <button
           onClick={() => {
             setRoleFilter('all');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-3 rounded-2xl border text-left transition-all ${
             roleFilter === 'all'
               ? 'bg-white/10 border-white/30 shadow-md ring-1 ring-white/20'
               : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
           }`}
         >
-          <div className="flex items-center justify-between text-[#86868b] text-[11px] font-medium mb-1">
+          <div className="flex items-center justify-between text-[#86868b] text-[11px] font-medium mb-0.5">
             <span>Todos</span>
-            <Users className="w-3.5 h-3.5 text-white" />
+            <Users className="w-3 h-3 text-white" />
           </div>
-          <div className="text-xl font-bold text-white">{counts.all}</div>
-          <span className="text-[10px] text-[#86868b]">Cuentas en total</span>
+          <div className="text-lg sm:text-xl font-bold text-white">{counts.all}</div>
+          <span className="text-[10px] text-[#86868b] block truncate">Total usuarios</span>
         </button>
 
         {/* Programadores */}
@@ -424,18 +470,18 @@ export function UsersRegistryPanel() {
             setRoleFilter(roleFilter === 'programmer' ? 'all' : 'programmer');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-3 rounded-2xl border text-left transition-all ${
             roleFilter === 'programmer'
               ? 'bg-purple-500/20 border-purple-500/50 shadow-md ring-1 ring-purple-500/30'
               : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
           }`}
         >
-          <div className="flex items-center justify-between text-purple-300 text-[11px] font-medium mb-1">
+          <div className="flex items-center justify-between text-purple-300 text-[11px] font-medium mb-0.5">
             <span>Programadores</span>
-            <Code className="w-3.5 h-3.5" />
+            <Code className="w-3 h-3" />
           </div>
-          <div className="text-xl font-bold text-white">{counts.programmer}</div>
-          <span className="text-[10px] text-purple-300/70">Equipo técnico</span>
+          <div className="text-lg sm:text-xl font-bold text-white">{counts.programmer}</div>
+          <span className="text-[10px] text-purple-300/70 block truncate">Equipo dev</span>
         </button>
 
         {/* Dueños */}
@@ -444,18 +490,18 @@ export function UsersRegistryPanel() {
             setRoleFilter(roleFilter === 'owner' ? 'all' : 'owner');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-3 rounded-2xl border text-left transition-all ${
             roleFilter === 'owner'
               ? 'bg-[#2997ff]/20 border-[#2997ff]/50 shadow-md ring-1 ring-[#2997ff]/30'
               : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
           }`}
         >
-          <div className="flex items-center justify-between text-[#2997ff] text-[11px] font-medium mb-1">
+          <div className="flex items-center justify-between text-[#2997ff] text-[11px] font-medium mb-0.5">
             <span>Dueños / Jefes</span>
-            <Crown className="w-3.5 h-3.5" />
+            <Crown className="w-3 h-3" />
           </div>
-          <div className="text-xl font-bold text-white">{counts.owner}</div>
-          <span className="text-[10px] text-[#2997ff]/70">Administradores</span>
+          <div className="text-lg sm:text-xl font-bold text-white">{counts.owner}</div>
+          <span className="text-[10px] text-[#2997ff]/70 block truncate">Administradores</span>
         </button>
 
         {/* Empleados */}
@@ -464,18 +510,18 @@ export function UsersRegistryPanel() {
             setRoleFilter(roleFilter === 'employee' ? 'all' : 'employee');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-3 rounded-2xl border text-left transition-all ${
             roleFilter === 'employee'
               ? 'bg-[#30d158]/20 border-[#30d158]/50 shadow-md ring-1 ring-[#30d158]/30'
               : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
           }`}
         >
-          <div className="flex items-center justify-between text-[#30d158] text-[11px] font-medium mb-1">
+          <div className="flex items-center justify-between text-[#30d158] text-[11px] font-medium mb-0.5">
             <span>Empleados</span>
-            <Briefcase className="w-3.5 h-3.5" />
+            <Briefcase className="w-3 h-3" />
           </div>
-          <div className="text-xl font-bold text-white">{counts.employee}</div>
-          <span className="text-[10px] text-[#30d158]/70">Colaboradores</span>
+          <div className="text-lg sm:text-xl font-bold text-white">{counts.employee}</div>
+          <span className="text-[10px] text-[#30d158]/70 block truncate">Colaboradores</span>
         </button>
 
         {/* Clientes */}
@@ -484,18 +530,18 @@ export function UsersRegistryPanel() {
             setRoleFilter(roleFilter === 'customer' ? 'all' : 'customer');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-3 rounded-2xl border text-left transition-all ${
             roleFilter === 'customer'
               ? 'bg-[#ffd60a]/20 border-[#ffd60a]/50 shadow-md ring-1 ring-[#ffd60a]/30'
               : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
           }`}
         >
-          <div className="flex items-center justify-between text-[#ffd60a] text-[11px] font-medium mb-1">
+          <div className="flex items-center justify-between text-[#ffd60a] text-[11px] font-medium mb-0.5">
             <span>Clientes</span>
-            <ShoppingBag className="w-3.5 h-3.5" />
+            <ShoppingBag className="w-3 h-3" />
           </div>
-          <div className="text-xl font-bold text-white">{counts.customer}</div>
-          <span className="text-[10px] text-[#ffd60a]/70">Compradores</span>
+          <div className="text-lg sm:text-xl font-bold text-white">{counts.customer}</div>
+          <span className="text-[10px] text-[#ffd60a]/70 block truncate">Compradores</span>
         </button>
 
         {/* Claves Modificadas */}
@@ -504,31 +550,31 @@ export function UsersRegistryPanel() {
             setPasswordStatusFilter(passwordStatusFilter === 'modified' ? 'all' : 'modified');
             setCurrentPage(1);
           }}
-          className={`p-3.5 rounded-2xl border text-left transition-all ${
+          className={`p-3 rounded-2xl border text-left transition-all ${
             passwordStatusFilter === 'modified'
               ? 'bg-amber-500/20 border-amber-500/50 shadow-md ring-1 ring-amber-500/30'
               : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
           }`}
         >
-          <div className="flex items-center justify-between text-amber-400 text-[11px] font-medium mb-1">
+          <div className="flex items-center justify-between text-amber-400 text-[11px] font-medium mb-0.5">
             <span>Claves Cambiadas</span>
-            <KeyRound className="w-3.5 h-3.5" />
+            <KeyRound className="w-3 h-3" />
           </div>
-          <div className="text-xl font-bold text-white">{counts.modifiedPasswords}</div>
-          <span className="text-[10px] text-amber-300/70">Con modificación</span>
+          <div className="text-lg sm:text-xl font-bold text-white">{counts.modifiedPasswords}</div>
+          <span className="text-[10px] text-amber-300/70 block truncate">Con modificación</span>
         </button>
       </div>
 
       {/* ── Barra de Búsqueda y Filtros de Fecha (Mes, Año, Rango) ── */}
-      <div className="p-5 rounded-3xl bg-white/[0.03] border border-white/[0.08] space-y-4">
-        {/* Fila 1: Búsqueda y Filtro de Estado de Contraseña */}
-        <div className="flex flex-col lg:flex-row gap-3">
+      <div className="p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/[0.08] space-y-3 sm:space-y-4">
+        {/* Fila 1: Búsqueda y Dropdowns Principales */}
+        <div className="flex flex-col sm:flex-row gap-2.5">
           {/* Buscador */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar por nombre, correo, edad, dirección, sucursal o UID..."
+              placeholder="Buscar por nombre, correo, edad, dirección..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -546,33 +592,32 @@ export function UsersRegistryPanel() {
             )}
           </div>
 
-          {/* Filtro por Rol */}
-          <div className="flex items-center gap-2">
+          {/* Filtro por Rol y Contraseña */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
             <select
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-black/50 border border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#2997ff]"
+              className="w-full sm:w-auto bg-black/50 border border-white/[0.1] rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#2997ff]"
             >
               <option value="all">Todos los roles</option>
-              <option value="customer">Solo Clientes</option>
-              <option value="employee">Solo Empleados</option>
-              <option value="owner">Solo Dueños</option>
-              <option value="programmer">Solo Programadores</option>
+              <option value="customer">Clientes</option>
+              <option value="employee">Empleados</option>
+              <option value="owner">Dueños</option>
+              <option value="programmer">Programadores</option>
             </select>
 
-            {/* Filtro por Contraseña */}
             <select
               value={passwordStatusFilter}
               onChange={(e) => {
                 setPasswordStatusFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="bg-black/50 border border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#2997ff]"
+              className="w-full sm:w-auto bg-black/50 border border-white/[0.1] rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#2997ff]"
             >
-              <option value="all">Todas las contraseñas</option>
+              <option value="all">Todas las claves</option>
               <option value="modified">⚠️ Clave Modificada</option>
               <option value="original">✓ Clave Original</option>
             </select>
@@ -580,11 +625,28 @@ export function UsersRegistryPanel() {
         </div>
 
         {/* Fila 2: Filtros Especiales por Fecha (Año, Mes, Selector de Fecha) */}
-        <div className="pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#86868b]">
+        <div className="pt-3 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Botón para colapsar/expandir filtros de fecha en pantallas pequeñas */}
+          <div className="flex sm:hidden items-center justify-between">
+            <button
+              onClick={() => setShowMobileDateFilters(!showMobileDateFilters)}
+              className="text-xs text-[#2997ff] font-semibold flex items-center gap-1.5 py-1"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{showMobileDateFilters ? 'Ocultar filtros de fecha' : 'Filtrar por Mes / Año / Día'}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMobileDateFilters ? 'rotate-180' : ''}`} />
+            </button>
+            {hasDateFiltersActive && (
+              <span className="px-2 py-0.5 rounded-full bg-[#2997ff]/20 text-[#2997ff] text-[10px] font-bold">
+                Activo
+              </span>
+            )}
+          </div>
+
+          <div className={`${showMobileDateFilters ? 'flex' : 'hidden'} sm:flex flex-wrap items-center gap-2.5`}>
+            <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-[#86868b]">
               <Calendar className="w-3.5 h-3.5 text-[#2997ff]" />
-              <span>Filtrar por Fecha:</span>
+              <span>Fecha:</span>
             </div>
 
             {/* Selector de Año */}
@@ -637,7 +699,7 @@ export function UsersRegistryPanel() {
 
             {/* Selector de Día / Fecha Exacta */}
             <div className="flex items-center gap-1">
-              <span className="text-[11px] text-[#6e6e73]">Día exacto:</span>
+              <span className="text-[11px] text-[#6e6e73]">Día:</span>
               <input
                 type="date"
                 value={specificDate}
@@ -666,31 +728,31 @@ export function UsersRegistryPanel() {
           </div>
 
           {/* Contador de registros en el filtro activo */}
-          <div className="text-xs text-[#86868b] flex items-center gap-2">
+          <div className="text-xs text-[#86868b] flex items-center justify-between sm:justify-end gap-2">
             <span>
               Mostrando <strong className="text-white">{filteredUsers.length}</strong> de{' '}
               <strong className="text-white">{users.length}</strong> usuarios
             </span>
             {hasDateFiltersActive && (
               <span className="px-2 py-0.5 rounded-md bg-[#2997ff]/10 text-[#2997ff] text-[10px] font-medium border border-[#2997ff]/20">
-                Filtro temporal activo
+                Filtro fecha activo
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── TABLA DE USUARIOS REGISTRADOS ── */}
+      {/* ── CONTENIDO PRINCIPAL: TARJETAS O TABLA ── */}
       <div className="apple-card overflow-hidden rounded-3xl border border-white/[0.08] shadow-2xl">
         {loading ? (
-          <div className="p-12 space-y-4">
+          <div className="p-8 sm:p-12 space-y-4">
             <div className="flex items-center justify-center gap-3 text-sm text-[#86868b]">
               <RefreshCw className="w-5 h-5 animate-spin text-[#2997ff]" />
               <span>Cargando directorio global de usuarios...</span>
             </div>
             <div className="space-y-2 pt-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-14 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-16 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />
               ))}
             </div>
           </div>
@@ -707,13 +769,13 @@ export function UsersRegistryPanel() {
             </button>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="p-16 text-center">
+          <div className="p-12 sm:p-16 text-center">
             <div className="w-12 h-12 rounded-2xl bg-white/[0.04] flex items-center justify-center mx-auto mb-3 border border-white/[0.08]">
               <Users className="w-6 h-6 text-[#86868b]" />
             </div>
             <h4 className="text-sm font-bold text-white">No se encontraron usuarios</h4>
             <p className="text-xs text-[#86868b] mt-1 max-w-sm mx-auto">
-              No hay coincidencias con los filtros aplicados (búsqueda, rol, fecha o estado de contraseña).
+              No hay coincidencias con los filtros aplicados.
             </p>
             <button
               onClick={() => {
@@ -725,12 +787,174 @@ export function UsersRegistryPanel() {
               className="mt-4 px-3.5 py-1.5 rounded-xl bg-[#2997ff]/20 text-[#2997ff] border border-[#2997ff]/30 text-xs font-semibold hover:bg-[#2997ff]/30 transition-all inline-flex items-center gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Restablecer todos los filtros
+              Restablecer filtros
             </button>
           </div>
+        ) : viewMode === 'cards' ? (
+          /* ── 📱 VISTA DE TARJETAS MÓVILES (TOUCH OPTIMIZED) ── */
+          <div className="p-3 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {paginatedUsers.map((u) => {
+              const roleMeta = ROLE_META[u.role] || ROLE_META.customer;
+              const isPassRevealed = Boolean(revealedPasswords[u.uid]);
+              const isCopied = copiedUid === u.uid;
+
+              return (
+                <div
+                  key={u.uid}
+                  className="p-4 rounded-2xl bg-white/[0.025] hover:bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15] transition-all space-y-3"
+                >
+                  {/* Fila superior: Avatar, Nombre y Rol */}
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0">
+                        {(u.displayName || u.email || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-white text-xs truncate">
+                          {u.displayName || 'Sin nombre'}
+                        </h4>
+                        <span className="font-mono text-[9px] text-[#6e6e73] block truncate">
+                          {u.uid}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${roleMeta.badge}`}
+                    >
+                      {roleMeta.icon}
+                      {roleMeta.label}
+                    </span>
+                  </div>
+
+                  {/* Datos del usuario: Correo, Teléfono, Edad, Dirección */}
+                  <div className="space-y-1.5 text-xs text-[#86868b] pt-1 border-t border-white/[0.04]">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-[#2997ff] shrink-0" />
+                      <span className="truncate select-all text-white/90">{u.email}</span>
+                    </div>
+
+                    {u.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 text-[#30d158] shrink-0" />
+                        <span className="text-white/80">{u.phone}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {u.age ? (
+                        <span className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-white text-[11px] font-medium">
+                          Edad: {u.age} años
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-[#6e6e73] italic">Edad no especificada</span>
+                      )}
+
+                      {u.area && (
+                        <span className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-[#86868b] text-[11px]">
+                          {u.area}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-start gap-1.5 pt-0.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#2997ff] shrink-0 mt-0.5" />
+                      <span className="text-white/80 text-[11px] leading-snug">
+                        {u.direccion || 'Sin dirección registrada'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Contenedor de Contraseña y Estado */}
+                  <div className="p-3 rounded-xl bg-black/60 border border-white/[0.08] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-[#86868b] uppercase tracking-wider font-semibold">
+                        Credencial de Acceso
+                      </span>
+                      {u.passwordModified ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
+                          Modificada
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#30d158]/15 text-[#30d158] border border-[#30d158]/30">
+                          <Check className="w-2.5 h-2.5" />
+                          Original
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs font-bold text-white select-all">
+                        {isPassRevealed ? u.password || '••••••••' : '••••••••••••'}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => toggleRevealPassword(u.uid)}
+                          className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#86868b] hover:text-white transition-all"
+                          title={isPassRevealed ? 'Ocultar clave' : 'Ver clave'}
+                        >
+                          {isPassRevealed ? (
+                            <EyeOff className="w-3.5 h-3.5 text-[#ffd60a]" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleCopyPassword(u.uid, u.password)}
+                          className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-[#86868b] hover:text-white transition-all"
+                          title="Copiar clave"
+                        >
+                          {isCopied ? (
+                            <Check className="w-3.5 h-3.5 text-[#30d158]" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {u.passwordModified && u.passwordModifiedAt && (
+                      <div className="text-[10px] text-amber-300/80">
+                        Cambiada el: {formatDate(u.passwordModifiedAt)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pie de la tarjeta con fecha y botón de cambiar clave */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06] text-[11px]">
+                    <div className="text-[#86868b]">
+                      <span>Alta: </span>
+                      <strong className="text-white/90">{formatDate(u.createdAt)}</strong>
+                      <span className="block text-[10px] text-[#6e6e73]">
+                        {timeAgo(u.createdAt)}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setEditingUser(u);
+                        setNewPasswordInput('');
+                        setUpdateFeedback(null);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-xs font-semibold text-white inline-flex items-center gap-1.5 transition-all shadow-sm"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-[#2997ff]" />
+                      <span>Cambiar Clave</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          /* ── 💻 VISTA DE TABLA COMPLETA CON SCROLL HORIZONTAL TÁCTIL ── */
+          <div className="overflow-x-auto touch-pan-x no-scrollbar">
+            <div className="md:hidden px-4 py-2 bg-[#2997ff]/10 border-b border-[#2997ff]/20 text-[11px] text-[#2997ff] flex items-center justify-between">
+              <span>Desliza horizontalmente la tabla para ver todas las columnas</span>
+              <span>➔</span>
+            </div>
+            <table className="w-full min-w-[850px] text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-white/[0.08] bg-white/[0.03] text-[#86868b] uppercase tracking-wider font-semibold text-[10px]">
                   <th className="py-3.5 px-4">Usuario / Nombre</th>
@@ -828,11 +1052,10 @@ export function UsersRegistryPanel() {
                           <span className="font-mono text-xs font-semibold px-2 py-1 rounded-lg bg-black/60 border border-white/[0.08] text-white select-all">
                             {isPassRevealed ? u.password || '••••••••' : '••••••••••••'}
                           </span>
-                          {/* Toggle revelación */}
                           <button
                             onClick={() => toggleRevealPassword(u.uid)}
                             className="p-1 rounded-lg hover:bg-white/[0.1] text-[#86868b] hover:text-white transition-all"
-                            title={isPassRevealed ? 'Ocultar contraseña' : 'Ver contraseña'}
+                            title={isPassRevealed ? 'Ocultar clave' : 'Ver clave'}
                           >
                             {isPassRevealed ? (
                               <EyeOff className="w-3.5 h-3.5 text-[#ffd60a]" />
@@ -840,11 +1063,10 @@ export function UsersRegistryPanel() {
                               <Eye className="w-3.5 h-3.5" />
                             )}
                           </button>
-                          {/* Copiar contraseña */}
                           <button
                             onClick={() => handleCopyPassword(u.uid, u.password)}
                             className="p-1 rounded-lg hover:bg-white/[0.1] text-[#86868b] hover:text-white transition-all"
-                            title="Copiar contraseña"
+                            title="Copiar clave"
                           >
                             {isCopied ? (
                               <Check className="w-3.5 h-3.5 text-[#30d158]" />
@@ -900,7 +1122,7 @@ export function UsersRegistryPanel() {
                             setUpdateFeedback(null);
                           }}
                           className="px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] font-medium text-white inline-flex items-center gap-1.5 transition-all"
-                          title="Cambiar contraseña de este usuario para probar o gestionar"
+                          title="Cambiar contraseña de este usuario"
                         >
                           <Edit3 className="w-3 h-3 text-[#2997ff]" />
                           <span>Cambiar Clave</span>
@@ -914,17 +1136,17 @@ export function UsersRegistryPanel() {
           </div>
         )}
 
-        {/* ── Pie de Tabla / Paginación ── */}
+        {/* ── Pie de Tabla / Paginación Responsiva ── */}
         {!loading && filteredUsers.length > 0 && (
-          <div className="p-4 border-t border-white/[0.06] bg-white/[0.01] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 sm:p-4 border-t border-white/[0.06] bg-white/[0.01] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-3 text-[#86868b]">
               <span>
-                Página <strong className="text-white">{currentPage}</strong> de{' '}
+                Pág. <strong className="text-white">{currentPage}</strong> de{' '}
                 <strong className="text-white">{totalPages}</strong>
               </span>
               <span className="text-[#6e6e73]">|</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px]">Filas por página:</span>
+                <span className="text-[11px]">Filas:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -936,17 +1158,16 @@ export function UsersRegistryPanel() {
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
-                  <option value={100}>100</option>
                 </select>
               </div>
             </div>
 
-            {/* Botones de navegación */}
-            <div className="flex items-center gap-1.5">
+            {/* Botones de navegación táctiles */}
+            <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white disabled:opacity-30 transition-all"
+                className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white disabled:opacity-30 transition-all"
               >
                 ← Anterior
               </button>
@@ -975,7 +1196,7 @@ export function UsersRegistryPanel() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white disabled:opacity-30 transition-all"
+                className="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white disabled:opacity-30 transition-all"
               >
                 Siguiente →
               </button>
@@ -984,10 +1205,10 @@ export function UsersRegistryPanel() {
         )}
       </div>
 
-      {/* ── Modal para Modificar Contraseña de un Usuario ── */}
+      {/* ── Modal Móvil-Friendly para Modificar Contraseña de un Usuario ── */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-md apple-card p-6 rounded-3xl border border-white/[0.15] shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="w-full max-w-md apple-card p-5 sm:p-6 rounded-3xl border border-white/[0.15] shadow-2xl space-y-4 my-auto">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div className="flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-[#ffd60a]" />
@@ -1003,8 +1224,8 @@ export function UsersRegistryPanel() {
 
             <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs space-y-1">
               <div className="text-white font-semibold">{editingUser.displayName}</div>
-              <div className="text-[#86868b]">{editingUser.email}</div>
-              <div className="text-[10px] text-[#6e6e73] font-mono">UID: {editingUser.uid}</div>
+              <div className="text-[#86868b] truncate">{editingUser.email}</div>
+              <div className="text-[10px] text-[#6e6e73] font-mono truncate">UID: {editingUser.uid}</div>
             </div>
 
             <form onSubmit={handleSavePasswordChange} className="space-y-4">
@@ -1020,9 +1241,8 @@ export function UsersRegistryPanel() {
                   onChange={(e) => setNewPasswordInput(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/[0.1] text-xs text-white font-mono placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
                 />
-                <p className="text-[10px] text-[#86868b] mt-1">
-                  Al guardar, se actualizará en tiempo real y el estado cambiará a &quot;Modificada&quot;
-                  con la fecha y hora actual registrada en el sistema.
+                <p className="text-[10px] text-[#86868b] mt-1 leading-relaxed">
+                  Al guardar, se registrará el cambio en tiempo real y el estado cambiará a &quot;Modificada&quot;.
                 </p>
               </div>
 
@@ -1056,7 +1276,7 @@ export function UsersRegistryPanel() {
                   ) : (
                     <Check className="w-3.5 h-3.5" />
                   )}
-                  <span>Guardar y Registrar Modificación</span>
+                  <span>Guardar Clave</span>
                 </button>
               </div>
             </form>

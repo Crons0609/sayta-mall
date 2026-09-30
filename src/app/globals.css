@@ -98,6 +98,8 @@ html.light,
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -111,6 +113,22 @@ html.light,
     overflow-x: hidden;
     letter-spacing: -0.012em;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Evitar auto-zoom molesto en inputs en Safari iOS en pantallas móviles */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Ocultar barra de desplazamiento manteniendo el scroll táctil */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   /* Scrollbar */

@@ -174,11 +174,11 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
     if (role === 'programmer') {
       return [
         { label: t('nav_dashboard_programmer', 'Centro de Comando'), href: '/programador/dashboard', icon: LayoutDashboard },
-        { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: 'En Vivo' },
-        { label: t('nav_delivery', 'Empresas de Delivery'), href: '/programador/delivery', icon: Truck, badge: 'Envíos' },
-        { label: t('nav_products', 'Gestión de Productos'), href: '/dueno/productos', icon: Package, badge: 'Inventario' },
-        { label: t('nav_categories', 'Categorías'), href: '/programador/categorias', icon: Layers, badge: 'Catálogo' },
-        { label: t('nav_owners', 'Dueños de Tienda'), href: '/programador/duenos', icon: Users, badge: 'Gestión' },
+        { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: t('badge_live', 'En Vivo') },
+        { label: t('nav_delivery', 'Empresas de Delivery'), href: '/programador/delivery', icon: Truck, badge: t('badge_shipping', 'Envíos') },
+        { label: t('nav_products', 'Gestión de Productos'), href: '/dueno/productos', icon: Package, badge: t('badge_inventory', 'Inventario') },
+        { label: t('nav_categories', 'Categorías'), href: '/programador/categorias', icon: Layers, badge: t('badge_catalog', 'Catálogo') },
+        { label: t('nav_owners', 'Dueños de Tienda'), href: '/programador/duenos', icon: Users, badge: t('badge_management', 'Gestión') },
         { label: t('nav_employees', 'Registro de Empleados'), href: '/dueno/empleados', icon: Briefcase },
         { label: t('nav_catalog', 'Catálogo Global'), href: '/catalogo', icon: ShoppingBag },
         { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/programador/ajustes', icon: Settings },
@@ -187,18 +187,18 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
     if (role === 'owner') {
       return [
         { label: t('nav_dashboard_owner', 'Panel Ejecutivo'), href: '/dueno/dashboard', icon: LayoutDashboard },
-        { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: 'En Vivo' },
-        { label: t('nav_products', 'Gestión de Productos'), href: '/dueno/productos', icon: Package, badge: 'Inventario' },
-        { label: t('nav_categories', 'Categorías'), href: '/dueno/categorias', icon: Layers, badge: 'Catálogo' },
-        { label: t('nav_employees', 'Gestión de Empleados'), href: '/dueno/empleados', icon: Users, badge: 'Áreas' },
+        { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: t('badge_live', 'En Vivo') },
+        { label: t('nav_products', 'Gestión de Productos'), href: '/dueno/productos', icon: Package, badge: t('badge_inventory', 'Inventario') },
+        { label: t('nav_categories', 'Categorías'), href: '/dueno/categorias', icon: Layers, badge: t('badge_catalog', 'Catálogo') },
+        { label: t('nav_employees', 'Gestión de Empleados'), href: '/dueno/empleados', icon: Users, badge: t('tab_employees', 'Empleados') },
         { label: t('nav_catalog', 'Catálogo de Productos'), href: '/catalogo', icon: ShoppingBag },
         { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/dueno/ajustes', icon: Settings },
       ];
     }
     return [
       { label: t('nav_dashboard_employee', 'Mi Estación'), href: '/empleado/dashboard', icon: LayoutDashboard },
-      { label: t('nav_chat_team', 'Chat del Equipo'), href: '/empleado/chat', icon: MessageSquare, badge: 'En Vivo' },
-      { label: t('nav_products', 'Gestión de Productos'), href: '/empleado/productos', icon: Package, badge: 'Inventario' },
+      { label: t('nav_chat_team', 'Chat del Equipo'), href: '/empleado/chat', icon: MessageSquare, badge: t('badge_live', 'En Vivo') },
+      { label: t('nav_products', 'Gestión de Productos'), href: '/empleado/productos', icon: Package, badge: t('badge_inventory', 'Inventario') },
       { label: t('nav_catalog', 'Catálogo de Tienda'), href: '/catalogo', icon: ShoppingBag },
       { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/empleado/ajustes', icon: Settings },
     ];
@@ -326,11 +326,11 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                   onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs text-white border border-white/[0.1] transition-all"
                 >
-                  <Store className="w-3.5 h-3.5 text-[#30d158]" />
-                  <span className="max-w-[130px] truncate font-medium">
+                  <Store className="w-3.5 h-3.5 text-[#30d158] shrink-0" />
+                  <span className="max-w-[80px] xs:max-w-[110px] sm:max-w-[150px] truncate font-medium">
                     {currentBranch?.name || 'Seleccionar sucursal'}
                   </span>
-                  <ChevronDown className="w-3 h-3 text-[#86868b]" />
+                  <ChevronDown className="w-3 h-3 text-[#86868b] shrink-0" />
                 </button>
 
                 {branchDropdownOpen && (
@@ -423,12 +423,12 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 {user?.displayName || user?.email || 'Administrador'}
               </span>
               <span className="block text-[10px] uppercase font-semibold text-[#86868b] tracking-wider">
-                {role === 'programmer' ? 'Superadmin' : role === 'owner' ? 'Dueño' : 'Empleado'}
+                {role === 'programmer' ? t('superadmin', 'Superadmin') : role === 'owner' ? t('role_owner', 'Dueño') : t('role_employee', 'Empleado')}
               </span>
             </div>
             <button
               onClick={() => logout()}
-              title="Cerrar sesión"
+              title={t('logout', 'Cerrar sesión')}
               className="p-2 rounded-xl text-[#86868b] hover:text-[#ff453a] hover:bg-[#ff453a]/10 transition-colors"
             >
               <LogOut className="w-4 h-4" />
@@ -487,7 +487,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-medium text-[#86868b] hover:text-white hover:bg-white/[0.04] transition-colors"
             >
               <ArrowLeft className="w-4 h-4 shrink-0" />
-              {!collapsed && <span>Ver Tienda Pública</span>}
+              {!collapsed && <span>{t('view_public_store', 'Ver Tienda Pública')}</span>}
             </Link>
           </div>
         </aside>
@@ -550,25 +550,214 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                   className="flex items-center gap-2 text-xs text-[#86868b] hover:text-white px-2 py-1"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Volver a la Tienda</span>
+                  <span>{t('back_to_store', 'Volver a la Tienda')}</span>
                 </Link>
                 <button
                   onClick={() => logout()}
                   className="w-full flex items-center gap-2 text-xs text-[#ff453a] hover:bg-[#ff453a]/10 px-2 py-2 rounded-xl"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>Cerrar Sesión</span>
+                  <span>{t('logout', 'Cerrar Sesión')}</span>
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Contenido Principal con Centrado y Márgenes */}
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-x-hidden">
+        {/* Contenido Principal con Centrado y Márgenes adaptados para móviles */}
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 lg:pb-8 overflow-x-hidden">
           {children}
         </main>
       </div>
+
+      {/* ─── DOCK / BARRA DE NAVEGACIÓN INFERIOR MÓVIL (NATIVE APP FEEL) ─── */}
+      <nav
+        aria-label="Navegación móvil inferior"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-[#000000]/95 backdrop-blur-2xl border-t border-white/[0.1] lg:hidden safe-bottom px-2 py-1 flex items-center justify-around shadow-2xl"
+      >
+        {role === 'programmer' && (
+          <>
+            <Link
+              href="/programador/dashboard"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/programador/dashboard'
+                  ? 'text-[#2997ff] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_summary', 'Consola')}</span>
+            </Link>
+
+            <Link
+              href="/empleado/chat"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                pathname === '/empleado/chat'
+                  ? 'text-[#30d158] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_chat', 'Chat')}</span>
+              <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#30d158]" />
+            </Link>
+
+            <Link
+              href="/programador/duenos"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/programador/duenos'
+                  ? 'text-[#2997ff] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_owners', 'Dueños')}</span>
+            </Link>
+
+            <Link
+              href="/programador/delivery"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/programador/delivery'
+                  ? 'text-[#30d158] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <Truck className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_delivery', 'Delivery')}</span>
+            </Link>
+
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[#86868b] hover:text-white transition-all"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_menu', 'Menú')}</span>
+            </button>
+          </>
+        )}
+
+        {role === 'owner' && (
+          <>
+            <Link
+              href="/dueno/dashboard"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/dueno/dashboard'
+                  ? 'text-[#2997ff] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_summary', 'Resumen')}</span>
+            </Link>
+
+            <Link
+              href="/dueno/productos"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/dueno/productos'
+                  ? 'text-[#2997ff] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <Package className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_products', 'Productos')}</span>
+            </Link>
+
+            <Link
+              href="/empleado/chat"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                pathname === '/empleado/chat'
+                  ? 'text-[#30d158] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_chat', 'Chat')}</span>
+              <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#30d158]" />
+            </Link>
+
+            <Link
+              href="/dueno/empleados"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/dueno/empleados'
+                  ? 'text-[#30d158] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_employees', 'Empleados')}</span>
+            </Link>
+
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[#86868b] hover:text-white transition-all"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_menu', 'Más')}</span>
+            </button>
+          </>
+        )}
+
+        {role === 'employee' && (
+          <>
+            <Link
+              href="/empleado/dashboard"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/empleado/dashboard'
+                  ? 'text-[#2997ff] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_station', 'Mi Estación')}</span>
+            </Link>
+
+            <Link
+              href="/empleado/productos"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/empleado/productos'
+                  ? 'text-[#2997ff] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <Package className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_products', 'Productos')}</span>
+            </Link>
+
+            <Link
+              href="/empleado/chat"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                pathname === '/empleado/chat'
+                  ? 'text-[#30d158] font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_chat', 'Chat')}</span>
+              <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#30d158]" />
+            </Link>
+
+            <Link
+              href="/catalogo"
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                pathname === '/catalogo'
+                  ? 'text-white font-bold'
+                  : 'text-[#86868b] hover:text-white'
+              }`}
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_store', 'Tienda')}</span>
+            </Link>
+
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[#86868b] hover:text-white transition-all"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">{t('tab_menu', 'Menú')}</span>
+            </button>
+          </>
+        )}
+      </nav>
 
       {/* Modal de búsqueda rápida (Cmd+K) */}
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />

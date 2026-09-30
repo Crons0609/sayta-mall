@@ -125,8 +125,8 @@ export default function ProgramadorDashboardPage() {
           </div>
         </div>
 
-        {/* Pestañas de la Consola */}
-        <div className="flex items-center gap-1.5 p-1 bg-white/[0.04] rounded-2xl border border-white/[0.06] w-fit overflow-x-auto max-w-full">
+        {/* Pestañas de la Consola con scroll táctil suave */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-white/[0.04] rounded-2xl border border-white/[0.06] w-full sm:w-fit overflow-x-auto no-scrollbar touch-pan-x -mx-1 sm:mx-0">
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${

@@ -812,12 +812,12 @@ export default function HomePage() {
     </div>
   </footer>
 
-  {/* ─── BOTÓN FLOTANTE DE WHATSAPP ─── */ }
+  {/* ─── BOTÓN FLOTANTE DE WHATSAPP (Ajustado para no tapar la barra móvil) ─── */}
   <a
     href="https://wa.me/50588880000"
     target="_blank"
     rel="noopener noreferrer"
-    className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-[#30d158] text-black flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform"
+    className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 rounded-full bg-[#30d158] text-black flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform"
     title="Atención por WhatsApp"
   >
     <MessageCircle className="w-6 h-6 fill-current" />
