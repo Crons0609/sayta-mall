@@ -1,26 +1,415 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   SAYTA MALL — Design System & Precision Tokens
+   ============================================================ */
+
+:root,
+html.dark,
+.dark,
+[data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0B0D;
+  --bg-card: #161617;
+  --bg-card-hover: #1c1c1e;
+  --bg-section: rgba(12, 12, 14, 0.6);
+  --hero-from: #0a0a0c;
+  --hero-via: #050507;
+  --hero-to: #000000;
+  --footer-bg: #000000;
+
+  --text-primary: #f5f5f7;
+  --text-secondary: #86868b;
+  --text-muted: #6e6e73;
+  --text-heading: #ffffff;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --chip-bg: rgba(255, 255, 255, 0.05);
+
+  --nav-bg: rgba(10, 11, 13, 0.85);
+
+  /* Apple Palette */
+  --apple-black: #000000;
+  --apple-dark-bg: #0A0B0D;
+  --apple-card-bg: #111318;
+  --apple-card-border: rgba(255, 255, 255, 0.08);
+  --apple-card-hover: rgba(255, 255, 255, 0.14);
+
+  --apple-text-primary: #F5F7FA;
+  --apple-text-secondary: #9AA3AF;
+  --apple-text-tertiary: #6e6e73;
+
+  --apple-emerald: #10B981;
+  --apple-amber: #F59E0B;
+
+  /* Tipografía */
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html.light,
+.light,
+[data-theme="light"] {
+  --bg-primary: #f5f5f7;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f0f2;
+  --bg-section: #ebebef;
+  --hero-from: #ffffff;
+  --hero-via: #f5f5f7;
+  --hero-to: #ebebef;
+  --footer-bg: #ececee;
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #515154;
+  --text-muted: #86868b;
+  --text-heading: #1d1d1f;
+
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-card: rgba(0, 0, 0, 0.08);
+  --chip-bg: rgba(0, 0, 0, 0.05);
+
+  --nav-bg: rgba(245, 245, 247, 0.88);
+
+  /* Apple Palette */
+  --apple-black: #ffffff;
+  --apple-dark-bg: #f5f5f7;
+  --apple-card-bg: #ffffff;
+  --apple-card-border: rgba(0, 0, 0, 0.08);
+  --apple-card-hover: rgba(0, 0, 0, 0.12);
+
+  --apple-text-primary: #1d1d1f;
+  --apple-text-secondary: #4a4a4e;
+  --apple-text-tertiary: #6e6e73;
+
+  --apple-emerald: #10B981;
+  --apple-amber: #F59E0B;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    letter-spacing: -0.012em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: #232733; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #32384a; }
+  html.light ::-webkit-scrollbar-track { background: #f0f0f2; }
+  html.light ::-webkit-scrollbar-thumb { background: #c0c0c4; }
+
+  ::selection {
+    background-color: rgba(16, 185, 129, 0.35);
+    color: #ffffff;
+  }
+
+  /* Prevenir el color amarillo/khaki que los navegadores (Chrome, Edge, etc.) fuerzan en inputs autocompletados */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #111318 inset !important;
+    box-shadow: 0 0 0 1000px #111318 inset !important;
+    -webkit-text-fill-color: #f5f5f7 !important;
+    color: #f5f5f7 !important;
+    caret-color: #f5f5f7 !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  html.light input:-webkit-autofill,
+  html.light input:-webkit-autofill:hover,
+  html.light input:-webkit-autofill:focus,
+  html.light input:-webkit-autofill:active,
+  [data-theme="light"] input:-webkit-autofill,
+  [data-theme="light"] input:-webkit-autofill:hover,
+  [data-theme="light"] input:-webkit-autofill:focus,
+  [data-theme="light"] input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
+    -webkit-text-fill-color: #1d1d1f !important;
+    color: #1d1d1f !important;
+    caret-color: #1d1d1f !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   LIGHT MODE OVERRIDES — Using [data-theme] attribute selectors
+   (Compatible with Tailwind v4)
+   ============================================================ */
+
+/* Base */
+[data-theme="light"],
+[data-theme="light"] body {
+  background-color: #f5f5f7;
+  color: #1d1d1f;
 }
+
+/* All backgrounds that should be light */
+[data-theme="light"] .min-h-screen {
+  background-color: #f5f5f7;
+}
+
+/* Hero section gradient */
+[data-theme="light"] section {
+  background-color: #f5f5f7;
+}
+
+/* Apple card overrides */
+[data-theme="light"] .apple-card {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Navigation Bar */
+[data-theme="light"] .apple-nav {
+  background: rgba(245, 245, 247, 0.95) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Footer */
+[data-theme="light"] footer {
+  background-color: #ececee !important;
+  border-top-color: rgba(0, 0, 0, 0.08) !important;
+  color: #515154;
+}
+
+/* Text gradient in light mode */
+[data-theme="light"] .apple-text-gradient {
+  background: linear-gradient(180deg, #1d1d1f 0%, #4a4a4e 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Secondary button in light mode */
+[data-theme="light"] .apple-btn-secondary {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #1d1d1f;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .apple-btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   Also keep html.light selectors for compatibility 
+   ============================================================ */
+
+html.light,
+html.light body {
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+}
+
+html.light .apple-card {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .apple-nav {
+  background: rgba(245, 245, 247, 0.95) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light footer {
+  background-color: #ececee !important;
+  border-top-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .apple-text-gradient {
+  background: linear-gradient(180deg, #1d1d1f 0%, #4a4a4e 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.light .apple-btn-secondary {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #1d1d1f !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+html.light .apple-btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Scrollbar light mode */
+html.light ::-webkit-scrollbar-track { background: #f0f0f2; }
+html.light ::-webkit-scrollbar-thumb { background: #c0c0c4; }
+
+/* ============================================================
+   LIGHT MODE — Broad text & background overrides
+   These target common Tailwind utility colors throughout the app.
+   ============================================================ */
+
+/* Dark arbitrary bg classes → light */
+html.light *[class*="bg-[#000"],
+html.light *[class*="bg-[#0a"],
+html.light *[class*="bg-[#0A"],
+html.light *[class*="bg-[#05"],
+html.light *[class*="bg-[#16"],
+html.light *[class*="bg-[#1c"],
+html.light *[class*="bg-[#11"] {
+  background-color: #f5f5f7 !important;
+}
+
+/* Subtle transparent-white → transparent-black */
+html.light *[class*="bg-white\/"] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+html.light *[class*="bg-black\/"] {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* White borders → dark borders */
+html.light *[class*="border-white\/"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Text-white, text-[#f5f5f7] → dark */
+html.light *[class*="text-white"]:not([class*="text-white/[0"]) {
+  color: #1d1d1f !important;
+}
+html.light *[class*="text-[#f5f5f7]"] {
+  color: #1d1d1f !important;
+}
+html.light *[class*="text-[#F5F5F7]"] {
+  color: #1d1d1f !important;
+}
+html.light *[class*="text-[#86868b]"] {
+  color: #515154 !important;
+}
+html.light *[class*="text-[#6e6e73]"] {
+  color: #515154 !important;
+}
+
+/* Restore accents */
+html.light *[class*="text-[#30d158]"] { color: #059669 !important; }
+html.light *[class*="text-[#2997ff]"] { color: #0071e3 !important; }
+html.light *[class*="text-[#ffd60a]"] { color: #b7860d !important; }
+html.light *[class*="text-[#ff453a]"] { color: #c0392b !important; }
+html.light *[class*="text-[#bf5af2]"] { color: #9b59b6 !important; }
+
+/* Inputs in light mode */
+html.light input,
+html.light textarea,
+html.light select {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #1d1d1f !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #86868b !important;
+}
+
+/* KBD */
+html.light kbd {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #1d1d1f !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+@layer components {
+  .apple-nav {
+    background: var(--nav-bg, rgba(10, 11, 13, 0.85));
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .apple-card {
+    background-color: var(--apple-card-bg, #111318);
+    border: 1px solid var(--apple-card-border, rgba(255, 255, 255, 0.08));
+    border-radius: 20px;
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .apple-card:hover {
+    border-color: var(--apple-card-hover, rgba(255, 255, 255, 0.16));
+    transform: translateY(-2px);
+  }
+
+  .apple-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .apple-btn-primary {
+    background-color: #10B981;
+    color: #ffffff;
+  }
+  .apple-btn-primary:hover {
+    background-color: #059669;
+    transform: scale(1.02);
+  }
+  .apple-btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .apple-btn-secondary {
+    background-color: var(--chip-bg, rgba(255, 255, 255, 0.06));
+    color: var(--apple-text-primary, #F5F7FA);
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .apple-btn-secondary:hover {
+    background-color: var(--apple-card-hover, rgba(255, 255, 255, 0.12));
+    border-color: var(--apple-card-border, rgba(255, 255, 255, 0.18));
+  }
+
+  .apple-text-gradient {
+    background: linear-gradient(180deg, var(--text-heading, #ffffff) 0%, var(--text-secondary, #a1a1a6) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .apple-text-gradient-emerald {
+    background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

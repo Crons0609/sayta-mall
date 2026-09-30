@@ -1,0 +1,318 @@
+rules_version = '2';
+// ============================================================
+// SAYTA MALL — Firestore Security Rules
+// Última actualización: Fase 1
+//
+// PRINCIPIO: Nunca confiar solo en el frontend.
+// Todos los roles se verifican mediante custom claims del token JWT.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Funciones auxiliares ──────────────────────────────────────────────────
+
+    // Verifica que el usuario está autenticado
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Obtiene el rol del token (custom claim)
+    function role() {
+      return request.auth.token.get('role', 'visitor');
+    }
+
+    // Verifica el acceso a una sucursal específica
+    function hasBranchAccess(branchId) {
+      return isAuth() && (
+        role() == 'programmer' ||
+        branchId in request.auth.token.get('branchIds', [])
+      );
+    }
+
+    // Guards de rol
+    function isProgrammer() {
+      return isAuth() && role() == 'programmer';
+    }
+
+    function isOwner() {
+      return isAuth() && (role() == 'owner' || role() == 'programmer');
+    }
+
+    function isEmployee() {
+      return isAuth() && (
+        role() == 'employee' ||
+        role() == 'owner' ||
+        role() == 'programmer'
+      );
+    }
+
+    function isCustomer() {
+      return isAuth(); // cualquier usuario autenticado
+    }
+
+    // Verifica que el empleado no está suspendido
+    function isNotSuspended() {
+      return request.auth.token.get('suspended', false) == false;
+    }
+
+    // Verifica que el empleado pertenece a la sucursal del documento
+    function isEmployeeOfBranch(branchId) {
+      return isEmployee() && hasBranchAccess(branchId) && isNotSuspended();
+    }
+
+    function isOwnerOfBranch(branchId) {
+      return isOwner() && hasBranchAccess(branchId);
+    }
+
+    // ─── Colección: users ──────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Un usuario puede leer y escribir su propio documento
+      allow read: if isAuth() && request.auth.uid == uid;
+      // El dueño o programador pueden leer perfiles de su sucursal
+      allow read: if isOwner();
+      // Solo el servidor (Admin SDK) puede escribir la mayoría de los campos
+      // El usuario solo puede actualizar sus preferencias
+      allow update: if isAuth() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['preferences', 'updatedAt']);
+      // Creación: solo el primer login (onAuthStateChanged la crea vía el servidor)
+      allow create: if isAuth() && request.auth.uid == uid;
+    }
+
+    // ─── Colección: invitations ────────────────────────────────────────────────
+    match /invitations/{invitationId} {
+      // El dueño puede crear y ver invitaciones de sus sucursales
+      allow read: if isOwner() &&
+        request.auth.token.get('branchIds', []).hasAny(resource.data.branchIds);
+      // El programador puede ver y crear todo
+      allow read, write: if isProgrammer();
+      // Los dueños pueden crear invitaciones (validar en servidor también)
+      allow create: if isOwner()
+        && request.resource.data.invitedBy == request.auth.uid;
+      // Nadie puede borrar (solo cambiar status)
+      allow delete: if isProgrammer();
+    }
+
+    // ─── Colección: branches ───────────────────────────────────────────────────
+    match /branches/{branchId} {
+      // Lectura pública de sucursales activas (sin datos sensibles)
+      allow read: if resource.data.active == true;
+      // Empleados de la sucursal pueden leer todos los datos
+      allow read: if isEmployeeOfBranch(branchId);
+      // Solo el dueño de la sucursal puede crear/editar
+      allow create: if isOwner()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isOwnerOfBranch(branchId);
+      allow delete: if isProgrammer();
+    }
+
+    // ─── Colección: products ───────────────────────────────────────────────────
+    match /products/{productId} {
+      // VISITANTES: pueden leer productos activos pero NO la subcolección pricing
+      allow read: if resource.data.status == 'active'
+        && resource.data.deletedAt == null;
+      // Usuarios autenticados pueden leer todos los productos activos
+      allow read: if isCustomer()
+        && resource.data.status == 'active'
+        && resource.data.deletedAt == null;
+      // Personal puede leer todos los productos de su sucursal
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      // Solo empleados de la sucursal pueden crear/editar productos
+      allow create: if isEmployeeOfBranch(request.resource.data.branchId)
+        && request.resource.data.keys().hasAll(['name', 'branchId', 'status', 'stock'])
+        && request.resource.data.images.size() <= 5;
+      allow update: if isEmployeeOfBranch(resource.data.branchId)
+        && request.resource.data.images.size() <= 5;
+      allow delete: if isProgrammer(); // solo soft-delete en producción
+
+      // ── Subcolección: pricing (PRECIOS — solo usuarios autenticados) ──────────
+      match /pricing/{pricingId} {
+        // VISITANTES NO AUTENTICADOS NO PUEDEN LEER EL PRECIO
+        allow read: if isCustomer(); // cualquier usuario autenticado
+        // Solo personal puede escribir precios
+        allow write: if isEmployeeOfBranch(get(/databases/$(database)/documents/products/$(productId)).data.branchId);
+      }
+    }
+
+    // ─── Colección: categories ─────────────────────────────────────────────────
+    match /categories/{categoryId} {
+      allow read: if true; // público
+      allow write: if isEmployee();
+    }
+
+    // ─── Colección: stockMovements ─────────────────────────────────────────────
+    match /stockMovements/{movementId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      allow create: if isEmployeeOfBranch(request.resource.data.branchId)
+        && request.resource.data.performedBy == request.auth.uid;
+      allow update, delete: if isProgrammer(); // inmutable en producción
+    }
+
+    // ─── Colección: orders ─────────────────────────────────────────────────────
+    match /orders/{orderId} {
+      // El cliente puede ver y crear sus propios pedidos
+      allow read: if isCustomer() && resource.data.customerId == request.auth.uid;
+      allow create: if isCustomer()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      // El personal de la sucursal puede ver y actualizar pedidos
+      allow read, update: if isEmployeeOfBranch(resource.data.branchId);
+
+      // Subcolección: items
+      match /items/{itemId} {
+        allow read: if isCustomer() &&
+          get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid;
+        allow read: if isEmployeeOfBranch(
+          get(/databases/$(database)/documents/orders/$(orderId)).data.branchId
+        );
+        allow create: if isCustomer();
+        allow write: if isProgrammer();
+      }
+    }
+
+    // ─── Colección: carts ──────────────────────────────────────────────────────
+    match /carts/{uid} {
+      // Solo el dueño del carrito puede leer/escribir
+      allow read, write: if isCustomer() && request.auth.uid == uid;
+    }
+
+    // ─── Colección: favorites ──────────────────────────────────────────────────
+    match /favorites/{favoriteId} {
+      allow read, write: if isCustomer()
+        && request.auth.uid == resource.data.userId;
+      allow create: if isCustomer()
+        && request.auth.uid == request.resource.data.userId;
+    }
+
+    // ─── Colección: reviews ────────────────────────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true; // públicas
+      allow create: if isCustomer()
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isCustomer()
+        && resource.data.userId == request.auth.uid;
+      // Moderación: dueño puede ocultar reseñas
+      allow update: if isOwner();
+      allow delete: if isProgrammer();
+    }
+
+    // ─── Colección: tasks ──────────────────────────────────────────────────────
+    match /tasks/{taskId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      // Dueño crea tareas
+      allow create: if isOwnerOfBranch(request.resource.data.branchId);
+      // Dueño edita todo; empleado solo puede actualizar su propio status
+      allow update: if isOwnerOfBranch(resource.data.branchId);
+      allow update: if isEmployeeOfBranch(resource.data.branchId)
+        && resource.data.assignedTo == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isOwnerOfBranch(resource.data.branchId);
+    }
+
+    // ─── Colección: dayOffRequests ─────────────────────────────────────────────
+    match /dayOffRequests/{requestId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      allow create: if isEmployeeOfBranch(request.resource.data.branchId)
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwnerOfBranch(resource.data.branchId); // aprueba/rechaza
+      allow update: if isEmployeeOfBranch(resource.data.branchId)
+        && resource.data.userId == request.auth.uid
+        && resource.data.status == 'pending'; // solo puede editar si aún está pendiente
+    }
+
+    // ─── Colección: attendance ─────────────────────────────────────────────────
+    match /attendance/{recordId} {
+      allow read: if isOwnerOfBranch(resource.data.branchId);
+      allow read: if isEmployeeOfBranch(resource.data.branchId)
+        && resource.data.userId == request.auth.uid;
+      allow create: if isEmployeeOfBranch(request.resource.data.branchId)
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isEmployeeOfBranch(resource.data.branchId)
+        && resource.data.userId == request.auth.uid
+        && resource.data.checkOut == null; // solo puede marcar salida
+    }
+
+    // ─── Colección: chatChannels ───────────────────────────────────────────────
+    match /chatChannels/{channelId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId)
+        || (resource.data.type == 'global' && isOwner());
+      allow create: if isOwnerOfBranch(request.resource.data.branchId);
+      allow update: if isOwnerOfBranch(resource.data.branchId);
+      allow delete: if isProgrammer();
+
+      // Subcolección: messages
+      match /messages/{messageId} {
+        allow read: if isEmployeeOfBranch(
+          get(/databases/$(database)/documents/chatChannels/$(channelId)).data.branchId
+        );
+        allow create: if isEmployeeOfBranch(
+          get(/databases/$(database)/documents/chatChannels/$(channelId)).data.branchId
+        ) && request.resource.data.senderId == request.auth.uid;
+        allow update: if resource.data.senderId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'updatedAt']);
+        allow delete: if isProgrammer();
+      }
+    }
+
+    // ─── Colección: announcements ──────────────────────────────────────────────
+    match /announcements/{announcementId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      allow write: if isOwnerOfBranch(request.resource.data.branchId);
+      allow delete: if isProgrammer();
+    }
+
+    // ─── Colección: auditLogs ──────────────────────────────────────────────────
+    match /auditLogs/{logId} {
+      allow read: if isOwner(); // dueño ve logs de sus sucursales
+      allow read: if isProgrammer(); // programador ve todo
+      allow write: if false; // NUNCA desde el cliente; solo Admin SDK
+    }
+
+    // ─── Colección: notifications ──────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+      allow write: if false; // solo Admin SDK puede crear notificaciones
+    }
+
+    // ─── Colección: suppliers ─────────────────────────────────────────────────
+    match /suppliers/{supplierId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      allow write: if isOwnerOfBranch(request.resource.data.branchId);
+    }
+
+    // ─── Colección: purchases ─────────────────────────────────────────────────
+    match /purchases/{purchaseId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      allow create: if isOwnerOfBranch(request.resource.data.branchId);
+      allow update: if isOwnerOfBranch(resource.data.branchId);
+    }
+
+    // ─── Colección: transfers ─────────────────────────────────────────────────
+    match /transfers/{transferId} {
+      allow read: if isOwnerOfBranch(resource.data.fromBranchId)
+        || isOwnerOfBranch(resource.data.toBranchId);
+      allow create: if isOwnerOfBranch(request.resource.data.fromBranchId);
+      allow update: if isOwnerOfBranch(resource.data.toBranchId); // aprueba/rechaza
+    }
+
+    // ─── Colección: coupons y promotions ──────────────────────────────────────
+    match /coupons/{couponId} {
+      allow read: if isCustomer() && resource.data.active == true;
+      allow write: if isOwnerOfBranch(request.resource.data.branchId);
+    }
+
+    match /promotions/{promoId} {
+      allow read: if true; // públicas
+      allow write: if isOwnerOfBranch(request.resource.data.branchId);
+    }
+
+    // ─── Colección: shifts ────────────────────────────────────────────────────
+    match /shifts/{shiftId} {
+      allow read: if isEmployeeOfBranch(resource.data.branchId);
+      allow write: if isOwnerOfBranch(request.resource.data.branchId);
+    }
+  }
+}

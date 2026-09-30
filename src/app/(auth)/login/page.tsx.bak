@@ -1,0 +1,676 @@
+// src/app/(auth)/login/page.tsx
+'use client';
+
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useAuth } from '@/providers/AuthProvider';
+import {
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Sparkles,
+  ShieldCheck,
+  Store,
+  ChevronLeft,
+  CheckCircle2,
+  ShoppingBag,
+  Zap,
+  Phone,
+  Smartphone,
+  RotateCcw,
+  UserCheck,
+} from 'lucide-react';
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+
+  const {
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    sendPhoneVerification,
+    confirmPhoneVerification,
+  } = useAuth();
+
+  // Modo: Iniciar sesión, Crear cuenta o Verificación de Teléfono
+  const [mode, setMode] = useState<'signin' | 'signup' | 'phone'>('signin');
+
+  // Form states correo
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Form states teléfono
+  const [countryCode, setCountryCode] = useState('+505');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [phoneStep, setPhoneStep] = useState<'input' | 'otp' | 'success'>('input');
+  const [phoneCountdown, setPhoneCountdown] = useState(0);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [isDevBypass, setIsDevBypass] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Temporizador para reenvío SMS
+  React.useEffect(() => {
+    let t: NodeJS.Timeout;
+    if (phoneCountdown > 0) {
+      t = setTimeout(() => setPhoneCountdown(phoneCountdown - 1), 1000);
+    }
+    return () => clearTimeout(t);
+  }, [phoneCountdown]);
+
+  const handleRoleRedirect = (role?: string) => {
+    if (redirectUrl) {
+      router.push(redirectUrl);
+      return;
+    }
+
+    switch (role) {
+      case 'programmer':
+        router.push('/programador/dashboard');
+        break;
+      case 'owner':
+        router.push('/dueno/dashboard');
+        break;
+      case 'employee':
+        router.push('/empleado/dashboard');
+        break;
+      default:
+        router.push('/');
+        break;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    if (!email.trim() || !password) {
+      setErrorMessage('Por favor ingresa tu correo y contraseña.');
+      return;
+    }
+
+    if (mode === 'signup') {
+      if (password.length < 6) {
+        setErrorMessage('La contraseña debe tener un mínimo de 6 caracteres.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setErrorMessage('Las contraseñas no coinciden.');
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+
+      if (mode === 'signup') {
+        const claims = await signUpWithEmail(email, password, displayName);
+        setSuccessMessage('¡Cuenta creada exitosamente! Redirigiendo...');
+        setTimeout(() => {
+          handleRoleRedirect(claims?.role);
+        }, 800);
+      } else {
+        const claims = await signInWithEmail(email, password);
+        handleRoleRedirect(claims?.role);
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error en la autenticación.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejo de envío SMS
+  const handleSendPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const cleanNum = phoneNumber.replace(/\D/g, '');
+    if (cleanNum.length < 8) {
+      setErrorMessage('Ingresa un número telefónico de al menos 8 dígitos.');
+      return;
+    }
+
+    const fullPhone = `${countryCode}${cleanNum}`;
+
+    try {
+      setLoading(true);
+      const res = await sendPhoneVerification(fullPhone, 'login-recaptcha-container');
+      if (res.error) throw new Error(res.error);
+
+      setConfirmationResult(res.confirmationResult || null);
+      setIsDevBypass(Boolean(res.devMode));
+      setPhoneStep('otp');
+      setPhoneCountdown(45);
+      setSuccessMessage('Código SMS enviado correctamente.');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error enviando código SMS.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejo de confirmación OTP
+  const handleConfirmPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (!otpCode || otpCode.trim().length < 4) {
+      setErrorMessage('Ingresa el código de 6 dígitos recibido por SMS.');
+      return;
+    }
+
+    const fullPhone = `${countryCode}${phoneNumber.replace(/\D/g, '')}`;
+
+    try {
+      setLoading(true);
+      await confirmPhoneVerification(confirmationResult, otpCode.trim(), fullPhone);
+      setPhoneStep('success');
+      setSuccessMessage('¡Teléfono verificado! Eres  confirmada.');
+      setTimeout(() => {
+        handleRoleRedirect();
+      }, 1200);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Código incorrecto o expirado.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMessage(null);
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+      router.push('/');
+    } catch (err: any) {
+      setErrorMessage('No se pudo completar el acceso con Google. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#000000] text-[#f5f5f7] flex flex-col justify-between relative overflow-hidden">
+      {/* Contenedor invisible para reCAPTCHA de Firebase */}
+      <div id="login-recaptcha-container" />
+
+      {/* Fondo Ambiental Apple */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[#2997ff]/10 via-[#30d158]/5 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Barra Superior con regreso */}
+      <header className="relative z-10 px-4 sm:px-8 py-5 flex items-center justify-between max-w-7xl mx-auto w-full">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-[#86868b] hover:text-white transition-colors group"
+        >
+          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          <span>Volver a la tienda</span>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#2997ff] to-[#30d158] flex items-center justify-center font-bold text-xs text-white shadow-md shadow-[#2997ff]/20">
+            S
+          </div>
+          <span className="font-semibold text-sm text-white tracking-tight">Sayta Mall</span>
+        </div>
+      </header>
+
+      {/* Contenedor Principal */}
+      <main className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Columna Izquierda: Presentación Premium */}
+          <div className="space-y-8 text-left hidden lg:block">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] text-xs text-[#30d158]">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="font-medium">Identidad Verificada · Personas Naturales</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
+                Super Ahorro. <br />
+                <span className="apple-text-gradient">Todo en un solo lugar.</span>
+              </h1>
+
+              <p className="text-sm text-[#86868b] leading-relaxed max-w-md">
+                Inicia sesión con tu cuenta de Google, correo o mediante tu <strong>número celular</strong> para confirmar tu condición de .
+              </p>
+            </div>
+
+            {/* Tarjeta de Beneficios */}
+            <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl space-y-4 max-w-md">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#30d158]/15 text-[#30d158] flex items-center justify-center shrink-0 mt-0.5">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-white">Verificación por Celular</h4>
+                  <p className="text-[11px] text-[#86868b] mt-0.5">
+                    Validación por SMS que previene cuentas falsas y garantiza usuarios legítimos.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#2997ff]/15 text-[#2997ff] flex items-center justify-center shrink-0 mt-0.5">
+                  <Store className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-white">Acceso a Paneles de Gestión</h4>
+                  <p className="text-[11px] text-[#86868b] mt-0.5">
+                    Dueños y empleados pueden subir y gestionar productos, precios y categorías colaborativamente.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#ffd60a]/15 text-[#ffd60a] flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-white">Descuentos con Autorización</h4>
+                  <p className="text-[11px] text-[#86868b] mt-0.5">
+                    Rebajas de precio aprobadas directamente por el Dueño o Programador del local.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Tarjeta de Autenticación */}
+          <div className="apple-card p-6 sm:p-10 max-w-md w-full mx-auto bg-[#161617]/95 border-white/[0.1] shadow-2xl rounded-3xl">
+            {/* Pestañas: Iniciar Sesión / Crear Cuenta / Teléfono */}
+            <div className="grid grid-cols-3 gap-1 p-1 bg-black/40 rounded-2xl border border-white/[0.08] mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setErrorMessage(null);
+                }}
+                className={`py-2 text-[11px] font-semibold rounded-xl transition-all ${mode === 'signin'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-[#86868b] hover:text-white'
+                  }`}
+              >
+                Ingresar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setErrorMessage(null);
+                }}
+                className={`py-2 text-[11px] font-semibold rounded-xl transition-all ${mode === 'signup'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-[#86868b] hover:text-white'
+                  }`}
+              >
+                Registrarse
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('phone');
+                  setErrorMessage(null);
+                }}
+                className={`py-2 text-[11px] font-semibold rounded-xl transition-all flex items-center justify-center gap-1 ${mode === 'phone'
+                  ? 'bg-[#30d158] text-black shadow-sm font-bold'
+                  : 'text-[#86868b] hover:text-white'
+                  }`}
+              >
+                <Smartphone className="w-3 h-3" />
+                <span>Teléfono</span>
+              </button>
+            </div>
+
+            <div className="mb-5 text-left">
+              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                {mode === 'signin' && 'Te damos la bienvenida'}
+                {mode === 'signup' && 'Crea tu cuenta de cliente'}
+                {mode === 'phone' && 'Verificación '}
+              </h3>
+              <p className="text-xs text-[#86868b] mt-1">
+                {mode === 'signin' && 'Ingresa con cualquier correo y contraseña o con Google.'}
+                {mode === 'signup' && 'Regístrate con tu correo para ver precios y comprar en Sayta Mall.'}
+                {mode === 'phone' && 'Verifica tu número telefónico mediante SMS para validar tu cuenta.'}
+              </p>
+            </div>
+
+            {/* Alerta de Error */}
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-[#ff453a]/10 border border-[#ff453a]/25 text-xs text-[#ff453a] flex items-center gap-2 animate-fade-in text-left">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Alerta de Éxito */}
+            {successMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-[#30d158]/10 border border-[#30d158]/25 text-xs text-[#30d158] flex items-center gap-2 animate-fade-in text-left">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {/* ─── VISTA 1: TELÉFONO () ─── */}
+            {mode === 'phone' ? (
+              <div className="space-y-4 text-left">
+                {phoneStep === 'input' && (
+                  <form onSubmit={handleSendPhoneOtp} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-white block">
+                        Número Celular
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          className="bg-black/50 border border-white/[0.1] rounded-2xl px-2.5 py-3 text-xs text-white focus:outline-none focus:border-[#30d158]"
+                        >
+                          <option value="+505">🇳🇮 +505</option>
+                          <option value="+506">🇨🇷 +506</option>
+                          <option value="+504">🇭🇳 +504</option>
+                          <option value="+503">🇸🇻 +503</option>
+                          <option value="+502">🇬🇹 +502</option>
+                          <option value="+1">🇺🇸 +1</option>
+                        </select>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="8888 1234"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="flex-1 bg-black/50 border border-white/[0.1] rounded-2xl px-3.5 py-3 text-sm text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#30d158]"
+                        />
+                      </div>
+                      <p className="text-[11px] text-[#86868b]">
+                        Recibirás un código SMS de 6 dígitos para validar que eres una persona real.
+                      </p>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full apple-pill-btn apple-btn-primary py-3 text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[#0071e3]/20 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <span>Enviando SMS...</span>
+                      ) : (
+                        <>
+                          <Smartphone className="w-4 h-4" />
+                          <span>Enviar Código SMS</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
+
+                {phoneStep === 'otp' && (
+                  <form onSubmit={handleConfirmPhoneOtp} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-white block text-center">
+                        Ingresa el código enviado a {countryCode} {phoneNumber}
+                      </label>
+                      {isDevBypass && (
+                        <div className="p-2 rounded-xl bg-[#ffd60a]/10 border border-[#ffd60a]/20 text-[#ffd60a] text-[11px] flex items-center gap-1.5 justify-center">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Código de prueba local: <strong>123456</strong></span>
+                        </div>
+                      )}
+                      <input
+                        type="text"
+                        required
+                        maxLength={6}
+                        placeholder="123456"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value)}
+                        className="w-full bg-black/60 border border-white/[0.15] rounded-2xl px-4 py-3 text-center text-2xl font-mono tracking-widest text-white focus:outline-none focus:border-[#30d158]"
+                        autoFocus
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full apple-pill-btn apple-btn-primary py-3 text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[#0071e3]/20 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <span>Confirmando...</span>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-[#30d158]" />
+                          <span>Confirmar </span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setPhoneStep('input')}
+                        className="text-[#86868b] hover:text-white"
+                      >
+                        Cambiar número
+                      </button>
+                      {phoneCountdown > 0 ? (
+                        <span className="text-[#86868b]">Reenviar en {phoneCountdown}s</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSendPhoneOtp}
+                          className="text-[#2997ff] hover:underline"
+                        >
+                          Reenviar SMS
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                )}
+
+                {phoneStep === 'success' && (
+                  <div className="text-center space-y-4 py-3">
+                    <div className="w-12 h-12 rounded-full bg-[#30d158]/20 text-[#30d158] flex items-center justify-center mx-auto">
+                      <UserCheck className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white">¡ Confirmada!</h4>
+                      <p className="text-xs text-[#86868b] mt-1">
+                        Tu número ha sido verificado satisfactoriamente.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ─── VISTA 2: FORMULARIO CORREO Y CONTRASEÑA ─── */
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Campo Nombre en Registro */}
+                {mode === 'signup' && (
+                  <div className="space-y-1 text-left animate-fade-in">
+                    <label className="text-xs font-medium text-[#86868b]">Nombre Completo</label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Ej. Juan Pérez"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-black/50 border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Campo Correo */}
+                <div className="space-y-1 text-left">
+                  <label className="text-xs font-medium text-[#86868b]">
+                    Correo Electrónico (Gmail, Outlook, Yahoo o cualquiera)
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      placeholder="tunombre@correo.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-black/50 border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
+                    />
+                  </div>
+                </div>
+
+                {/* Campo Contraseña */}
+                <div className="space-y-1 text-left">
+                  <label className="text-xs font-medium text-[#86868b]">Contraseña</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Mínimo 6 caracteres"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-black/50 border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#86868b] hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirmar Contraseña en Registro */}
+                {mode === 'signup' && (
+                  <div className="space-y-1 text-left animate-fade-in">
+                    <label className="text-xs font-medium text-[#86868b]">Confirmar Contraseña</label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Repite la contraseña"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-black/50 border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Botón de Envío */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full apple-pill-btn apple-btn-primary py-3 text-xs font-semibold flex items-center justify-center gap-2 mt-2 disabled:opacity-50 shadow-lg shadow-[#2997ff]/20"
+                >
+                  <span>
+                    {loading
+                      ? 'Procesando...'
+                      : mode === 'signin'
+                        ? 'Iniciar Sesión'
+                        : 'Crear Mi Cuenta'}
+                  </span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            )}
+
+            {/* Separador */}
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-white/[0.08]" />
+              <span className="text-[10px] text-[#86868b] uppercase tracking-wider">
+                O también accede con
+              </span>
+              <div className="flex-1 h-px bg-white/[0.08]" />
+            </div>
+
+            {/* Botón Google OAuth */}
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              type="button"
+              className="w-full py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-medium text-white transition-all flex items-center justify-center gap-2.5 active:scale-[0.99]"
+            >
+              <GoogleIcon />
+              <span>Continuar con Google</span>
+            </button>
+
+            <p className="text-[10px] text-[#6e6e73] text-center mt-5">
+              Al continuar aceptas nuestros{' '}
+              <a href="#" className="underline hover:text-[#2997ff]">
+                Términos
+              </a>{' '}
+              y{' '}
+              <a href="#" className="underline hover:text-[#2997ff]">
+                Privacidad
+              </a>
+              . Precios expresados en Córdobas (C$ NIO).
+            </p>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 p-5 text-center text-[11px] text-[#6e6e73]">
+        © {new Date().getFullYear()} Sayta Mall · Super Ahorro Y Todo Aquí
+      </footer>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#000000] flex items-center justify-center text-xs text-[#86868b]">
+          Cargando Sayta Mall...
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
+}
+

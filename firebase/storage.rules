@@ -1,0 +1,117 @@
+rules_version = '2';
+// ============================================================
+// SAYTA MALL — Firebase Storage Security Rules
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── Funciones auxiliares ──────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return request.auth.token.get('role', 'visitor');
+    }
+
+    function isProgrammer() {
+      return isAuth() && role() == 'programmer';
+    }
+
+    function isEmployee() {
+      return isAuth() && (
+        role() == 'employee' ||
+        role() == 'owner' ||
+        role() == 'programmer'
+      );
+    }
+
+    function isOwner() {
+      return isAuth() && (role() == 'owner' || role() == 'programmer');
+    }
+
+    function hasBranchAccess(branchId) {
+      return isAuth() && (
+        role() == 'programmer' ||
+        branchId in request.auth.token.get('branchIds', [])
+      );
+    }
+
+    // Valida tipo y tamaño de imágenes
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size <= 5 * 1024 * 1024; // máx 5MB antes de comprimir
+    }
+
+    // Valida tipo y tamaño de archivos generales
+    function isValidFile() {
+      return request.resource.size <= 10 * 1024 * 1024; // máx 10MB
+    }
+
+    // ─── Imágenes de productos ─────────────────────────────────────────────────
+    // Ruta: products/{branchId}/{productId}/{filename}
+    match /products/{branchId}/{productId}/{filename} {
+      // Lectura pública (las URLs son firmadas o públicas según configuración del bucket)
+      allow read: if true;
+
+      // Solo empleados de la sucursal pueden subir imágenes de productos
+      allow write: if isEmployee()
+        && hasBranchAccess(branchId)
+        && isValidImage();
+
+      // Solo empleados de la sucursal o programador pueden eliminar
+      allow delete: if isEmployee() && hasBranchAccess(branchId);
+    }
+
+    // ─── Imágenes de perfil de usuarios ───────────────────────────────────────
+    // Ruta: users/{uid}/profile/{filename}
+    match /users/{uid}/profile/{filename} {
+      allow read: if true;
+      allow write: if isAuth()
+        && request.auth.uid == uid
+        && isValidImage();
+      allow delete: if isAuth() && request.auth.uid == uid;
+    }
+
+    // ─── Imágenes de sucursales ────────────────────────────────────────────────
+    // Ruta: branches/{branchId}/{filename}
+    match /branches/{branchId}/{filename} {
+      allow read: if true;
+      allow write: if isOwner()
+        && hasBranchAccess(branchId)
+        && isValidImage();
+      allow delete: if isOwner() && hasBranchAccess(branchId);
+    }
+
+    // ─── Imágenes de chat ─────────────────────────────────────────────────────
+    // Ruta: chat/{channelId}/{filename}
+    match /chat/{channelId}/{filename} {
+      allow read: if isEmployee();
+      allow write: if isEmployee() && isValidFile();
+      allow delete: if isProgrammer();
+    }
+
+    // ─── Categorías ───────────────────────────────────────────────────────────
+    // Ruta: categories/{filename}
+    match /categories/{filename} {
+      allow read: if true;
+      allow write: if isOwner() && isValidImage();
+      allow delete: if isOwner();
+    }
+
+    // ─── Reportes exportados ──────────────────────────────────────────────────
+    // Ruta: reports/{branchId}/{filename}
+    match /reports/{branchId}/{filename} {
+      allow read: if isOwner() && hasBranchAccess(branchId);
+      allow write: if isProgrammer(); // solo el servidor genera reportes
+      allow delete: if isOwner() && hasBranchAccess(branchId);
+    }
+
+    // ─── Bloquear todo lo demás ───────────────────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if isProgrammer();
+    }
+  }
+}
