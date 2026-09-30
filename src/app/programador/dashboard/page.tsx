@@ -27,11 +27,48 @@ import {
   Truck,
   UserPlus,
   Briefcase,
+  Clock,
+  Zap,
+  Copy,
+  ExternalLink,
+  CheckCheck,
+  AlertCircle,
+  Globe,
 } from 'lucide-react';
 
 export default function ProgramadorDashboardPage() {
   const { branches, branchCount } = useBranch();
-  const [activeTab, setActiveTab] = useState<'overview' | 'programmers' | 'employees' | 'system' | 'logs' | 'referral'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'programmers' | 'employees' | 'system' | 'logs' | 'referral' | 'cronjobs'>('overview');
+  const [pingCopied, setPingCopied] = useState(false);
+  const [pingStatus, setPingStatus] = useState<'idle' | 'checking' | 'ok' | 'error'>('idle');
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://tu-app.onrender.com');
+  const pingUrl = `${appUrl}/api/ping`;
+
+  const handleCopyPing = async () => {
+    try {
+      await navigator.clipboard.writeText(pingUrl);
+      setPingCopied(true);
+      setTimeout(() => setPingCopied(false), 2000);
+    } catch {
+      // fallback silencioso
+    }
+  };
+
+  const handleTestPing = async () => {
+    setPingStatus('checking');
+    try {
+      const res = await fetch('/api/ping');
+      if (res.ok) {
+        setPingStatus('ok');
+      } else {
+        setPingStatus('error');
+      }
+    } catch {
+      setPingStatus('error');
+    }
+    setTimeout(() => setPingStatus('idle'), 3000);
+  };
   const [ownerCount, setOwnerCount] = useState<number>(0);
   const [programmerCount, setProgrammerCount] = useState<number>(1);
 
@@ -179,6 +216,17 @@ export default function ProgramadorDashboardPage() {
           >
             <Link2 className="w-3 h-3" />
             Mi Enlace Referido
+          </button>
+          <button
+            onClick={() => setActiveTab('cronjobs')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+              activeTab === 'cronjobs'
+                ? 'bg-[#ffd60a] text-black font-semibold shadow-sm shadow-[#ffd60a]/20'
+                : 'text-[#86868b] hover:text-white'
+            }`}
+          >
+            <Clock className="w-3 h-3" />
+            Cron Jobs
           </button>
         </div>
 
@@ -401,6 +449,195 @@ export default function ProgramadorDashboardPage() {
               tu enlace queda registrada automáticamente bajo tu perfil.
             </p>
             <ReferralLinkPanel role="programmer" />
+          </div>
+        )}
+
+        {/* Tab Cron Jobs - Keepalive para Render */}
+        {activeTab === 'cronjobs' && (
+          <div className="space-y-5 animate-fade-in">
+            {/* Header del panel */}
+            <div className="apple-card p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#ffd60a]/15 flex items-center justify-center shrink-0">
+                  <Zap className="w-6 h-6 text-[#ffd60a]" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-white">Keepalive de Render — Anti-Sleep</h3>
+                  <p className="text-xs text-[#86868b] mt-1 leading-relaxed max-w-2xl">
+                    El plan gratuito de Render pone a dormir el servicio tras <strong className="text-white">15 minutos</strong> de inactividad,
+                    lo que genera una demora de hasta 50 segundos en la primera petición. Configura un cron job externo
+                    para hacer ping cada <strong className="text-[#ffd60a]">14 minutos</strong> al endpoint de keepalive y mantener el servidor activo 24/7.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Endpoint de Ping */}
+            <div className="apple-card p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-[#2997ff]" />
+                <h3 className="text-sm font-bold text-white">Endpoint de Keepalive</h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#30d158]/15 text-[#30d158] border border-[#30d158]/25">GET · /api/ping</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1 p-3 rounded-xl bg-black/50 border border-white/[0.08] font-mono text-xs text-[#2997ff] overflow-x-auto">
+                  {pingUrl}
+                </div>
+                <button
+                  onClick={handleCopyPing}
+                  className="shrink-0 p-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] transition-all"
+                  title="Copiar URL"
+                >
+                  {pingCopied
+                    ? <CheckCheck className="w-4 h-4 text-[#30d158]" />
+                    : <Copy className="w-4 h-4 text-[#86868b]" />}
+                </button>
+                <button
+                  onClick={handleTestPing}
+                  disabled={pingStatus === 'checking'}
+                  className="shrink-0 px-3 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] transition-all text-xs font-semibold text-white flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${pingStatus === 'checking' ? 'animate-spin text-[#ffd60a]' : 'text-[#86868b]'}`} />
+                  {pingStatus === 'checking' ? 'Probando…' : pingStatus === 'ok' ? '✓ OK' : pingStatus === 'error' ? '✗ Error' : 'Probar'}
+                </button>
+              </div>
+
+              {pingStatus === 'ok' && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[#30d158]/10 border border-[#30d158]/20">
+                  <CheckCircle2 className="w-4 h-4 text-[#30d158]" />
+                  <span className="text-xs text-[#30d158] font-medium">El endpoint responde correctamente (200 OK). ¡El servidor está vivo!</span>
+                </div>
+              )}
+              {pingStatus === 'error' && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                  <AlertCircle className="w-4 h-4 text-red-400" />
+                  <span className="text-xs text-red-400 font-medium">No se pudo conectar al endpoint. Verifica que el servidor esté corriendo.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Guías de configuración */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* cron-job.org */}
+              <div className="apple-card p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                    <Clock className="w-4.5 h-4.5 text-orange-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">cron-job.org</h4>
+                    <p className="text-[11px] text-[#86868b]">Servicio gratuito · Sin registro de tarjeta</p>
+                  </div>
+                </div>
+                <ol className="space-y-2.5 text-xs text-[#86868b]">
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-bold flex items-center justify-center">1</span>
+                    <span>Ve a <strong className="text-white">cron-job.org</strong> y crea una cuenta gratuita</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-bold flex items-center justify-center">2</span>
+                    <span>Haz clic en <strong className="text-white">Create Cronjob</strong></span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-bold flex items-center justify-center">3</span>
+                    <span>Pega la URL del endpoint de arriba en el campo <strong className="text-white">URL</strong></span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-bold flex items-center justify-center">4</span>
+                    <span>Establece la expresión cron: <code className="px-1 py-0.5 rounded bg-white/[0.06] text-[#ffd60a] font-mono">*/14 * * * *</code> (cada 14 min)</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-bold flex items-center justify-center">5</span>
+                    <span>Guarda y activa el cron job ✓</span>
+                  </li>
+                </ol>
+                <a
+                  href="https://cron-job.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-400 hover:underline"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Ir a cron-job.org
+                </a>
+              </div>
+
+              {/* UptimeRobot */}
+              <div className="apple-card p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Activity className="w-4.5 h-4.5 text-green-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">UptimeRobot</h4>
+                    <p className="text-[11px] text-[#86868b]">Monitor + Keepalive · Mínimo 5 min</p>
+                  </div>
+                </div>
+                <ol className="space-y-2.5 text-xs text-[#86868b]">
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold flex items-center justify-center">1</span>
+                    <span>Ve a <strong className="text-white">uptimerobot.com</strong> y crea una cuenta gratuita</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold flex items-center justify-center">2</span>
+                    <span>Haz clic en <strong className="text-white">Add New Monitor</strong></span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold flex items-center justify-center">3</span>
+                    <span>Selecciona tipo <strong className="text-white">HTTP(s)</strong> y pega la URL del endpoint</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold flex items-center justify-center">4</span>
+                    <span>Configura el intervalo a <strong className="text-white">5 minutos</strong> (mínimo del plan free)</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold flex items-center justify-center">5</span>
+                    <span>Guarda — también recibirás alertas si el sitio cae ✓</span>
+                  </li>
+                </ol>
+                <a
+                  href="https://uptimerobot.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-400 hover:underline"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Ir a UptimeRobot
+                </a>
+              </div>
+            </div>
+
+            {/* Info de la expresión cron */}
+            <div className="apple-card p-5">
+              <div className="flex items-start gap-3">
+                <Terminal className="w-4 h-4 text-[#ffd60a] shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-white">Expresión Cron Recomendada</h4>
+                  <div className="font-mono text-sm bg-black/60 border border-white/[0.08] rounded-xl px-4 py-3 text-[#ffd60a]">
+                    */14 * * * *
+                  </div>
+                  <div className="grid grid-cols-5 gap-2 text-[10px] text-center">
+                    {[
+                      { val: '*/14', label: 'Minuto', desc: 'Cada 14 min' },
+                      { val: '*', label: 'Hora', desc: 'Cualquier hora' },
+                      { val: '*', label: 'Día', desc: 'Cualquier día' },
+                      { val: '*', label: 'Mes', desc: 'Cualquier mes' },
+                      { val: '*', label: 'Semana', desc: 'Cualquier día' },
+                    ].map((field) => (
+                      <div key={field.label} className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+                        <div className="font-mono text-[#ffd60a] font-bold text-xs">{field.val}</div>
+                        <div className="text-white font-medium mt-0.5">{field.label}</div>
+                        <div className="text-[#86868b] text-[9px]">{field.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-[#86868b]">
+                    Render duerme el servicio tras 15 min de inactividad — con 14 min de intervalo se garantiza que nunca llegue al límite.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
