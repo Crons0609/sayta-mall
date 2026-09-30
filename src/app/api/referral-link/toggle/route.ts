@@ -3,21 +3,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getReferralLinkByUserId, saveReferralLink } from '@/lib/firebase/referral';
-
-function getUserIdFromRequest(request: NextRequest): { userId: string; role: string; displayName: string } | null {
-  const simulatedRole = request.cookies.get('sayta_simulated_role')?.value;
-  if (!simulatedRole) return null;
-  const simulatedUsers: Record<string, { userId: string; role: string; displayName: string }> = {
-    programmer: { userId: 'programmer-1', role: 'programmer', displayName: 'Programador Superadmin' },
-    owner: { userId: 'owner-1', role: 'owner', displayName: 'Dueño Sayta Mall' },
-    employee: { userId: 'employee-1', role: 'employee', displayName: 'Empleado' },
-  };
-  return simulatedUsers[simulatedRole] ?? null;
-}
+import { getAuthenticatedUserFromRequest } from '@/lib/auth/serverAuth';
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userInfo = getUserIdFromRequest(request);
+    const userInfo = await getAuthenticatedUserFromRequest(request);
     if (!userInfo) {
       return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
     }
@@ -39,6 +29,6 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[referral-link/toggle]', error);
-    return NextResponse.json({ error: 'Error interno.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno cambiando estado.' }, { status: 500 });
   }
 }

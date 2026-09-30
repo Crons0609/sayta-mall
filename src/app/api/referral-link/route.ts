@@ -9,38 +9,23 @@ import {
   type ReferralLink,
 } from '@/lib/firebase/referral';
 import { generateReferralCode } from '@/lib/referral-code';
-
-// ─── Helpers de autenticación simulada ──────────────────────────────────────
-function getUserIdFromRequest(request: NextRequest): { userId: string; role: string; displayName: string } | null {
-  // En desarrollo, el userId se extrae de la cookie de simulación
-  const simulatedRole = request.cookies.get('sayta_simulated_role')?.value;
-  if (!simulatedRole) return null;
-
-  // Mapeamos rol → datos de usuario simulado
-  const simulatedUsers: Record<string, { userId: string; role: string; displayName: string }> = {
-    programmer: { userId: 'programmer-1', role: 'programmer', displayName: 'Programador Superadmin' },
-    owner: { userId: 'owner-1', role: 'owner', displayName: 'Dueño Sayta Mall' },
-    employee: { userId: 'employee-1', role: 'employee', displayName: 'Empleado' },
-  };
-
-  return simulatedUsers[simulatedRole] ?? null;
-}
+import { getAuthenticatedUserFromRequest } from '@/lib/auth/serverAuth';
 
 // ─── GET /api/referral-link ──────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
   try {
-    const userInfo = getUserIdFromRequest(request);
+    const userInfo = await getAuthenticatedUserFromRequest(request);
     if (!userInfo) {
       return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
     }
 
     const { userId, role, displayName } = userInfo;
 
-    // Buscar enlace existente
+    // Buscar enlace existente por userId
     let link = await getReferralLinkByUserId(userId);
 
     if (!link) {
-      // Auto-crear el enlace si no existe
+      // Auto-crear el enlace si no existe para este empleado/dueño
       const code = generateReferralCode(10);
       const newLink: ReferralLink = {
         id: `ref-${userId}`,
@@ -54,9 +39,16 @@ export async function GET(request: NextRequest) {
       };
       await saveReferralLink(newLink);
       link = newLink;
+    } else if (displayName && link.userDisplayName !== displayName && !link.userDisplayName) {
+      // Actualizar nombre si antes era desconocido
+      link.userDisplayName = displayName;
+      await saveReferralLink(link);
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const host = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${protocol}://${host}` : 'https://sayta-mall.onrender.com');
+
     return NextResponse.json({
       success: true,
       link,
@@ -64,6 +56,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[referral-link GET]', error);
-    return NextResponse.json({ error: 'Error interno.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno obteniendo enlace de referidos.' }, { status: 500 });
   }
 }

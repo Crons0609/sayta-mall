@@ -31,9 +31,14 @@ import {
   Smartphone,
   ShieldCheck,
   Truck,
+  MessageSquare,
+  Settings,
+  Sliders,
 } from 'lucide-react';
 import { SearchModal } from '@/components/ui/SearchModal';
 import { PhoneVerificationModal } from '@/components/auth/PhoneVerificationModal';
+import { DashboardPreferencesProvider, useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
+import { DashboardSettingsModal } from '@/components/dashboard/DashboardSettingsModal';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -41,10 +46,19 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
+  return (
+    <DashboardPreferencesProvider>
+      <DashboardLayoutInner role={role}>{children}</DashboardLayoutInner>
+    </DashboardPreferencesProvider>
+  );
+}
+
+function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, claims, logout, phoneVerified } = useAuth();
+  const { user, claims, logout, phoneVerified, loading: authLoading } = useAuth();
   const { branches, currentBranch, branchCount, setBranchId } = useBranch();
+  const { themeConfig, setSettingsModalOpen, t, language } = useDashboardPreferences();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -71,44 +85,47 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       .split('; ')
       .some((c) => c.startsWith('sayta_impersonating_owner='));
 
+    const activeRole = cookieRole || claims?.role;
+
     let allowed = false;
 
     if (role === 'programmer') {
-      allowed = cookieRole === 'programmer' || claims?.role === 'programmer';
+      allowed = activeRole === 'programmer';
     } else if (role === 'owner') {
       allowed =
-        cookieRole === 'programmer' ||
-        cookieRole === 'owner' ||
-        claims?.role === 'programmer' ||
-        claims?.role === 'owner' ||
+        activeRole === 'programmer' ||
+        activeRole === 'owner' ||
         isImpersonating;
     } else if (role === 'employee') {
       allowed =
-        cookieRole === 'programmer' ||
-        cookieRole === 'owner' ||
-        cookieRole === 'employee' ||
-        claims?.role === 'programmer' ||
-        claims?.role === 'owner' ||
-        claims?.role === 'employee';
+        activeRole === 'programmer' ||
+        activeRole === 'owner' ||
+        activeRole === 'employee';
     }
 
-    if (!allowed && !hasSessionCookie && !cookieRole) {
-      setIsAllowed(false);
+    if (allowed) {
+      setIsAllowed(true);
       setAuthChecked(true);
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}&error=login_required`);
       return;
     }
 
-    if (!allowed && cookieRole === 'customer') {
-      setIsAllowed(false);
-      setAuthChecked(true);
+    // Si AuthProvider todavía está inicializando la sesión de Firebase, esperar antes de rechazar
+    if (authLoading) {
+      return;
+    }
+
+    // Si terminó de cargar y no está permitido:
+    setIsAllowed(false);
+    setAuthChecked(true);
+
+    if (activeRole === 'customer') {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}&error=unauthorized_role`);
       return;
     }
 
-    setIsAllowed(allowed);
-    setAuthChecked(true);
-  }, [role, claims, pathname, router]);
+    // Redirigir de inmediato al login si no tiene sesión autorizada
+    router.replace(`/login?redirect=${encodeURIComponent(pathname)}&error=login_required`);
+  }, [role, claims, authLoading, pathname, router]);
 
   // Detectar soporte / impersonación desde cookies
   useEffect(() => {
@@ -156,46 +173,52 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getNavLinks = () => {
     if (role === 'programmer') {
       return [
-        { label: 'Centro de Comando', href: '/programador/dashboard', icon: LayoutDashboard },
-        { label: 'Empresas de Delivery', href: '/programador/delivery', icon: Truck, badge: 'Envíos' },
-        { label: 'Gestión de Productos', href: '/dueno/productos', icon: Package, badge: 'Inventario' },
-        { label: 'Categorías', href: '/programador/categorias', icon: Layers, badge: 'Catálogo' },
-        { label: 'Dueños de Tienda', href: '/programador/duenos', icon: Users, badge: 'Gestión' },
-        { label: 'Registro de Empleados', href: '/dueno/empleados', icon: Briefcase },
-        { label: 'Catálogo Global', href: '/catalogo', icon: ShoppingBag },
+        { label: t('nav_dashboard_programmer', 'Centro de Comando'), href: '/programador/dashboard', icon: LayoutDashboard },
+        { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: 'En Vivo' },
+        { label: t('nav_delivery', 'Empresas de Delivery'), href: '/programador/delivery', icon: Truck, badge: 'Envíos' },
+        { label: t('nav_products', 'Gestión de Productos'), href: '/dueno/productos', icon: Package, badge: 'Inventario' },
+        { label: t('nav_categories', 'Categorías'), href: '/programador/categorias', icon: Layers, badge: 'Catálogo' },
+        { label: t('nav_owners', 'Dueños de Tienda'), href: '/programador/duenos', icon: Users, badge: 'Gestión' },
+        { label: t('nav_employees', 'Registro de Empleados'), href: '/dueno/empleados', icon: Briefcase },
+        { label: t('nav_catalog', 'Catálogo Global'), href: '/catalogo', icon: ShoppingBag },
+        { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/programador/ajustes', icon: Settings },
       ];
     }
     if (role === 'owner') {
       return [
-        { label: 'Panel Ejecutivo', href: '/dueno/dashboard', icon: LayoutDashboard },
-        { label: 'Gestión de Productos', href: '/dueno/productos', icon: Package, badge: 'Inventario' },
-        { label: 'Categorías', href: '/dueno/categorias', icon: Layers, badge: 'Catálogo' },
-        { label: 'Gestión de Empleados', href: '/dueno/empleados', icon: Users, badge: 'Áreas' },
-        { label: 'Catálogo de Productos', href: '/catalogo', icon: ShoppingBag },
+        { label: t('nav_dashboard_owner', 'Panel Ejecutivo'), href: '/dueno/dashboard', icon: LayoutDashboard },
+        { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: 'En Vivo' },
+        { label: t('nav_products', 'Gestión de Productos'), href: '/dueno/productos', icon: Package, badge: 'Inventario' },
+        { label: t('nav_categories', 'Categorías'), href: '/dueno/categorias', icon: Layers, badge: 'Catálogo' },
+        { label: t('nav_employees', 'Gestión de Empleados'), href: '/dueno/empleados', icon: Users, badge: 'Áreas' },
+        { label: t('nav_catalog', 'Catálogo de Productos'), href: '/catalogo', icon: ShoppingBag },
+        { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/dueno/ajustes', icon: Settings },
       ];
     }
     return [
-      { label: 'Mi Estación', href: '/empleado/dashboard', icon: LayoutDashboard },
-      { label: 'Gestión de Productos', href: '/empleado/productos', icon: Package, badge: 'Inventario' },
-      { label: 'Catálogo de Tienda', href: '/catalogo', icon: ShoppingBag },
+      { label: t('nav_dashboard_employee', 'Mi Estación'), href: '/empleado/dashboard', icon: LayoutDashboard },
+      { label: t('nav_chat_team', 'Chat del Equipo'), href: '/empleado/chat', icon: MessageSquare, badge: 'En Vivo' },
+      { label: t('nav_products', 'Gestión de Productos'), href: '/empleado/productos', icon: Package, badge: 'Inventario' },
+      { label: t('nav_catalog', 'Catálogo de Tienda'), href: '/catalogo', icon: ShoppingBag },
+      { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/empleado/ajustes', icon: Settings },
     ];
   };
 
   const navLinks = getNavLinks();
 
-  // Si no está verificado o no está autorizado, bloquear renderizado y mostrar pantalla de seguridad
-  if (!authChecked || !isAllowed) {
+  // Mientras la autenticación inicial se resuelve
+  if (!authChecked || authLoading) {
     return (
       <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-4">
         <div className="apple-card p-8 max-w-sm w-full text-center space-y-4 border-white/[0.08] shadow-2xl animate-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-purple-500/15 border border-purple-500/25 text-purple-300 flex items-center justify-center mx-auto animate-pulse">
-            <Shield className="w-7 h-7" />
+          <div className="w-12 h-12 rounded-2xl bg-[#2997ff]/15 border border-[#2997ff]/25 text-[#2997ff] flex items-center justify-center mx-auto animate-pulse">
+            <Shield className="w-6 h-6" />
           </div>
           <h2 className="text-base font-bold text-white tracking-tight">
-            Acceso Privado Protegido
+            Cargando Estación
           </h2>
           <p className="text-xs text-[#86868b] leading-relaxed">
-            Esta sección requiere credenciales autorizadas. Verificando sesión y redirigiendo a la pantalla de acceso seguro...
+            Sincronizando credenciales de trabajo y catálogo...
           </p>
           <div className="w-6 h-6 border-2 border-[#2997ff] border-t-transparent rounded-full animate-spin mx-auto" />
         </div>
@@ -203,8 +226,39 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     );
   }
 
+  // Si no está autorizado tras verificar completamente
+  if (!isAllowed) {
+    return (
+      <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-4">
+        <div className="apple-card p-8 max-w-sm w-full text-center space-y-4 border-white/[0.08] shadow-2xl animate-fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-purple-500/15 border border-purple-500/25 text-purple-300 flex items-center justify-center mx-auto">
+            <Shield className="w-7 h-7" />
+          </div>
+          <h2 className="text-base font-bold text-white tracking-tight">
+            Acceso Privado Protegido
+          </h2>
+          <p className="text-xs text-[#86868b] leading-relaxed">
+            Esta sección requiere credenciales autorizadas. Redirigiendo al inicio de sesión seguro...
+          </p>
+          <div className="w-6 h-6 border-2 border-[#2997ff] border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="pt-2">
+            <Link
+              href={`/login?redirect=${encodeURIComponent(pathname)}`}
+              className="apple-pill-btn apple-btn-primary px-5 py-2 text-xs font-semibold inline-block"
+            >
+              Iniciar Sesión
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#000000] text-[#f5f5f7] flex flex-col selection:bg-[#2997ff]/30 selection:text-[#2997ff]">
+    <div
+      className="min-h-screen text-[#f5f5f7] flex flex-col selection:bg-[#2997ff]/30 selection:text-[#2997ff] transition-colors duration-300"
+      style={{ backgroundColor: themeConfig.previewBg }}
+    >
       {/* Banner de Modo Soporte si aplica */}
       {impersonatingOwner && (
         <div className="bg-gradient-to-r from-[#ffd60a]/20 via-[#ff9f0a]/20 to-[#ffd60a]/20 border-b border-[#ffd60a]/30 px-4 py-2 flex items-center justify-between text-xs text-[#ffd60a] z-50">
@@ -330,6 +384,16 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#2997ff] ring-2 ring-black" />
+          </button>
+
+          {/* Ajustes Rápidos del Dashboard (Tema e Idioma) */}
+          <button
+            onClick={() => setSettingsModalOpen(true)}
+            title={t('settings_title', 'Ajustes del Dashboard')}
+            className="p-2 rounded-xl text-[#86868b] hover:text-white hover:bg-white/[0.06] transition-colors relative group"
+          >
+            <Sliders className="w-4 h-4" />
+            <span className="sr-only">Ajustes</span>
           </button>
 
           {/* Indicador de  / Verificación telefónica */}
@@ -511,6 +575,9 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
       {/* Modal de Verificación Telefónica () */}
       <PhoneVerificationModal isOpen={phoneModalOpen} onClose={() => setPhoneModalOpen(false)} />
+
+      {/* Modal de Ajustes Personales (Tema e Idioma) */}
+      <DashboardSettingsModal />
     </div>
   );
 }

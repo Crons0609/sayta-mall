@@ -7,21 +7,11 @@ import {
   getReferralVisits,
   getReferralSales,
 } from '@/lib/firebase/referral';
-
-function getUserIdFromRequest(request: NextRequest): { userId: string } | null {
-  const simulatedRole = request.cookies.get('sayta_simulated_role')?.value;
-  if (!simulatedRole) return null;
-  const simulatedUsers: Record<string, { userId: string }> = {
-    programmer: { userId: 'programmer-1' },
-    owner: { userId: 'owner-1' },
-    employee: { userId: 'employee-1' },
-  };
-  return simulatedUsers[simulatedRole] ?? null;
-}
+import { getAuthenticatedUserFromRequest } from '@/lib/auth/serverAuth';
 
 export async function GET(request: NextRequest) {
   try {
-    const userInfo = getUserIdFromRequest(request);
+    const userInfo = await getAuthenticatedUserFromRequest(request);
     if (!userInfo) {
       return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
     }
@@ -61,6 +51,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[referral-link/stats]', error);
-    return NextResponse.json({ error: 'Error interno.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno obteniendo métricas.' }, { status: 500 });
   }
 }

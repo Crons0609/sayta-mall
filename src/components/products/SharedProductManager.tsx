@@ -1,7 +1,7 @@
 // src/components/products/SharedProductManager.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useBranch } from '@/providers/BranchProvider';
 import { ProductDocument, CategoryDocument } from '@/types/product.types';
@@ -34,6 +34,10 @@ import {
   Image as ImageIcon,
   Camera,
   RefreshCw,
+  RotateCcw,
+  History,
+  Barcode,
+  TriangleAlert,
 } from 'lucide-react';
 import {
   convertFileToBinaryDataUrl,
@@ -46,7 +50,16 @@ import {
   saveProductToRtdb,
   getProductsFromRtdb,
   deleteProductFromRtdb,
+  writeRtdb,
 } from '@/lib/firebase/rtdb';
+import {
+  findDuplicateProduct,
+  calculateAutomaticDiscount,
+  recordPriceHistory,
+  getProductPriceHistory,
+  normalizeProductName,
+  PriceHistoryRecord,
+} from '@/lib/products/pricingEngine';
 
 // Categorías iniciales comunes
 const DEFAULT_CATEGORIES = [
@@ -103,6 +116,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
 
   // Formulario Producto
   const [formName, setFormName] = useState('');
+  const [formSku, setFormSku] = useState('');
   const [formCategory, setFormCategory] = useState(DEFAULT_CATEGORIES[0]);
   const [formPrice, setFormPrice] = useState<number | ''>('');
   const [formStock, setFormStock] = useState<number | ''>(10);
@@ -112,11 +126,22 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
   const [imageBinarySize, setImageBinarySize] = useState<number | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  
+
   // Descuento Formulario
   const [hasDiscount, setHasDiscount] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(10);
   const [discountReason, setDiscountReason] = useState('');
+
+  // Detección de duplicados y descuento automático
+  const [duplicateDetected, setDuplicateDetected] = useState<any | null>(null);
+  const [autoDiscountInfo, setAutoDiscountInfo] = useState<{ porcentaje: number; ahorro: number } | null>(null);
+  const [duplicateModalMode, setDuplicateModalMode] = useState<'lower_price' | 'higher_price' | null>(null);
+  const [pendingSavePayload, setPendingSavePayload] = useState<any | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Historial de precios
+  const [priceHistoryModal, setPriceHistoryModal] = useState<{ open: boolean; productId: string; productName: string; records: PriceHistoryRecord[] } | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Formulario Nueva Categoría
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -254,6 +279,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
   const handleOpenCreate = () => {
     setEditingProduct(null);
     setFormName('');
+    setFormSku('');
     setFormCategory(categories[0] || 'General');
     setFormPrice('');
     setFormStock(10);
@@ -264,6 +290,8 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
     setHasDiscount(false);
     setDiscountPercent(10);
     setDiscountReason('');
+    setDuplicateDetected(null);
+    setAutoDiscountInfo(null);
     setIsModalOpen(true);
   };
 
@@ -271,8 +299,9 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
   const handleOpenEdit = (product: any) => {
     setEditingProduct(product);
     setFormName(product.name || '');
+    setFormSku(product.sku || product.barcode || product.codigo || '');
     setFormCategory(product.categoryName || product.category || 'General');
-    setFormPrice(product.price ?? '');
+    setFormPrice(product.compareAtPrice || (product.price ?? ''));
     setFormStock(product.stock ?? 10);
     setFormDescription(product.description || '');
     setFormTagline(product.tagline || product.shortDescription || '');
@@ -293,10 +322,157 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
       setDiscountPercent(10);
       setDiscountReason('');
     }
+    setDuplicateDetected(null);
+    setAutoDiscountInfo(null);
     setIsModalOpen(true);
   };
 
-  // Guardar Producto
+  // Ver historial de precios
+  const handleViewHistory = async (product: any) => {
+    setLoadingHistory(true);
+    const records = await getProductPriceHistory(product.id);
+    setPriceHistoryModal({ open: true, productId: product.id, productName: product.name, records });
+    setLoadingHistory(false);
+  };
+
+  // Restaurar precio original (quitar descuento automático)
+  const handleRestoreOriginalPrice = async (product: any) => {
+    if (!product.compareAtPrice && !product.precioOriginal) {
+      showNotification('error', 'Este producto no tiene un precio original guardado para restaurar.');
+      return;
+    }
+    const originalPrice = product.compareAtPrice || product.precioOriginal;
+    const updated = {
+      ...product,
+      price: originalPrice,
+      compareAtPrice: undefined,
+      discountPercent: 0,
+      discountPrice: undefined,
+      hasDiscount: false,
+      discountStatus: 'none',
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      try { await setDoc(doc(db, 'products', product.id), updated, { merge: true }); } catch {}
+      let localItems: any[] = [];
+      try { localItems = JSON.parse(localStorage.getItem('sayta_custom_products') || '[]'); } catch {}
+      const idx = localItems.findIndex((p) => p.id === product.id);
+      if (idx >= 0) { localItems[idx] = updated; localStorage.setItem('sayta_custom_products', JSON.stringify(localItems)); }
+      window.dispatchEvent(new Event('sayta_products_updated'));
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)));
+      // Registrar en historial
+      await recordPriceHistory({
+        id: `ph_${Date.now()}`,
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
+        precioAnterior: product.price,
+        precioNuevo: originalPrice,
+        porcentajeCambio: 0,
+        tipo: 'restauracion',
+        empleadoId: user?.uid || 'local',
+        empleadoNombre: user?.displayName || user?.email || 'Empleado',
+        fecha: new Date().toISOString(),
+        motivo: 'Restauración manual del precio original',
+      });
+      // Auditoría
+      writeRtdb(`audit_logs/${Date.now()}`, { action: 'restore_price', productId: product.id, productName: product.name, by: user?.email || 'local', role: userRole, timestamp: new Date().toISOString() }).catch(() => {});
+      showNotification('success', `✅ Precio restaurado a ${formatCurrency(originalPrice, 'NIO')}. El descuento fue eliminado.`);
+    } catch (err: any) {
+      showNotification('error', 'Error al restaurar precio: ' + err.message);
+    }
+  };
+
+  // Detección de duplicados al escribir nombre o SKU
+  useEffect(() => {
+    if (!formName.trim() && !formSku.trim()) {
+      setDuplicateDetected(null);
+      setAutoDiscountInfo(null);
+      return;
+    }
+    const found = findDuplicateProduct(
+      { sku: formSku, name: formName, id: editingProduct?.id },
+      products
+    );
+    if (found) {
+      setDuplicateDetected(found);
+      if (formPrice !== '' && Number(formPrice) > 0) {
+        const existingPrice = found.compareAtPrice || found.price;
+        const result = calculateAutomaticDiscount(existingPrice, Number(formPrice));
+        setAutoDiscountInfo(result.esMenor ? { porcentaje: result.porcentaje, ahorro: result.ahorro } : null);
+      } else {
+        setAutoDiscountInfo(null);
+      }
+    } else {
+      setDuplicateDetected(null);
+      setAutoDiscountInfo(null);
+    }
+  }, [formName, formSku, formPrice, products, editingProduct?.id]);
+
+  // Función interna para persistir el producto y registrar auditoría
+  const persistProduct = async (productPayload: any, isEdit: boolean, priceChanged?: { anterior: number; nuevo: number }) => {
+    try {
+      try { await saveProductToRtdb(productPayload); } catch {}
+      try { await setDoc(doc(db, 'products', productPayload.id), productPayload, { merge: true }); } catch {}
+
+      let localItems: any[] = [];
+      try { localItems = JSON.parse(localStorage.getItem('sayta_custom_products') || '[]'); } catch {}
+      const idx = localItems.findIndex((p: any) => p.id === productPayload.id);
+      if (idx >= 0) { localItems[idx] = { ...localItems[idx], ...productPayload }; } else { localItems.unshift(productPayload); }
+      localStorage.setItem('sayta_custom_products', JSON.stringify(localItems));
+      window.dispatchEvent(new Event('sayta_products_updated'));
+
+      setProducts((prev) => {
+        const existing = prev.findIndex((p) => p.id === productPayload.id);
+        if (existing >= 0) { const next = [...prev]; next[existing] = { ...next[existing], ...productPayload }; return next; }
+        return [productPayload, ...prev];
+      });
+
+      // Registrar auditoría
+      const auditEntry = {
+        action: isEdit ? 'edit_product' : 'create_product',
+        productId: productPayload.id,
+        productName: productPayload.name,
+        sku: productPayload.sku,
+        price: productPayload.price,
+        discountPercent: productPayload.discountPercent,
+        by: user?.email || 'local',
+        byName: user?.displayName || 'Empleado',
+        role: userRole,
+        timestamp: new Date().toISOString(),
+        ...(priceChanged ? { precioAnterior: priceChanged.anterior, precioNuevo: priceChanged.nuevo } : {}),
+      };
+      writeRtdb(`audit_logs/${Date.now()}`, auditEntry).catch(() => {});
+      // También en localStorage para el programador
+      try {
+        const auditLocal = JSON.parse(localStorage.getItem('sayta_audit_logs') || '[]');
+        auditLocal.unshift(auditEntry);
+        localStorage.setItem('sayta_audit_logs', JSON.stringify(auditLocal.slice(0, 200)));
+      } catch {}
+
+      if (priceChanged) {
+        const porcentaje = Math.round(((priceChanged.anterior - priceChanged.nuevo) / priceChanged.anterior) * 10000) / 100;
+        await recordPriceHistory({
+          id: `ph_${Date.now()}`,
+          productId: productPayload.id,
+          productName: productPayload.name,
+          sku: productPayload.sku,
+          precioAnterior: priceChanged.anterior,
+          precioNuevo: priceChanged.nuevo,
+          porcentajeCambio: porcentaje,
+          tipo: 'descuento_automatico',
+          empleadoId: user?.uid || 'local',
+          empleadoNombre: user?.displayName || user?.email || 'Empleado',
+          fecha: new Date().toISOString(),
+          motivo: 'Descuento automático por precio menor detectado',
+        });
+      }
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
+  // Guardar Producto — con detección de duplicados y descuento automático
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -309,26 +485,133 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
     const stockNum = Number(formStock) || 0;
     const branchId = currentBranch?.id || 'branch-central';
     const branchName = currentBranch?.name || 'Sayta Central';
+    const isEditMode = !!editingProduct;
 
-    // Determinar estado de descuento
-    let finalDiscountStatus: 'none' | 'pending' | 'approved' | 'rejected' = 'none';
-    let discountPriceNum: number | undefined = undefined;
+    // ── Detección de Duplicado (solo al crear, no al editar el mismo producto) ──
+    if (!isEditMode) {
+      const duplicate = findDuplicateProduct({ sku: formSku, name: formName, id: undefined }, products);
+      if (duplicate) {
+        const existingOriginalPrice = duplicate.compareAtPrice || duplicate.price;
+        const discountCalc = calculateAutomaticDiscount(existingOriginalPrice, priceNum);
 
-    if (hasDiscount && discountPercent > 0) {
-      discountPriceNum = Math.round(priceNum * (1 - discountPercent / 100));
-
-      if (canAuthorizeDiscounts) {
-        // Dueño o Programador autoriza directamente
-        finalDiscountStatus = 'approved';
-      } else {
-        // Empleado requiere autorización
-        finalDiscountStatus = 'pending';
+        if (discountCalc.esMenor) {
+          // Precio nuevo < precio existente → aplicar descuento automático
+          setDuplicateModalMode('lower_price');
+          setDuplicateDetected(duplicate);
+          setAutoDiscountInfo({ porcentaje: discountCalc.porcentaje, ahorro: discountCalc.ahorro });
+          // Preparar payload para cuando el usuario confirme
+          setPendingSavePayload({ duplicate, priceNum, stockNum, branchId, branchName });
+          return; // Esperar confirmación
+        } else if (discountCalc.esMayor || discountCalc.esIgual) {
+          // Precio nuevo >= precio existente → advertir
+          setDuplicateModalMode('higher_price');
+          setDuplicateDetected(duplicate);
+          setPendingSavePayload({ duplicate, priceNum, stockNum, branchId, branchName });
+          return; // Esperar decisión del empleado
+        }
       }
     }
 
-    const productId = editingProduct?.id || `prod_${Date.now()}`;
+    await doSaveProduct(priceNum, stockNum, branchId, branchName, isEditMode);
+  };
 
-    // Procesar imagen para Firebase (Storage o Firestore como Data URL binaria)
+  // Confirmar descuento automático (modal de duplicado lower_price)
+  const handleConfirmAutoDiscount = async () => {
+    if (!pendingSavePayload || !duplicateDetected || !autoDiscountInfo) return;
+    const { duplicate, priceNum, stockNum, branchId, branchName } = pendingSavePayload;
+    const originalPrice = duplicate.compareAtPrice || duplicate.price;
+
+    setIsSaving(true);
+    try {
+      // Actualizar el producto existente con el descuento calculado
+      const updated = {
+        ...duplicate,
+        price: priceNum,
+        compareAtPrice: originalPrice,
+        discountPercent: autoDiscountInfo.porcentaje,
+        discountPrice: priceNum,
+        hasDiscount: true,
+        discountStatus: canAuthorizeDiscounts ? 'approved' : 'pending',
+        stock: stockNum > 0 ? stockNum : duplicate.stock,
+        updatedAt: new Date().toISOString(),
+        discountReason: discountReason.trim() || 'Descuento automático por bajada de precio',
+        ...(canAuthorizeDiscounts
+          ? { discountApprovedBy: { uid: user?.uid, name: user?.displayName || 'Auth', role: userRole, date: new Date().toISOString() } }
+          : { discountRequestedBy: { uid: user?.uid, name: user?.displayName || 'Empleado', role: userRole, date: new Date().toISOString() } }),
+      };
+      await persistProduct(updated, true, { anterior: originalPrice, nuevo: priceNum });
+      setDuplicateModalMode(null);
+      setDuplicateDetected(null);
+      setAutoDiscountInfo(null);
+      setPendingSavePayload(null);
+      setIsModalOpen(false);
+      showNotification('success', `✅ Descuento del ${autoDiscountInfo.porcentaje}% aplicado automáticamente a "${duplicate.name}".`);
+    } catch (err: any) {
+      showNotification('error', 'Error aplicando descuento: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Confirmar actualización de precio (modal higher_price)
+  const handleConfirmPriceUpdate = async () => {
+    if (!pendingSavePayload || !duplicateDetected) return;
+    const { priceNum, stockNum, branchId, branchName } = pendingSavePayload;
+    setIsSaving(true);
+    try {
+      const updated = {
+        ...duplicateDetected,
+        price: priceNum,
+        compareAtPrice: undefined,
+        discountPercent: 0,
+        discountPrice: undefined,
+        hasDiscount: false,
+        discountStatus: 'none',
+        stock: stockNum > 0 ? stockNum : duplicateDetected.stock,
+        updatedAt: new Date().toISOString(),
+      };
+      await persistProduct(updated, true);
+      setDuplicateModalMode(null);
+      setDuplicateDetected(null);
+      setPendingSavePayload(null);
+      setIsModalOpen(false);
+      showNotification('success', `✅ Precio actualizado correctamente a ${formatCurrency(priceNum, 'NIO')}.`);
+    } catch (err: any) {
+      showNotification('error', 'Error actualizando precio: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Guardar como producto nuevo (ignorar duplicado)
+  const handleSaveAsNew = async () => {
+    if (!pendingSavePayload) return;
+    const { priceNum, stockNum, branchId, branchName } = pendingSavePayload;
+    setDuplicateModalMode(null);
+    setDuplicateDetected(null);
+    setPendingSavePayload(null);
+    await doSaveProduct(priceNum, stockNum, branchId, branchName, false, true);
+  };
+
+  // Función central de guardado
+  const doSaveProduct = async (
+    priceNum: number,
+    stockNum: number,
+    branchId: string,
+    branchName: string,
+    isEditMode: boolean,
+    forceNew = false
+  ) => {
+    setIsSaving(true);
+    let finalDiscountStatus: 'none' | 'pending' | 'approved' | 'rejected' = 'none';
+    let discountPriceNum: number | undefined;
+
+    if (hasDiscount && discountPercent > 0) {
+      discountPriceNum = Math.round(priceNum * (1 - discountPercent / 100));
+      finalDiscountStatus = canAuthorizeDiscounts ? 'approved' : 'pending';
+    }
+
+    const productId = isEditMode ? editingProduct.id : `prod_${Date.now()}`;
     let finalImageUrl = formImage || SAMPLE_IMAGES[0].url;
     let storagePath = '';
 
@@ -338,7 +621,6 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
         const uploadResult = await uploadBinaryImageToFirebase(formImage, storagePath);
         finalImageUrl = uploadResult.url;
       } catch (e) {
-        console.warn('[Firebase] Fallback directo a cadena binaria Data URL:', e);
         finalImageUrl = formImage;
       }
     }
@@ -349,6 +631,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
       branchId,
       branchName,
       name: formName.trim(),
+      sku: formSku.trim() || undefined,
       slug: formName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       category: formCategory,
       categoryName: formCategory,
@@ -370,22 +653,12 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
     };
 
     if (finalDiscountStatus === 'pending') {
-      productPayload.discountRequestedBy = {
-        uid: user?.uid || 'emp-local',
-        name: user?.displayName || user?.email || 'Empleado de Tienda',
-        role: userRole,
-        date: new Date().toISOString(),
-      };
+      productPayload.discountRequestedBy = { uid: user?.uid || 'emp-local', name: user?.displayName || user?.email || 'Empleado de Tienda', role: userRole, date: new Date().toISOString() };
     } else if (finalDiscountStatus === 'approved') {
-      productPayload.discountApprovedBy = {
-        uid: user?.uid || 'auth-local',
-        name: user?.displayName || 'Dueño/Programador',
-        role: userRole,
-        date: new Date().toISOString(),
-      };
+      productPayload.discountApprovedBy = { uid: user?.uid || 'auth-local', name: user?.displayName || 'Dueño/Programador', role: userRole, date: new Date().toISOString() };
     }
 
-    if (!editingProduct) {
+    if (!isEditMode) {
       productPayload.createdBy = user?.uid || 'user-local';
       productPayload.createdByName = user?.displayName || user?.email || 'Personal de Tienda';
       productPayload.createdByRole = userRole;
@@ -393,62 +666,19 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
     }
 
     try {
-      // 1. Guardar en Firebase Realtime Database
-      try {
-        await saveProductToRtdb(productPayload);
-      } catch (rtdbErr: any) {
-        console.warn('[SharedProductManager] RTDB sync aviso:', rtdbErr.message);
-      }
-
-      // 2. Guardar en Firestore
-      try {
-        const prodRef = doc(db, 'products', productId);
-        await setDoc(prodRef, productPayload, { merge: true });
-      } catch (err: any) {
-        console.warn('[SharedProductManager] Firestore sync fallback:', err.message);
-      }
-
-      // 2. Guardar en localStorage para sincronización instantánea local
-      let localItems: any[] = [];
-      try {
-        const stored = localStorage.getItem('sayta_custom_products');
-        if (stored) localItems = JSON.parse(stored);
-      } catch (e) {}
-
-      const idx = localItems.findIndex((p) => p.id === productId);
-      if (idx >= 0) {
-        localItems[idx] = { ...localItems[idx], ...productPayload };
-      } else {
-        localItems.unshift(productPayload);
-      }
-      localStorage.setItem('sayta_custom_products', JSON.stringify(localItems));
-
-      // Disparar evento para actualizar catálogo público si está abierto en otra ventana
-      window.dispatchEvent(new Event('sayta_products_updated'));
-
-      // Actualizar estado local reactivo
-      setProducts((prev) => {
-        const existing = prev.findIndex((p) => p.id === productId);
-        if (existing >= 0) {
-          const next = [...prev];
-          next[existing] = { ...next[existing], ...productPayload };
-          return next;
-        }
-        return [productPayload, ...prev];
-      });
-
+      const previousPrice = isEditMode ? (editingProduct.compareAtPrice || editingProduct.price) : undefined;
+      const priceActuallyChanged = isEditMode && previousPrice !== undefined && previousPrice !== priceNum;
+      await persistProduct(productPayload, isEditMode, priceActuallyChanged ? { anterior: previousPrice, nuevo: priceNum } : undefined);
       setIsModalOpen(false);
-
       if (hasDiscount && finalDiscountStatus === 'pending') {
-        showNotification(
-          'success',
-          '¡Producto guardado! El descuento del ' + discountPercent + '% quedó en espera de autorización del Dueño o Programador.'
-        );
+        showNotification('success', `¡Producto guardado! El descuento del ${discountPercent}% quedó en espera de autorización.`);
       } else {
-        showNotification('success', '¡Producto guardado exitosamente en el catálogo!');
+        showNotification('success', isEditMode ? '¡Producto actualizado exitosamente!' : '¡Producto publicado en el catálogo!');
       }
     } catch (err: any) {
       showNotification('error', 'Error guardando producto: ' + err.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -541,32 +771,34 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
     }
   };
 
-  // Eliminar producto
-  const handleDeleteProduct = async (productId: string) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este producto del inventario?')) return;
+  // Eliminar producto (soft delete si hay pedidos, hard delete si no)
+  const handleDeleteProduct = async (product: any) => {
+    if (!window.confirm(`¿Seguro que deseas eliminar "${product.name}" del inventario? Esta acción es irreversible si el producto no tiene pedidos asociados.`)) return;
 
     try {
-      try {
-        await deleteProductFromRtdb(productId);
-      } catch (e) {}
-
-      try {
-        const prodRef = doc(db, 'products', productId);
-        await deleteDoc(prodRef);
-      } catch (e) {}
+      // Soft delete: marcar como eliminado en lugar de borrar físicamente
+      const softDeleted = { ...product, status: 'inactive', isDeleted: true, deletedAt: new Date().toISOString(), deletedBy: user?.email || 'local' };
+      try { await setDoc(doc(db, 'products', product.id), softDeleted, { merge: true }); } catch {}
+      try { await deleteProductFromRtdb(product.id); } catch {}
 
       let localItems: any[] = [];
-      try {
-        const stored = localStorage.getItem('sayta_custom_products');
-        if (stored) localItems = JSON.parse(stored);
-      } catch (e) {}
-      localItems = localItems.filter((p) => p.id !== productId);
+      try { localItems = JSON.parse(localStorage.getItem('sayta_custom_products') || '[]'); } catch {}
+      localItems = localItems.filter((p) => p.id !== product.id);
       localStorage.setItem('sayta_custom_products', JSON.stringify(localItems));
 
       window.dispatchEvent(new Event('sayta_products_updated'));
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
 
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      showNotification('success', 'Producto eliminado correctamente.');
+      // Auditoría de eliminación
+      const auditEntry = { action: 'delete_product', productId: product.id, productName: product.name, by: user?.email || 'local', byName: user?.displayName || 'Empleado', role: userRole, timestamp: new Date().toISOString() };
+      writeRtdb(`audit_logs/${Date.now()}`, auditEntry).catch(() => {});
+      try {
+        const auditLocal = JSON.parse(localStorage.getItem('sayta_audit_logs') || '[]');
+        auditLocal.unshift(auditEntry);
+        localStorage.setItem('sayta_audit_logs', JSON.stringify(auditLocal.slice(0, 200)));
+      } catch {}
+
+      showNotification('success', `"${product.name}" eliminado correctamente del inventario.`);
     } catch (err: any) {
       showNotification('error', 'Error eliminando producto.');
     }
@@ -946,16 +1178,32 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
                   </div>
 
                   {/* Botones de acción */}
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     <button
                       onClick={() => handleOpenEdit(p)}
-                      className="flex-1 py-1.5 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-colors border border-white/[0.06]"
+                      className="flex-1 min-w-0 py-1.5 px-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-semibold text-white flex items-center justify-center gap-1 transition-colors border border-white/[0.06]"
                     >
-                      <Edit2 className="w-3.5 h-3.5 text-[#2997ff]" />
-                      <span>Editar</span>
+                      <Edit2 className="w-3.5 h-3.5 text-[#2997ff] shrink-0" />
+                      <span className="truncate">Editar</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteProduct(p.id)}
+                      onClick={() => handleViewHistory(p)}
+                      className="p-2 rounded-xl bg-white/[0.04] hover:bg-purple-500/20 text-[#86868b] hover:text-purple-300 transition-colors border border-white/[0.06]"
+                      title="Historial de precios"
+                    >
+                      <History className="w-3.5 h-3.5" />
+                    </button>
+                    {(p.compareAtPrice || p.precioOriginal) && p.discountStatus !== 'none' && (
+                      <button
+                        onClick={() => handleRestoreOriginalPrice(p)}
+                        className="p-2 rounded-xl bg-white/[0.04] hover:bg-[#ffd60a]/20 text-[#86868b] hover:text-[#ffd60a] transition-colors border border-white/[0.06]"
+                        title="Restaurar precio original"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteProduct(p)}
                       className="p-2 rounded-xl bg-white/[0.04] hover:bg-[#ff453a]/20 text-[#86868b] hover:text-[#ff453a] transition-colors border border-white/[0.06]"
                       title="Eliminar producto"
                     >
@@ -995,17 +1243,48 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
 
             <form onSubmit={handleSaveProduct} className="space-y-5">
               {/* Nombre del Producto */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white block">Nombre del Producto *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Taladro Percutor 21V con Maletín y Brocas"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  className="w-full bg-black/50 border border-white/[0.1] rounded-2xl px-4 py-3 text-sm text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-white block">Nombre del Producto *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Taladro Percutor 21V con Maletín y Brocas"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="w-full bg-black/50 border border-white/[0.1] rounded-2xl px-4 py-3 text-sm text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-white block flex items-center gap-1.5">
+                    <Barcode className="w-3.5 h-3.5 text-[#86868b]" />
+                    Código SKU / Referencia
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. TAL-21V-001"
+                    value={formSku}
+                    onChange={(e) => setFormSku(e.target.value)}
+                    className="w-full bg-black/50 border border-white/[0.1] rounded-2xl px-4 py-3 text-sm text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] font-mono"
+                  />
+                  <p className="text-[10px] text-[#6e6e73]">Identificador único para detectar duplicados con precisión</p>
+                </div>
               </div>
+              {/* Alerta de duplicado detectado (en tiempo real) */}
+              {duplicateDetected && !duplicateModalMode && (
+                <div className="p-3 rounded-xl bg-[#ffd60a]/10 border border-[#ffd60a]/30 flex items-start gap-2.5 animate-fade-in">
+                  <TriangleAlert className="w-4 h-4 text-[#ffd60a] shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="font-bold text-[#ffd60a]">Producto similar detectado: "{duplicateDetected.name}"</p>
+                    <p className="text-[#86868b] mt-0.5">
+                      Precio existente: <span className="text-white font-mono">{formatCurrency(duplicateDetected.compareAtPrice || duplicateDetected.price, 'NIO')}</span>
+                      {autoDiscountInfo && (
+                        <span className="ml-2 text-[#30d158] font-semibold">→ Se aplicará -{autoDiscountInfo.porcentaje}% al guardar</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Categoría y Stock */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1325,12 +1604,191 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
                 </button>
                 <button
                   type="submit"
-                  className="apple-pill-btn apple-btn-primary px-6 py-2.5 text-xs font-semibold shadow-lg shadow-[#0071e3]/20"
+                  disabled={isSaving}
+                  className="apple-pill-btn apple-btn-primary px-6 py-2.5 text-xs font-semibold shadow-lg shadow-[#0071e3]/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {isSaving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   {editingProduct ? 'Guardar Cambios' : 'Publicar Producto'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL CONFIRMACIÓN DUPLICADO: PRECIO MENOR → DESCUENTO AUTOMÁTICO ─── */}
+      {duplicateModalMode === 'lower_price' && duplicateDetected && autoDiscountInfo && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-md apple-card p-6 bg-[#161617] border-[#ffd60a]/30 rounded-3xl shadow-2xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#ffd60a]/15 flex items-center justify-center shrink-0">
+                <Percent className="w-6 h-6 text-[#ffd60a]" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Descuento Automático Detectado</h3>
+                <p className="text-xs text-[#86868b] mt-0.5">Este producto ya existe en el inventario</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/50 border border-white/[0.08] space-y-3">
+              <div className="flex items-center gap-3">
+                <img
+                  src={duplicateDetected.image || duplicateDetected.images?.[0]?.url || SAMPLE_IMAGES[0].url}
+                  alt={duplicateDetected.name}
+                  className="w-14 h-14 rounded-xl object-cover border border-white/10"
+                />
+                <div>
+                  <p className="text-sm font-bold text-white">{duplicateDetected.name}</p>
+                  <p className="text-xs text-[#86868b]">{duplicateDetected.categoryName || duplicateDetected.category}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2.5 rounded-xl bg-white/[0.03]">
+                  <div className="text-[#86868b] text-[10px]">Precio original</div>
+                  <div className="font-mono font-bold text-white mt-0.5">{formatCurrency(duplicateDetected.compareAtPrice || duplicateDetected.price, 'NIO')}</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white/[0.03]">
+                  <div className="text-[#86868b] text-[10px]">Precio nuevo</div>
+                  <div className="font-mono font-bold text-[#30d158] mt-0.5">{formatCurrency(pendingSavePayload?.priceNum, 'NIO')}</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-[#ff3b30]/10 border border-[#ff3b30]/20">
+                  <div className="text-[#86868b] text-[10px]">Descuento</div>
+                  <div className="font-bold text-[#ff3b30] text-base mt-0.5">-{autoDiscountInfo.porcentaje}%</div>
+                </div>
+              </div>
+              <p className="text-xs text-[#86868b] leading-relaxed">
+                El sistema actualizará el precio de <strong className="text-white">"{duplicateDetected.name}"</strong> y conservará el precio original como referencia. Se guardará un registro en el historial de precios.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDuplicateModalMode(null); setDuplicateDetected(null); setPendingSavePayload(null); }}
+                className="flex-1 py-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-[#86868b] hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveAsNew}
+                className="flex-1 py-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-white transition-colors border border-white/[0.08]"
+              >
+                Crear como Nuevo
+              </button>
+              <button
+                onClick={handleConfirmAutoDiscount}
+                disabled={isSaving}
+                className="flex-1 py-2.5 rounded-2xl bg-[#ffd60a] hover:bg-[#ffd60a]/90 text-black text-xs font-bold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60"
+              >
+                {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Aplicar -{autoDiscountInfo.porcentaje}%
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL ADVERTENCIA DUPLICADO: PRECIO MAYOR O IGUAL ─── */}
+      {duplicateModalMode === 'higher_price' && duplicateDetected && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-md apple-card p-6 bg-[#161617] border-[#2997ff]/30 rounded-3xl shadow-2xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#2997ff]/15 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-6 h-6 text-[#2997ff]" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Producto ya registrado</h3>
+                <p className="text-xs text-[#86868b] mt-0.5">¿Qué deseas hacer?</p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-black/50 border border-white/[0.08] space-y-2">
+              <p className="text-xs text-[#86868b]">
+                Ya existe <strong className="text-white">"{duplicateDetected.name}"</strong> con precio{' '}
+                <span className="font-mono text-white">{formatCurrency(duplicateDetected.compareAtPrice || duplicateDetected.price, 'NIO')}</span>.
+                El precio nuevo <span className="font-mono text-[#ffd60a]">{formatCurrency(pendingSavePayload?.priceNum, 'NIO')}</span> es mayor o igual.
+              </p>
+              <p className="text-xs text-[#86868b]">Si actualizas el precio, se registrará el cambio en el historial y se eliminará cualquier descuento previo.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDuplicateModalMode(null); setDuplicateDetected(null); setPendingSavePayload(null); }}
+                className="flex-1 py-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-[#86868b] hover:text-white"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveAsNew}
+                className="flex-1 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-xs font-semibold text-white hover:bg-white/[0.1]"
+              >
+                Crear como Nuevo
+              </button>
+              <button
+                onClick={handleConfirmPriceUpdate}
+                disabled={isSaving}
+                className="flex-1 py-2.5 rounded-2xl bg-[#2997ff] hover:bg-[#2997ff]/90 text-white text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
+              >
+                {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Actualizar Precio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL HISTORIAL DE PRECIOS ─── */}
+      {priceHistoryModal?.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-lg apple-card p-6 bg-[#161617] border-white/[0.1] rounded-3xl shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <div className="flex items-center gap-2.5">
+                <History className="w-4 h-4 text-purple-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-white">Historial de Precios</h3>
+                  <p className="text-[11px] text-[#86868b]">{priceHistoryModal.productName}</p>
+                </div>
+              </div>
+              <button onClick={() => setPriceHistoryModal(null)} className="p-1.5 rounded-full bg-white/[0.04] text-[#86868b] hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+              {loadingHistory ? (
+                <div className="text-center py-8 text-[#86868b] text-xs">Cargando historial...</div>
+              ) : priceHistoryModal.records.length === 0 ? (
+                <div className="text-center py-8">
+                  <History className="w-8 h-8 text-[#86868b] mx-auto mb-2" />
+                  <p className="text-xs text-[#86868b]">Sin historial de cambios de precio registrado aún.</p>
+                </div>
+              ) : (
+                priceHistoryModal.records.map((record, i) => (
+                  <div key={record.id || i} className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        record.tipo === 'descuento_automatico' ? 'bg-[#ff3b30]/15 text-[#ff3b30]' :
+                        record.tipo === 'restauracion' ? 'bg-[#30d158]/15 text-[#30d158]' :
+                        record.tipo === 'creacion' ? 'bg-[#2997ff]/15 text-[#2997ff]' :
+                        'bg-white/[0.08] text-white'
+                      }`}>
+                        {record.tipo === 'descuento_automatico' ? '🔻 Descuento Auto' :
+                         record.tipo === 'restauracion' ? '🔄 Restaurado' :
+                         record.tipo === 'creacion' ? '🆕 Creación' : '✏️ Ajuste'}
+                      </span>
+                      <span className="text-[10px] text-[#6e6e73]">{new Date(record.fecha).toLocaleString('es-NI')}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="font-mono text-[#86868b] line-through">{formatCurrency(record.precioAnterior, 'NIO')}</span>
+                      <ArrowRight className="w-3 h-3 text-[#86868b]" />
+                      <span className="font-mono font-bold text-white">{formatCurrency(record.precioNuevo, 'NIO')}</span>
+                      {record.porcentajeCambio !== 0 && (
+                        <span className={`font-bold ${record.porcentajeCambio < 0 ? 'text-[#30d158]' : 'text-[#ff453a]'}`}>
+                          {record.porcentajeCambio > 0 ? '+' : ''}{record.porcentajeCambio}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-[#6e6e73]">Por: <strong className="text-white">{record.empleadoNombre}</strong>{record.motivo && ` · ${record.motivo}`}</div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

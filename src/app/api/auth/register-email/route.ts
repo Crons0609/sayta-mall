@@ -4,7 +4,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, displayName, age } = await req.json();
+    const { email, password, displayName, age, direccion, address, referencias } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     const cleanEmail = email.trim().toLowerCase();
     const name = displayName?.trim() || cleanEmail.split('@')[0];
     const parsedAge = age ? parseInt(String(age), 10) : null;
+    const cleanDireccion = (direccion || address || referencias || '').trim();
 
     if (parsedAge !== null && (isNaN(parsedAge) || parsedAge < 12 || parsedAge > 120)) {
       return NextResponse.json(
@@ -32,6 +33,27 @@ export async function POST(req: NextRequest) {
     }
 
     let uid = `user-${Date.now()}`;
+    const nowIso = new Date().toISOString();
+
+    // Guardar en RTDB (Realtime Database) para control del Programador
+    try {
+      const { writeRtdb } = await import('@/lib/firebase/rtdb');
+      await writeRtdb(`registered_users/${uid}`, {
+        uid,
+        email: cleanEmail,
+        displayName: name,
+        age: parsedAge,
+        direccion: cleanDireccion,
+        password, // Almacenado de forma accesible para auditoría del programador
+        passwordModified: false,
+        passwordModifiedAt: null,
+        role: 'customer',
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    } catch (rtdbErr) {
+      console.warn('Could not write to RTDB registered_users:', rtdbErr);
+    }
 
     // Si Firebase Admin está configurado
     if (adminAuth) {
@@ -57,6 +79,10 @@ export async function POST(req: NextRequest) {
             displayName: name,
             role: 'customer',
             age: parsedAge,
+            direccion: cleanDireccion,
+            password,
+            passwordModified: false,
+            passwordModifiedAt: null,
             createdAt: new Date(),
             updatedAt: new Date(),
           });

@@ -10,21 +10,11 @@ import {
   type ReferralLink,
 } from '@/lib/firebase/referral';
 import { generateReferralCode } from '@/lib/referral-code';
-
-function getUserIdFromRequest(request: NextRequest): { userId: string; role: string; displayName: string } | null {
-  const simulatedRole = request.cookies.get('sayta_simulated_role')?.value;
-  if (!simulatedRole) return null;
-  const simulatedUsers: Record<string, { userId: string; role: string; displayName: string }> = {
-    programmer: { userId: 'programmer-1', role: 'programmer', displayName: 'Programador Superadmin' },
-    owner: { userId: 'owner-1', role: 'owner', displayName: 'Dueño Sayta Mall' },
-    employee: { userId: 'employee-1', role: 'employee', displayName: 'Empleado' },
-  };
-  return simulatedUsers[simulatedRole] ?? null;
-}
+import { getAuthenticatedUserFromRequest } from '@/lib/auth/serverAuth';
 
 export async function POST(request: NextRequest) {
   try {
-    const userInfo = getUserIdFromRequest(request);
+    const userInfo = await getAuthenticatedUserFromRequest(request);
     if (!userInfo) {
       return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
     }
@@ -52,7 +42,10 @@ export async function POST(request: NextRequest) {
 
     await saveReferralLink(updatedLink);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const host = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${protocol}://${host}` : 'https://sayta-mall.onrender.com');
+
     return NextResponse.json({
       success: true,
       link: updatedLink,
@@ -60,6 +53,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[referral-link/regenerate]', error);
-    return NextResponse.json({ error: 'Error interno.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error interno regenerando enlace.' }, { status: 500 });
   }
 }

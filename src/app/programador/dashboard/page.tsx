@@ -8,37 +8,13 @@ import { EmployeeManager } from '@/components/dashboard/EmployeeManager';
 import { ProgrammerManager } from '@/components/dashboard/ProgrammerManager';
 import { ReferralLinkPanel } from '@/components/referral/ReferralLinkPanel';
 import { useBranch } from '@/providers/BranchProvider';
-import {
-  Code,
-  Users,
-  Server,
-  Database,
-  ShieldAlert,
-  Terminal,
-  Activity,
-  ArrowRight,
-  RefreshCw,
-  Layers,
-  Sparkles,
-  Store,
-  CheckCircle2,
-  Lock,
-  Link2,
-  Truck,
-  UserPlus,
-  Briefcase,
-  Clock,
-  Zap,
-  Copy,
-  ExternalLink,
-  CheckCheck,
-  AlertCircle,
-  Globe,
-} from 'lucide-react';
+import { Code, Users, Server, Database, ShieldAlert, Terminal, Activity, ArrowRight, RefreshCw, Layers, Sparkles, Store, CheckCircle2, Lock, Link2, Truck, UserPlus, Briefcase, Clock, Zap, Copy, ExternalLink, CheckCheck, AlertCircle, Globe } from 'lucide-react';
+import { AuditLogPanel } from '@/components/dashboard/AuditLogPanel';
+import { UsersRegistryPanel } from '@/components/dashboard/UsersRegistryPanel';
 
 export default function ProgramadorDashboardPage() {
   const { branches, branchCount } = useBranch();
-  const [activeTab, setActiveTab] = useState<'overview' | 'programmers' | 'employees' | 'system' | 'logs' | 'referral' | 'cronjobs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'programmers' | 'employees' | 'system' | 'logs' | 'referral' | 'cronjobs' | 'audit' | 'users'>('overview');
   const [pingCopied, setPingCopied] = useState(false);
   const [pingStatus, setPingStatus] = useState<'idle' | 'checking' | 'ok' | 'error'>('idle');
 
@@ -71,6 +47,7 @@ export default function ProgramadorDashboardPage() {
   };
   const [ownerCount, setOwnerCount] = useState<number>(0);
   const [programmerCount, setProgrammerCount] = useState<number>(1);
+  const [registeredUsersCount, setRegisteredUsersCount] = useState<number>(0);
 
   useEffect(() => {
     fetch('/api/owners')
@@ -90,6 +67,15 @@ export default function ProgramadorDashboardPage() {
         }
       })
       .catch((e) => console.warn('Could not fetch programmers count:', e));
+
+    fetch('/api/registered-users')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.users)) {
+          setRegisteredUsersCount(data.users.length);
+        }
+      })
+      .catch((e) => console.warn('Could not fetch registered users count:', e));
   }, []);
 
   return (
@@ -207,6 +193,28 @@ export default function ProgramadorDashboardPage() {
             Logs de Auditoría
           </button>
           <button
+            onClick={() => setActiveTab('audit')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+              activeTab === 'audit'
+                ? 'bg-[#ff9f0a] text-black font-semibold shadow-sm'
+                : 'text-[#86868b] hover:text-white'
+            }`}
+          >
+            <ShieldAlert className="w-3 h-3" />
+            Auditoría Empleados
+          </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+              activeTab === 'users'
+                ? 'bg-[#2997ff] text-white font-semibold shadow-sm'
+                : 'text-[#86868b] hover:text-white'
+            }`}
+          >
+            <Users className="w-3 h-3" />
+            Usuarios Registrados
+          </button>
+          <button
             onClick={() => setActiveTab('referral')}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'referral'
@@ -234,7 +242,7 @@ export default function ProgramadorDashboardPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Métricas del Sistema */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
               <div className="apple-card p-4">
                 <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
                   Dueños Registrados
@@ -255,6 +263,21 @@ export default function ProgramadorDashboardPage() {
                   {branchCount}
                 </span>
                 <span className="text-[11px] text-[#30d158] mt-1 block">Operativas</span>
+              </div>
+
+              <div className="apple-card p-4 ring-1 ring-[#2997ff]/20 bg-gradient-to-b from-[#2997ff]/10 to-transparent">
+                <span className="text-[11px] text-[#2997ff] uppercase tracking-wider block font-semibold">
+                  Usuarios Registrados
+                </span>
+                <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
+                  {registeredUsersCount || '...'}
+                </span>
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="text-[11px] text-[#2997ff] mt-1 block hover:underline font-medium text-left"
+                >
+                  Ver tabla y claves ›
+                </button>
               </div>
 
               <div className="apple-card p-4">
@@ -354,6 +377,54 @@ export default function ProgramadorDashboardPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Tarjeta Tabla de Usuarios & Credenciales (Exclusivo Programador) */}
+              <div className="apple-card p-6 space-y-4 md:col-span-3 bg-gradient-to-r from-purple-950/20 via-blue-950/20 to-black border-[#2997ff]/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#2997ff]/20 text-[#2997ff] flex items-center justify-center">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Directorio Central de Usuarios Registrados</span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2997ff]/15 text-[#2997ff] border border-[#2997ff]/30 uppercase">
+                          Exclusivo Programador
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-[#86868b]">
+                        Tabla con nombre, correo, edad, dirección, contraseña y control de modificaciones por mes y año.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('users')}
+                    className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-lg shadow-[#2997ff]/20"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>Ver Tabla de Usuarios ({registeredUsersCount || '...'})</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-[#86868b]">
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                    <span className="text-white font-medium block">📋 Vista en Tabla</span>
+                    <span className="text-[11px]">Diseño responsive con columnas organizadas</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                    <span className="text-white font-medium block">📅 Filtro Mes y Año</span>
+                    <span className="text-[11px]">Explora altas por fecha o período temporal</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                    <span className="text-white font-medium block">🔑 Contraseñas & Cambios</span>
+                    <span className="text-[11px]">Visualiza clave original o fecha de modificación</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                    <span className="text-white font-medium block">📍 Dirección y Edad</span>
+                    <span className="text-[11px]">Datos de perfil y entrega de todos los usuarios</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -440,6 +511,20 @@ export default function ProgramadorDashboardPage() {
               <p className="text-[#ffd60a]">[CONFIG] Default currency standard: C$ (NIO) Nicaragua.</p>
               <p className="text-[#86868b]">[AUDIT] Superadmin accessed control console.</p>
             </div>
+          </div>
+        )}
+
+        {/* Tab Auditoría de Empleados */}
+        {activeTab === 'audit' && (
+          <div className="space-y-5 animate-fade-in">
+            <AuditLogPanel />
+          </div>
+        )}
+
+        {/* Tab Usuarios Registrados */}
+        {activeTab === 'users' && (
+          <div className="space-y-5 animate-fade-in">
+            <UsersRegistryPanel />
           </div>
         )}
         {activeTab === 'referral' && (

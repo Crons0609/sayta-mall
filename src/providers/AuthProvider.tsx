@@ -136,6 +136,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(firebaseUser);
         setClaims(userClaims);
+        // Sincronizar cookies para proxy y APIs
+        document.cookie = `sayta_simulated_role=${userClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sayta_user_id=${firebaseUser.uid}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sayta_user_email=${encodeURIComponent(firebaseUser.email || '')}; path=/; max-age=604800; SameSite=Lax`;
+        if (firebaseUser.displayName) {
+          document.cookie = `sayta_user_name=${encodeURIComponent(firebaseUser.displayName)}; path=/; max-age=604800; SameSite=Lax`;
+        }
+        if (userClaims.area) {
+          document.cookie = `sayta_user_area=${encodeURIComponent(userClaims.area)}; path=/; max-age=604800; SameSite=Lax`;
+        }
       } else {
         // Verificar si existe sesión activa en cookies (por correo y contraseña)
         const getCookie = (name: string) => {
@@ -148,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const emailCookie = getCookie('sayta_user_email');
         const idCookie = getCookie('sayta_user_id');
         const areaCookie = getCookie('sayta_user_area');
+        const nameCookie = getCookie('sayta_user_name');
 
         if (roleCookie) {
           const simulatedClaims: UserClaims = {
@@ -161,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser({
             uid: idCookie || `simulated-${Date.now()}`,
             email: emailCookie || null,
-            displayName: emailCookie ? emailCookie.split('@')[0] : 'Usuario',
+            displayName: nameCookie || (emailCookie ? emailCookie.split('@')[0] : 'Colaborador'),
           } as any);
         } else {
           setUser(null);
@@ -179,8 +190,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
       await signInWithPopup(auth, provider);
-      // onAuthStateChanged manejará el resto
-      // Redirigir según el rol (después de que los claims se carguen)
     } catch (error: unknown) {
       const firebaseError = error as { code?: string };
       if (firebaseError.code !== 'auth/popup-closed-by-user') {
@@ -212,10 +221,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setClaims(userClaims);
           const token = await credential.user.getIdToken();
           document.cookie = `session=${token}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `sayta_simulated_role=${userClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `sayta_user_id=${credential.user.uid}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `sayta_user_email=${encodeURIComponent(credential.user.email || '')}; path=/; max-age=604800; SameSite=Lax`;
+          if (credential.user.displayName) {
+            document.cookie = `sayta_user_name=${encodeURIComponent(credential.user.displayName)}; path=/; max-age=604800; SameSite=Lax`;
+          }
+          if (userClaims.area) {
+            document.cookie = `sayta_user_area=${encodeURIComponent(userClaims.area)}; path=/; max-age=604800; SameSite=Lax`;
+          }
           return userClaims;
         }
       } catch (firebaseErr: any) {
-        // Fallback endpoint para cuentas creadas localmente
+        // Fallback endpoint para cuentas creadas localmente / RTDB
         const res = await fetch('/api/auth/login-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -233,7 +251,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           suspended: data.suspended === true,
         };
         setClaims(resolvedClaims);
+        setUser({
+          uid: data.userId || `emp-${Date.now()}`,
+          email: data.email || emailInput.trim(),
+          displayName: data.displayName || emailInput.trim().split('@')[0],
+        } as any);
+
         document.cookie = `sayta_simulated_role=${resolvedClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sayta_user_id=${data.userId || ''}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sayta_user_email=${encodeURIComponent(data.email || emailInput.trim())}; path=/; max-age=604800; SameSite=Lax`;
+        if (data.displayName) {
+          document.cookie = `sayta_user_name=${encodeURIComponent(data.displayName)}; path=/; max-age=604800; SameSite=Lax`;
+        }
+        if (data.area) {
+          document.cookie = `sayta_user_area=${encodeURIComponent(data.area)}; path=/; max-age=604800; SameSite=Lax`;
+        }
+        document.cookie = `session=simulated-session-${data.userId || 'user'}; path=/; max-age=604800; SameSite=Lax`;
+
         return resolvedClaims;
       }
       return null;
