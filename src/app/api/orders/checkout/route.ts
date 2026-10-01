@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { items, cliente, empresaDeliveryId, sucursalId, descuento = 0 } = body;
 
-    // -- 2. Validaciones b·sicas ----------------------------------------------
-    if (!items?.length) return NextResponse.json({ error: 'Cesta vacÌa' }, { status: 400 });
+    // -- 2. Validaciones b√°sicas ----------------------------------------------
+    if (!items?.length) return NextResponse.json({ error: 'Cesta vac√≠a' }, { status: 400 });
     if (!cliente?.nombre || !cliente?.direccion) return NextResponse.json({ error: 'Datos de entrega incompletos' }, { status: 400 });
     if (!empresaDeliveryId) return NextResponse.json({ error: 'Selecciona una empresa de delivery' }, { status: 400 });
     if (!sucursalId) return NextResponse.json({ error: 'Sucursal no especificada' }, { status: 400 });
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       empresa.nombre, empresa.whatsapp, empresa.costo_envio ?? 0
     );
 
-    // -- 5. Generar link WhatsApp para el delivery (notificaciÛn) -------------
+    // -- 5. Generar link WhatsApp para el delivery (notificaci√≥n) -------------
     const waUrl = buildWhatsAppDeliveryNotification(order, empresa, items);
 
     return NextResponse.json({

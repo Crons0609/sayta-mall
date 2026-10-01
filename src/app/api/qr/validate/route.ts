@@ -1,5 +1,5 @@
 // src/app/api/qr/validate/route.ts
-// Valida el token QR y crea una sesi髇 temporal an髇ima para el delivery.
+// Valida el token QR y crea una sesi贸n temporal an贸nima para el delivery.
 import { NextRequest, NextResponse } from 'next/server';
 import { validateQrAndCreateSession } from '@/lib/firebase/qr-tokens';
 import { getDeliveryCompanyById } from '@/lib/firebase/delivery';
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const { sucursalId, token, nombre, empresaDeliveryId } = await req.json();
 
-    if (!sucursalId || !token) return NextResponse.json({ error: 'Par醡etros incompletos' }, { status: 400 });
+    if (!sucursalId || !token) return NextResponse.json({ error: 'Par谩metros incompletos' }, { status: 400 });
     if (!nombre?.trim()) return NextResponse.json({ error: 'Por favor ingresa tu nombre' }, { status: 400 });
     if (!empresaDeliveryId) return NextResponse.json({ error: 'Selecciona tu empresa de delivery' }, { status: 400 });
 
@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('[QR Validate POST]', err);
     const code = err.message === 'QR_EXPIRADO' ? 'QR_EXPIRADO' : err.message === 'QR_INVALIDO' ? 'QR_INVALIDO' : 'ERROR';
-    const msg = code === 'QR_EXPIRADO' ? 'El c骴igo QR ha expirado. Pide uno nuevo al empleado.' 
-              : code === 'QR_INVALIDO' ? 'C骴igo QR inv醠ido o ya utilizado.' 
+    const msg = code === 'QR_EXPIRADO' ? 'El c贸digo QR ha expirado. Pide uno nuevo al empleado.' 
+              : code === 'QR_INVALIDO' ? 'C贸digo QR inv谩lido o ya utilizado.' 
               : (err.message || 'Error al validar QR');
     return NextResponse.json({ error: msg, code }, { status: 400 });
   }
