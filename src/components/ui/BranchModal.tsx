@@ -1,9 +1,7 @@
-// src/components/ui/BranchModal.tsx
-'use client';
-
 import React from 'react';
 import { useBranch } from '@/providers/BranchProvider';
 import { MapPin, X, Clock, Phone, Check, Navigation, Store } from 'lucide-react';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 interface BranchModalProps {
   isOpen: boolean;
@@ -12,6 +10,7 @@ interface BranchModalProps {
 
 export function BranchModal({ isOpen, onClose }: BranchModalProps) {
   const { branches, currentBranchId, setBranchId, branchCount } = useBranch();
+  const { t } = useLanguage();
 
   if (!isOpen || branchCount <= 1) return null;
 
@@ -37,10 +36,10 @@ export function BranchModal({ isOpen, onClose }: BranchModalProps) {
             </div>
             <div>
               <h3 className="text-base font-semibold text-white tracking-tight">
-                Selecciona tu Sucursal
+                {t('branch_select_title', 'Selecciona tu Sucursal')}
               </h3>
               <p className="text-xs text-[#86868b]">
-                Elige la tienda más cercana para ver inventario y entregas locales
+                {t('branch_select_sub', 'Elige la tienda más cercana para ver inventario y entregas locales')}
               </p>
             </div>
           </div>
@@ -69,7 +68,7 @@ export function BranchModal({ isOpen, onClose }: BranchModalProps) {
               >
                 {isSelected && (
                   <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#30d158] text-black text-[10px] font-bold">
-                    <Check className="w-3 h-3" /> Activa
+                    <Check className="w-3 h-3" /> {t('branch_active', 'Activa')}
                   </div>
                 )}
 
@@ -102,7 +101,7 @@ export function BranchModal({ isOpen, onClose }: BranchModalProps) {
                         </span>
                       )}
                       <span className="text-[#30d158] font-medium">
-                        Moneda: {branch.currency || 'NIO'} ({branch.currencySymbol || 'C$'})
+                        {t('branch_currency_label')} {branch.currency || 'NIO'} ({branch.currencySymbol || 'C$'})
                       </span>
                     </div>
                   </div>
@@ -114,7 +113,7 @@ export function BranchModal({ isOpen, onClose }: BranchModalProps) {
 
         {/* Footer */}
         <div className="p-4 bg-white/[0.02] border-t border-white/[0.06] text-center text-xs text-[#86868b]">
-          📍 El catálogo se adapta automáticamente al stock disponible en tu sucursal.
+          {t('branch_footer_note')}
         </div>
       </div>
     </div>

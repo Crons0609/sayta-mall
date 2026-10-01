@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { EmployeeRecord } from '@/data/mockEmployees';
 import { EMPLOYEE_AREAS, EMPLOYEE_AREA_LABELS, EmployeeArea } from '@/lib/constants';
 import { useBranch } from '@/providers/BranchProvider';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import {
   UserPlus,
   Search,
@@ -56,6 +57,7 @@ const FALLBACK_WORK_AREAS: WorkArea[] = [
 
 export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerProps) {
   const { branches } = useBranch();
+  const { t } = useDashboardPreferences();
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [workAreas, setWorkAreas] = useState<WorkArea[]>(FALLBACK_WORK_AREAS);
   const [loading, setLoading] = useState(true);
@@ -336,10 +338,10 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-[#2997ff]" />
-            <span>{title || 'Gestión y Registro de Empleados'}</span>
+            <span>{title || t('emp_mgr_title', 'Gestión y Registro de Empleados')}</span>
           </h2>
           <p className="text-xs sm:text-sm text-[#86868b] mt-1">
-            {subtitle || 'Da de alta empleados con correo, contraseña y área de trabajo personalizada asignada.'}
+            {subtitle || t('emp_mgr_sub', 'Da de alta empleados con correo, contraseña y área de trabajo personalizada asignada.')}
           </p>
         </div>
 
@@ -352,7 +354,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             title="Administrar y crear áreas de trabajo personalizadas"
           >
             <FolderPlus className="w-4 h-4 text-[#2997ff]" />
-            <span>Gestionar Áreas ({workAreas.length})</span>
+            <span>{t('emp_mgr_btn_areas', 'Gestionar Áreas')} ({workAreas.length})</span>
           </button>
 
           {/* Botón Nuevo Empleado */}
@@ -362,7 +364,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             className="apple-pill-btn apple-btn-primary px-4 py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{isFormOpen ? 'Ocultar Formulario' : 'Nuevo Empleado'}</span>
+            <span>{isFormOpen ? t('emp_mgr_form_cancel', 'Ocultar Formulario') : t('emp_mgr_btn_add', 'Nuevo Empleado')}</span>
           </button>
         </div>
       </div>
@@ -390,20 +392,20 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
           <div className="border-b border-white/[0.08] pb-3 flex items-center justify-between">
             <h3 className="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#ffd60a]" />
-              <span>Registrar Credenciales y Asignar Área</span>
+              <span>{t('emp_mgr_modal_new_title', 'Registrar Nuevo Empleado')}</span>
             </h3>
-            <span className="text-[11px] text-[#86868b]">Rol: Empleado con Claims de Acceso</span>
+            <span className="text-[11px] text-[#86868b]">{t('emp_mgr_modal_new_desc', 'Rol: Empleado con Claims de Acceso')}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Nombre Completo */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-[#86868b]" /> Nombre del Empleado
+                <User className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_name', 'Nombre del Empleado')}
               </label>
               <input
                 type="text"
-                placeholder="Ej. Roberto Sánchez"
+                placeholder={t('emp_mgr_form_name_ph', 'Ej. Roberto Sánchez')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
@@ -414,7 +416,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             {/* Correo Electrónico */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-[#86868b]" /> Correo Electrónico
+                <Mail className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_email', 'Correo Electrónico')}
               </label>
               <input
                 type="email"
@@ -430,20 +432,20 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-[#86868b]" /> Contraseña Inicial
+                  <Lock className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_pass', 'Contraseña Inicial')}
                 </label>
                 <button
                   type="button"
                   onClick={handleGeneratePassword}
                   className="text-[11px] text-[#2997ff] hover:underline"
                 >
-                  Generar Segura
+                  {t('emp_mgr_form_pass_gen', 'Generar Segura')}
                 </button>
               </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t('emp_mgr_form_pass_ph', 'Mínimo 6 caracteres')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -463,7 +465,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5 text-[#86868b]" /> Área de Trabajo
+                  <Briefcase className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_area', 'Área de Trabajo')}
                 </label>
                 <button
                   type="button"
@@ -517,7 +519,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             {/* Sucursal Asignada */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#86868b]" /> Sucursal Asignada
+                <MapPin className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_branch', 'Sucursal Asignada')}
               </label>
               <select
                 value={selectedBranchId}
@@ -535,7 +537,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             {/* Teléfono de Contacto (Opcional) */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-[#86868b]" /> Teléfono de Contacto
+                <Phone className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_phone', 'Teléfono de Contacto')}
               </label>
               <input
                 type="tel"
@@ -560,7 +562,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
               disabled={submitting}
               className="w-full sm:w-auto apple-pill-btn apple-btn-primary px-6 py-2.5 text-xs font-semibold disabled:opacity-50"
             >
-              {submitting ? 'Creando Empleado...' : 'Guardar y Otorgar Acceso'}
+              {submitting ? t('emp_mgr_form_saving', 'Creando Empleado...') : t('emp_mgr_form_save', 'Guardar y Otorgar Acceso')}
             </button>
           </div>
         </form>
@@ -573,7 +575,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
           <Search className="w-4 h-4 text-[#86868b] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar por nombre o correo..."
+            placeholder={t('emp_mgr_search_ph', 'Buscar por nombre o correo...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
@@ -588,7 +590,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             onChange={(e) => setSelectedAreaFilter(e.target.value)}
             className="px-3 py-2 rounded-xl bg-[#1c1c1e] border border-white/[0.08] text-xs text-white focus:outline-none"
           >
-            <option value="all">Todas las áreas</option>
+            <option value="all">{t('emp_mgr_filter_area', 'Todas las áreas')}</option>
             {workAreas.map((area) => (
               <option key={area.id} value={area.id}>
                 {area.name} {area.isCustom ? '★' : ''}
@@ -602,7 +604,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
             onChange={(e) => setSelectedBranchFilter(e.target.value)}
             className="px-3 py-2 rounded-xl bg-[#1c1c1e] border border-white/[0.08] text-xs text-white focus:outline-none"
           >
-            <option value="all">Todas las sucursales</option>
+            <option value="all">{t('emp_mgr_filter_branch', 'Todas las sucursales')}</option>
             {branches.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
@@ -702,18 +704,18 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
         <table className="w-full text-left text-xs text-[#86868b]">
           <thead className="bg-white/[0.02] border-b border-white/[0.06] text-[#f5f5f7] uppercase tracking-wider text-[11px]">
             <tr>
-              <th className="py-3.5 px-4 font-semibold">Empleado</th>
-              <th className="py-3.5 px-4 font-semibold">Área Asignada</th>
-              <th className="py-3.5 px-4 font-semibold">Sucursal</th>
-              <th className="py-3.5 px-4 font-semibold">Estado</th>
-              <th className="py-3.5 px-4 font-semibold text-right">Acciones</th>
+              <th className="py-3.5 px-4 font-semibold">{t('emp_mgr_th_employee', 'Empleado')}</th>
+              <th className="py-3.5 px-4 font-semibold">{t('emp_mgr_th_area', 'Área Asignada')}</th>
+              <th className="py-3.5 px-4 font-semibold">{t('emp_mgr_th_branch', 'Sucursal')}</th>
+              <th className="py-3.5 px-4 font-semibold">{t('emp_mgr_th_status', 'Estado')}</th>
+              <th className="py-3.5 px-4 font-semibold text-right">{t('emp_mgr_th_actions', 'Acciones')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.04]">
             {filteredEmployees.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-12 text-center text-xs text-[#6e6e73]">
-                  No se encontraron empleados registrados.
+                  {t('emp_mgr_empty_title', 'No se encontraron empleados registrados.')}
                 </td>
               </tr>
             ) : (
@@ -889,8 +891,8 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
                       <Trash2 className="w-5 h-5 text-red-400" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Eliminar Empleado</h3>
-                      <p className="text-[11px] text-[#86868b]">Esta acción es permanente</p>
+                      <h3 className="text-sm font-bold text-white">{t('emp_mgr_delete_title', 'Eliminar Empleado')}</h3>
+                      <p className="text-[11px] text-[#86868b]">{t('emp_mgr_delete_desc', 'Esta acción es permanente')}</p>
                     </div>
                   </div>
                   <button onClick={() => setDeleteConfirmId(null)} className="text-[#86868b] hover:text-white">
@@ -914,7 +916,7 @@ export function EmployeeManager({ userRole, title, subtitle }: EmployeeManagerPr
                     disabled={deleting}
                     className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 transition-colors disabled:opacity-50"
                   >
-                    {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                    {deleting ? t('emp_mgr_delete_canceling', 'Eliminando...') : t('emp_mgr_delete_confirm', 'Sí, Eliminar')}
                   </button>
                 </div>
               </div>

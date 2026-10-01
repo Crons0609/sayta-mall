@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import { readRtdb } from '@/lib/firebase/rtdb';
 import {
   ShieldAlert,
@@ -79,6 +80,7 @@ function timeAgo(timestamp: string) {
 }
 
 export function AuditLogPanel() {
+  const { t } = useDashboardPreferences();
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,9 +150,9 @@ export function AuditLogPanel() {
               Registro de Auditoría
             </span>
           </div>
-          <h2 className="text-xl font-bold text-white mt-0.5">Actividad de Empleados</h2>
+          <h2 className="text-xl font-bold text-white mt-0.5">{t('audit_mgr_title', 'Actividad de Empleados')}</h2>
           <p className="text-xs text-[#86868b] mt-0.5">
-            Todas las acciones sobre productos: crear, editar, eliminar, descuentos y restauraciones.
+            {t('audit_mgr_sub', 'Todas las acciones sobre productos: crear, editar, eliminar, descuentos y restauraciones.')}
           </p>
         </div>
         <button
@@ -159,7 +161,7 @@ export function AuditLogPanel() {
           className="shrink-0 px-4 py-2 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-white flex items-center gap-2 transition-all disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#2997ff]' : 'text-[#86868b]'}`} />
-          Actualizar
+          {t('users_reg_btn_refresh', 'Actualizar')}
         </button>
       </div>
 
@@ -194,7 +196,7 @@ export function AuditLogPanel() {
           <Search className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar por producto, empleado o SKU..."
+            placeholder={t('audit_mgr_search_ph', 'Buscar por producto, empleado o SKU...')}
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/40 border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
@@ -213,7 +215,7 @@ export function AuditLogPanel() {
           onChange={(e) => { setActionFilter(e.target.value); setPage(0); }}
           className="bg-black/40 border border-white/[0.1] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#2997ff]"
         >
-          <option value="all">Todas las acciones</option>
+          <option value="all">{t('audit_mgr_filter_all', 'Todas las acciones')}</option>
           <option value="create_product">Solo creaciones</option>
           <option value="edit_product">Solo ediciones</option>
           <option value="delete_product">Solo eliminaciones</option>
@@ -231,7 +233,7 @@ export function AuditLogPanel() {
       ) : paginated.length === 0 ? (
         <div className="p-12 text-center apple-card rounded-3xl border-white/[0.06]">
           <ShieldAlert className="w-8 h-8 text-[#86868b] mx-auto mb-3" />
-          <p className="text-sm font-semibold text-white">Sin registros de auditoría</p>
+          <p className="text-sm font-semibold text-white">{t('audit_mgr_empty', 'Sin registros de auditoría')}</p>
           <p className="text-xs text-[#86868b] mt-1">
             Las acciones de los empleados aparecerán aquí automáticamente.
           </p>
@@ -262,7 +264,7 @@ export function AuditLogPanel() {
                     </span>
                     {log.role && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.06] text-[#86868b]">
-                        {log.role === 'employee' ? 'Empleado' : log.role === 'owner' ? 'Dueño' : 'Programador'}
+                        {log.role === 'employee' ? t('role_employee', 'Empleado') : log.role === 'owner' ? t('role_owner', 'Dueño') : t('role_programmer', 'Programador')}
                       </span>
                     )}
                   </div>

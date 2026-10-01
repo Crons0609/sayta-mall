@@ -8,13 +8,17 @@ import { EmployeeManager } from '@/components/dashboard/EmployeeManager';
 import { ProgrammerManager } from '@/components/dashboard/ProgrammerManager';
 import { ReferralLinkPanel } from '@/components/referral/ReferralLinkPanel';
 import { useBranch } from '@/providers/BranchProvider';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import { Code, Users, Server, Database, ShieldAlert, Terminal, Activity, ArrowRight, RefreshCw, Layers, Sparkles, Store, CheckCircle2, Lock, Link2, Truck, UserPlus, Briefcase, Clock, Zap, Copy, ExternalLink, CheckCheck, AlertCircle, Globe } from 'lucide-react';
 import { AuditLogPanel } from '@/components/dashboard/AuditLogPanel';
 import { UsersRegistryPanel } from '@/components/dashboard/UsersRegistryPanel';
+import { BranchQrManager } from '@/components/qr/BranchQrManager';
+import { QrCode } from 'lucide-react';
 
 export default function ProgramadorDashboardPage() {
   const { branches, branchCount } = useBranch();
-  const [activeTab, setActiveTab] = useState<'overview' | 'programmers' | 'employees' | 'system' | 'logs' | 'referral' | 'cronjobs' | 'audit' | 'users'>('overview');
+  const { t } = useDashboardPreferences();
+  const [activeTab, setActiveTab] = useState<'overview' | 'programmers' | 'employees' | 'system' | 'logs' | 'referral' | 'cronjobs' | 'audit' | 'users' | 'qr'>('overview');
   const [pingCopied, setPingCopied] = useState(false);
   const [pingStatus, setPingStatus] = useState<'idle' | 'checking' | 'ok' | 'error'>('idle');
 
@@ -86,17 +90,17 @@ export default function ProgramadorDashboardPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2997ff]">
-                Consola Principal del Desarrollador
+                {t('prog_console_badge', 'Consola Principal del Desarrollador')}
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
                 SUPERADMIN ACCESS
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
-              Panel de Control Maestro
+              {t('prog_title', 'Panel de Control Maestro')}
             </h1>
             <p className="text-xs text-[#86868b] mt-1 max-w-2xl">
-              Monitoreo integral de Firebase Auth, gestión de programadores, roles privilegiados, invitaciones de dueños y registro de empleados.
+              {t('prog_desc', 'Monitoreo integral de Firebase Auth, gestión de programadores, roles privilegiados, invitaciones de dueños y registro de empleados.')}
             </p>
           </div>
 
@@ -106,21 +110,21 @@ export default function ProgramadorDashboardPage() {
               className="apple-pill-btn bg-white/[0.08] hover:bg-white/[0.14] text-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 border border-white/[0.1] transition-all"
             >
               <Code className="w-3.5 h-3.5 text-[#2997ff]" />
-              <span>+ Programadores</span>
+              <span>{t('prog_btn_add_prog', '+ Programadores')}</span>
             </button>
             <Link
               href="/programador/delivery"
               className="apple-pill-btn bg-white/[0.08] hover:bg-white/[0.14] text-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 border border-white/[0.1] transition-all"
             >
               <Truck className="w-3.5 h-3.5 text-[#30d158]" />
-              <span>Delivery</span>
+              <span>{t('prog_btn_delivery', 'Delivery')}</span>
             </Link>
             <Link
               href="/programador/duenos"
               className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-[#2997ff]/20"
             >
               <Users className="w-4 h-4" />
-              <span>Dueños</span>
+              <span>{t('prog_btn_owners', 'Dueños')}</span>
             </Link>
           </div>
         </div>
@@ -135,7 +139,7 @@ export default function ProgramadorDashboardPage() {
                 : 'text-[#86868b] hover:text-white'
             }`}
           >
-            Resumen General
+            {t('prog_tab_overview', 'Resumen General')}
           </button>
           <button
             onClick={() => setActiveTab('programmers')}
@@ -146,21 +150,21 @@ export default function ProgramadorDashboardPage() {
             }`}
           >
             <Code className="w-3.5 h-3.5 text-[#2997ff]" />
-            <span>Equipo de Programadores ({programmerCount})</span>
+            <span>{t('prog_tab_programmers', 'Equipo de Programadores')} ({programmerCount})</span>
           </button>
           <Link
             href="/programador/duenos"
             className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 text-[#86868b] hover:text-white hover:bg-white/[0.04] flex items-center gap-1.5"
           >
             <Users className="w-3.5 h-3.5 text-[#2997ff]" />
-            <span>Jefes & Dueños</span>
+            <span>{t('prog_tab_owners', 'Jefes & Dueños')}</span>
           </Link>
           <Link
             href="/programador/delivery"
             className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 text-[#86868b] hover:text-white hover:bg-white/[0.04] flex items-center gap-1.5"
           >
             <Truck className="w-3.5 h-3.5 text-[#30d158]" />
-            <span>Empresas de Delivery</span>
+            <span>{t('prog_tab_delivery', 'Empresas de Delivery')}</span>
           </Link>
           <button
             onClick={() => setActiveTab('employees')}
@@ -170,7 +174,7 @@ export default function ProgramadorDashboardPage() {
                 : 'text-[#86868b] hover:text-white'
             }`}
           >
-            Trabajadores & Empleados
+            {t('prog_tab_staff', 'Trabajadores & Empleados')}
           </button>
           <button
             onClick={() => setActiveTab('system')}
@@ -180,7 +184,7 @@ export default function ProgramadorDashboardPage() {
                 : 'text-[#86868b] hover:text-white'
             }`}
           >
-            Estado del Sistema
+            {t('prog_tab_system', 'Estado del Sistema')}
           </button>
           <button
             onClick={() => setActiveTab('logs')}
@@ -190,7 +194,7 @@ export default function ProgramadorDashboardPage() {
                 : 'text-[#86868b] hover:text-white'
             }`}
           >
-            Logs de Auditoría
+            {t('prog_tab_logs', 'Logs de Auditoría')}
           </button>
           <button
             onClick={() => setActiveTab('audit')}
@@ -201,7 +205,7 @@ export default function ProgramadorDashboardPage() {
             }`}
           >
             <ShieldAlert className="w-3 h-3" />
-            Auditoría Empleados
+            {t('prog_tab_audit_staff', 'Auditoría Empleados')}
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -212,7 +216,7 @@ export default function ProgramadorDashboardPage() {
             }`}
           >
             <Users className="w-3 h-3" />
-            Usuarios Registrados
+            {t('prog_tab_users', 'Usuarios Registrados')}
           </button>
           <button
             onClick={() => setActiveTab('referral')}
@@ -223,7 +227,7 @@ export default function ProgramadorDashboardPage() {
             }`}
           >
             <Link2 className="w-3 h-3" />
-            Mi Enlace Referido
+            {t('prog_tab_referral', 'Mi Enlace Referido')}
           </button>
           <button
             onClick={() => setActiveTab('cronjobs')}
@@ -234,7 +238,18 @@ export default function ProgramadorDashboardPage() {
             }`}
           >
             <Clock className="w-3 h-3" />
-            Cron Jobs
+            {t('prog_tab_cronjobs', 'Cron Jobs')}
+          </button>
+          <button
+            onClick={() => setActiveTab('qr')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+              activeTab === 'qr'
+                ? 'bg-[#30d158] text-black font-semibold shadow-sm shadow-[#30d158]/20'
+                : 'text-[#86868b] hover:text-white'
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5 text-[#30d158]" />
+            {t('prog_tab_qr_branch', 'Códigos QR Sucursal')}
           </button>
         </div>
 
@@ -245,29 +260,29 @@ export default function ProgramadorDashboardPage() {
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
               <div className="apple-card p-4">
                 <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
-                  Dueños Registrados
+                  {t('prog_stat_owners', 'Dueños Registrados')}
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
                   {ownerCount}
                 </span>
                 <Link href="/programador/duenos" className="text-[11px] text-[#2997ff] mt-1 block hover:underline">
-                  Ver directorio ›
+                  {t('prog_stat_owners_link', 'Ver directorio ›')}
                 </Link>
               </div>
 
               <div className="apple-card p-4">
                 <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
-                  Sucursales Activas
+                  {t('prog_stat_branches', 'Sucursales Activas')}
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
                   {branchCount}
                 </span>
-                <span className="text-[11px] text-[#30d158] mt-1 block">Operativas</span>
+                <span className="text-[11px] text-[#30d158] mt-1 block">{t('prog_stat_branches_sub', 'Operativas')}</span>
               </div>
 
               <div className="apple-card p-4 ring-1 ring-[#2997ff]/20 bg-gradient-to-b from-[#2997ff]/10 to-transparent">
                 <span className="text-[11px] text-[#2997ff] uppercase tracking-wider block font-semibold">
-                  Usuarios Registrados
+                  {t('prog_stat_users', 'Usuarios Registrados')}
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
                   {registeredUsersCount || '...'}
@@ -276,26 +291,26 @@ export default function ProgramadorDashboardPage() {
                   onClick={() => setActiveTab('users')}
                   className="text-[11px] text-[#2997ff] mt-1 block hover:underline font-medium text-left"
                 >
-                  Ver tabla y claves ›
+                  {t('prog_stat_users_link', 'Ver tabla y claves ›')}
                 </button>
               </div>
 
               <div className="apple-card p-4">
                 <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
-                  Firebase Admin SDK
+                  {t('prog_stat_firebase', 'Firebase Admin SDK')}
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-[#30d158] mt-1 block">
-                  Conectado
+                  {t('prog_stat_firebase_status', 'Conectado')}
                 </span>
                 <span className="text-[11px] text-[#86868b] mt-1 block">Claims & Auth API</span>
               </div>
 
               <div className="apple-card p-4">
                 <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
-                  Seguridad de Roles
+                  {t('prog_stat_roles', 'Seguridad de Roles')}
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
-                  Activa
+                  {t('prog_stat_roles_status', 'Activa')}
                 </span>
                 <span className="text-[11px] text-[#2997ff] mt-1 block">Proxy Middleware</span>
               </div>
@@ -310,19 +325,19 @@ export default function ProgramadorDashboardPage() {
                     <Code className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Equipo de Programadores</h3>
-                    <p className="text-[11px] text-[#86868b]">Alta de desarrolladores con credenciales</p>
+                    <h3 className="text-sm font-bold text-white">{t('prog_card_prog_title', 'Equipo de Programadores')}</h3>
+                    <p className="text-[11px] text-[#86868b]">{t('prog_card_prog_sub', 'Alta de desarrolladores con credenciales')}</p>
                   </div>
                 </div>
                 <p className="text-xs text-[#86868b] leading-relaxed">
-                  Crea y administra accesos de programadores con contraseñas seguras y roles especializados para colaborar en la administración de la plataforma.
+                  {t('prog_card_prog_desc', 'Crea y administra accesos de programadores.')}
                 </p>
                 <div className="pt-2">
                   <button
                     onClick={() => setActiveTab('programmers')}
                     className="inline-flex items-center gap-2 text-xs font-semibold text-purple-400 hover:underline"
                   >
-                    <span>Gestionar Programadores ({programmerCount})</span>
+                    <span>{t('prog_card_prog_btn', 'Gestionar Programadores')} ({programmerCount})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -335,19 +350,19 @@ export default function ProgramadorDashboardPage() {
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Directorio de Dueños</h3>
-                    <p className="text-[11px] text-[#86868b]">Control de franquicias y tiendas</p>
+                    <h3 className="text-sm font-bold text-white">{t('prog_card_owners_title', 'Directorio de Dueños')}</h3>
+                    <p className="text-[11px] text-[#86868b]">{t('prog_card_owners_sub', 'Control de franquicias y tiendas')}</p>
                   </div>
                 </div>
                 <p className="text-xs text-[#86868b] leading-relaxed">
-                  Genera invitaciones con token único de 7 días, activa el modo soporte para inspeccionar la tienda como el dueño, o revoca credenciales de manera auditada.
+                  {t('prog_card_owners_desc', 'Genera invitaciones con token único de 7 días.')}
                 </p>
                 <div className="pt-2">
                   <Link
                     href="/programador/duenos"
                     className="inline-flex items-center gap-2 text-xs font-semibold text-[#2997ff] hover:underline"
                   >
-                    <span>Ir a Dueños ({ownerCount})</span>
+                    <span>{t('prog_card_owners_btn', 'Ir a Dueños')} ({ownerCount})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -360,19 +375,19 @@ export default function ProgramadorDashboardPage() {
                     <Briefcase className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Registro de Empleados</h3>
-                    <p className="text-[11px] text-[#86868b]">Altas directas con área personalizada</p>
+                    <h3 className="text-sm font-bold text-white">{t('prog_card_emp_title', 'Registro de Empleados')}</h3>
+                    <p className="text-[11px] text-[#86868b]">{t('prog_card_emp_sub', 'Altas directas con área personalizada')}</p>
                   </div>
                 </div>
                 <p className="text-xs text-[#86868b] leading-relaxed">
-                  Crea credenciales operativas asignando áreas de trabajo estándar o personalizadas por ti para una mejor administración.
+                  {t('prog_card_emp_desc', 'Crea credenciales operativas asignando áreas de trabajo.')}
                 </p>
                 <div className="pt-2">
                   <button
                     onClick={() => setActiveTab('employees')}
                     className="inline-flex items-center gap-2 text-xs font-semibold text-[#30d158] hover:underline"
                   >
-                    <span>Abrir Módulo de Empleados</span>
+                    <span>{t('prog_card_emp_btn', 'Abrir Módulo de Empleados')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -387,13 +402,13 @@ export default function ProgramadorDashboardPage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <span>Directorio Central de Usuarios Registrados</span>
+                        <span>{t('prog_card_users_title', 'Directorio Central de Usuarios Registrados')}</span>
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2997ff]/15 text-[#2997ff] border border-[#2997ff]/30 uppercase">
-                          Exclusivo Programador
+                          {t('prog_card_users_badge', 'Exclusivo Programador')}
                         </span>
                       </h3>
                       <p className="text-[11px] text-[#86868b]">
-                        Tabla con nombre, correo, edad, dirección, contraseña y control de modificaciones por mes y año.
+                        {t('prog_card_users_sub', 'Tabla con nombre, correo, edad, dirección, contraseña y control de modificaciones.')}
                       </p>
                     </div>
                   </div>
@@ -402,26 +417,26 @@ export default function ProgramadorDashboardPage() {
                     className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-lg shadow-[#2997ff]/20"
                   >
                     <Users className="w-4 h-4" />
-                    <span>Ver Tabla de Usuarios ({registeredUsersCount || '...'})</span>
+                    <span>{t('prog_card_users_btn', 'Ver Tabla de Usuarios')} ({registeredUsersCount || '...'})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-[#86868b]">
                   <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">📋 Vista en Tabla</span>
-                    <span className="text-[11px]">Diseño responsive con columnas organizadas</span>
+                    <span className="text-white font-medium block">📋 {t('prog_card_users_feat1_title', 'Vista en Tabla')}</span>
+                    <span className="text-[11px]">{t('prog_card_users_feat1_sub', 'Diseño responsive con columnas organizadas')}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">📅 Filtro Mes y Año</span>
-                    <span className="text-[11px]">Explora altas por fecha o período temporal</span>
+                    <span className="text-white font-medium block">📅 {t('prog_card_users_feat2_title', 'Filtro Mes y Año')}</span>
+                    <span className="text-[11px]">{t('prog_card_users_feat2_sub', 'Explora altas por fecha o período temporal')}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">🔑 Contraseñas & Cambios</span>
-                    <span className="text-[11px]">Visualiza clave original o fecha de modificación</span>
+                    <span className="text-white font-medium block">🔑 {t('prog_card_users_feat3_title', 'Contraseñas & Cambios')}</span>
+                    <span className="text-[11px]">{t('prog_card_users_feat3_sub', 'Visualiza clave original o fecha de modificación')}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">📍 Dirección y Edad</span>
-                    <span className="text-[11px]">Datos de perfil y entrega de todos los usuarios</span>
+                    <span className="text-white font-medium block">📍 {t('prog_card_users_feat4_title', 'Dirección y Edad')}</span>
+                    <span className="text-[11px]">{t('prog_card_users_feat4_sub', 'Datos de perfil y entrega de todos los usuarios')}</span>
                   </div>
                 </div>
               </div>
@@ -438,11 +453,11 @@ export default function ProgramadorDashboardPage() {
 
         {/* Tab Employees */}
         {activeTab === 'employees' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <EmployeeManager
               userRole="programmer"
-              title="Consola Superadmin · Registro de Empleados"
-              subtitle="Crea correos y contraseñas de empleados para cualquier sucursal y gestiona tus propias áreas de trabajo personalizadas."
+              title={t('prog_emp_console_title', 'Consola Superadmin · Registro de Empleados')}
+              subtitle={t('prog_emp_console_sub', 'Crea correos y contraseñas de empleados para cualquier sucursal y gestiona tus propias áreas de trabajo personalizadas.')}
             />
           </div>
         )}
@@ -451,7 +466,7 @@ export default function ProgramadorDashboardPage() {
         {activeTab === 'system' && (
           <div className="space-y-4">
             <div className="apple-card p-6 space-y-4">
-              <h3 className="text-sm font-bold text-white">Arquitectura & Servicios en Tiempo Real</h3>
+              <h3 className="text-sm font-bold text-white">{t('prog_system_title', 'Arquitectura & Servicios en Tiempo Real')}</h3>
               <div className="space-y-2.5 text-xs">
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
                   <div>
@@ -459,37 +474,37 @@ export default function ProgramadorDashboardPage() {
                     <span className="text-[#86868b]">SSR, Server Components & Dynamic API Routes</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-[#30d158]/15 text-[#30d158] text-[10px] font-semibold">
-                    Saludable (200 OK)
+                    {t('prog_system_nextjs_status', 'Saludable (200 OK)')}
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
                   <div>
                     <strong className="text-white block">Firestore Database</strong>
-                    <span className="text-[#86868b]">Colecciones: users, branches, products, invitations, auditLogs</span>
+                    <span className="text-[#86868b]">{t('prog_system_firestore', 'Colecciones: users, branches, products, invitations, auditLogs')}</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-[#30d158]/15 text-[#30d158] text-[10px] font-semibold">
-                    Tiempo Real
+                    {t('prog_system_firestore_status', 'Tiempo Real')}
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
                   <div>
-                    <strong className="text-white block">Sistema de Precios Ocultos</strong>
-                    <span className="text-[#86868b]">Los precios y botones de compra son inaccesibles para visitantes sin sesión</span>
+                    <strong className="text-white block">{t('prog_system_prices', 'Sistema de Precios Ocultos')}</strong>
+                    <span className="text-[#86868b]">{t('prog_system_prices_sub', 'Los precios y botones de compra son inaccesibles para visitantes sin sesión')}</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-[#2997ff]/15 text-[#2997ff] text-[10px] font-semibold">
-                    Protegido
+                    {t('prog_system_prices_status', 'Protegido')}
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
                   <div>
-                    <strong className="text-white block">Moneda del Sistema</strong>
-                    <span className="text-[#86868b]">Córdobas Nicaragüenses (C$ / NIO) por defecto con formateo Intl</span>
+                    <strong className="text-white block">{t('prog_system_currency', 'Moneda del Sistema')}</strong>
+                    <span className="text-[#86868b]">{t('prog_system_currency_sub', 'Córdobas Nicaragüenses (C$ / NIO) por defecto con formateo Intl')}</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-[#ffd60a]/15 text-[#ffd60a] text-[10px] font-semibold">
-                    Configurado
+                    {t('prog_system_currency_status', 'Configurado')}
                   </span>
                 </div>
               </div>
@@ -502,7 +517,7 @@ export default function ProgramadorDashboardPage() {
           <div className="apple-card p-6 space-y-4">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Terminal className="w-4 h-4 text-[#2997ff]" />
-              <span>Registro de Eventos y Auditoría del Sistema</span>
+              <span>{t('prog_logs_title', 'Registro de Eventos y Auditoría del Sistema')}</span>
             </h3>
             <div className="p-4 rounded-xl bg-black font-mono text-[11px] text-[#86868b] space-y-2 border border-white/[0.08]">
               <p className="text-[#30d158]">[READY] Sayta Mall production-ready server online.</p>
@@ -530,8 +545,7 @@ export default function ProgramadorDashboardPage() {
         {activeTab === 'referral' && (
           <div className="space-y-2">
             <p className="text-xs text-[#86868b] max-w-xl">
-              Gestiona tu enlace único de atribución como desarrollador. Toda venta originada desde
-              tu enlace queda registrada automáticamente bajo tu perfil.
+              {t('prog_referral_desc', 'Gestiona tu enlace único de atribución como desarrollador.')}
             </p>
             <ReferralLinkPanel role="programmer" />
           </div>
@@ -725,7 +739,15 @@ export default function ProgramadorDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Tab Códigos QR de Sucursal */}
+        {activeTab === 'qr' && (
+          <div className="space-y-4">
+            <BranchQrManager />
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
 }
+

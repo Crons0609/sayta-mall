@@ -1,4 +1,4 @@
-// src/components/referral/ReferralLinkPanel.tsx
+﻿// src/components/referral/ReferralLinkPanel.tsx
 // Panel completo de "Mi Enlace de Referido" para todos los dashboards.
 // Compatible con roles: worker (employee), owner/admin y developer (programmer).
 
@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
+import { getAuthToken } from '@/lib/firebase/client';
 import {
   Link2,
   Copy,
@@ -96,7 +97,7 @@ export function ReferralLinkPanel({ role = 'employee', className = '' }: Referra
 
     if (user) {
       try {
-        const token = await user.getIdToken();
+        const token = await getAuthToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
       } catch {}
 
@@ -581,3 +582,4 @@ export function ReferralLinkPanel({ role = 'employee', className = '' }: Referra
     </div>
   );
 }
+

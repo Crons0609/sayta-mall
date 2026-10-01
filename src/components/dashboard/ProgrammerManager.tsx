@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import {
   Code,
   UserPlus,
@@ -33,6 +34,7 @@ interface Programmer {
 }
 
 export function ProgrammerManager() {
+  const { t } = useDashboardPreferences();
   const [programmers, setProgrammers] = useState<Programmer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,7 +176,7 @@ export function ProgrammerManager() {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2997ff]">
-              Control de Accesos Técnicos
+              {t('prog_card_prog_sub', 'Control de Accesos Técnicos')}
             </span>
             <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">
               DESARROLLADORES
@@ -182,10 +184,10 @@ export function ProgrammerManager() {
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1 flex items-center gap-2">
             <Code className="w-5 h-5 text-[#2997ff]" />
-            <span>Equipo de Programadores</span>
+            <span>{t('prog_mgr_title', 'Equipo de Programadores')}</span>
           </h2>
           <p className="text-xs sm:text-sm text-[#86868b] mt-1 max-w-2xl">
-            Registra nuevos desarrolladores con su propio correo y contraseña para que puedan acceder al panel de control maestro.
+            {t('prog_mgr_sub', 'Registra nuevos desarrolladores con su propio correo y contraseña para que puedan acceder al panel de control maestro.')}
           </p>
         </div>
 
@@ -194,7 +196,7 @@ export function ProgrammerManager() {
           className="apple-pill-btn apple-btn-primary px-4 py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#2997ff]/20 self-start sm:self-auto"
         >
           <UserPlus className="w-4 h-4" />
-          <span>Agregar Programador</span>
+          <span>{t('prog_mgr_btn_add', 'Agregar Programador')}</span>
         </button>
       </div>
 
@@ -216,7 +218,7 @@ export function ProgrammerManager() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="apple-card p-4">
           <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
-            Total Desarrolladores
+            {t('prog_mgr_th_programmer', 'Total Desarrolladores')}
           </span>
           <span className="text-2xl font-bold text-white mt-1 block">
             {programmers.length}
@@ -251,7 +253,7 @@ export function ProgrammerManager() {
           <Search className="w-4 h-4 text-[#86868b] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar programador por nombre o correo..."
+            placeholder={t('prog_mgr_search_ph', 'Buscar programador por nombre o correo...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
@@ -272,18 +274,18 @@ export function ProgrammerManager() {
         <table className="w-full text-left text-xs text-[#86868b]">
           <thead className="bg-white/[0.02] border-b border-white/[0.06] text-[#f5f5f7] uppercase tracking-wider text-[11px]">
             <tr>
-              <th className="py-3.5 px-4 font-semibold">Programador</th>
-              <th className="py-3.5 px-4 font-semibold">Especialidad / Cargo</th>
-              <th className="py-3.5 px-4 font-semibold">Nivel de Acceso</th>
-              <th className="py-3.5 px-4 font-semibold">Fecha Registro</th>
-              <th className="py-3.5 px-4 font-semibold text-right">Acciones</th>
+              <th className="py-3.5 px-4 font-semibold">{t('prog_mgr_th_programmer', 'Programador')}</th>
+              <th className="py-3.5 px-4 font-semibold">{t('prog_mgr_th_role', 'Especialidad / Cargo')}</th>
+              <th className="py-3.5 px-4 font-semibold">{t('prog_mgr_th_access', 'Nivel de Acceso')}</th>
+              <th className="py-3.5 px-4 font-semibold">{t('prog_mgr_th_date', 'Fecha Registro')}</th>
+              <th className="py-3.5 px-4 font-semibold text-right">{t('prog_mgr_th_actions', 'Acciones')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.04]">
             {filteredProgrammers.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-12 text-center text-xs text-[#6e6e73]">
-                  No se encontraron programadores registrados.
+                  {t('prog_mgr_empty_title', 'No se encontraron programadores registrados.')}
                 </td>
               </tr>
             ) : (
@@ -323,7 +325,7 @@ export function ProgrammerManager() {
                       }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${prog.isRoot ? 'bg-purple-400' : 'bg-[#30d158]'}`} />
-                      {prog.isRoot ? 'Superadmin Raíz' : 'Programador Autorizado'}
+                      {prog.isRoot ? t('prog_mgr_badge_root', 'Superadmin Raíz') : t('prog_mgr_badge_standard', 'Programador Autorizado')}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-[#86868b]">
@@ -339,7 +341,7 @@ export function ProgrammerManager() {
                       className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-[#f5f5f7] text-[11px] transition-all"
                       title="Copiar datos de acceso"
                     >
-                      {copiedId === prog.id ? 'Copiado ✓' : 'Copiar'}
+                      {copiedId === prog.id ? t('emp_mgr_copied_pass', 'Copiado ✓') : t('tab_menu', 'Copiar')}
                     </button>
                     {!prog.isRoot && (
                       <button
@@ -347,7 +349,7 @@ export function ProgrammerManager() {
                         className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
                         title="Revocar acceso de programador"
                       >
-                        Revocar
+                        {t('owners_btn_revoke', 'Revocar')}
                       </button>
                     )}
                   </td>
@@ -365,7 +367,7 @@ export function ProgrammerManager() {
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#2997ff]" />
-                <h3 className="text-base font-bold text-white">Agregar Nuevo Programador</h3>
+                <h3 className="text-base font-bold text-white">{t('prog_mgr_modal_title', 'Agregar Nuevo Programador')}</h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -378,7 +380,7 @@ export function ProgrammerManager() {
             <form onSubmit={handleCreateProgrammer} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#86868b]" /> Nombre del Programador
+                  <User className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_name', 'Nombre del Programador')}
                 </label>
                 <input
                   type="text"
@@ -392,7 +394,7 @@ export function ProgrammerManager() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-[#86868b]" /> Correo Electrónico
+                  <Mail className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_email', 'Correo Electrónico')}
                 </label>
                 <input
                   type="email"
@@ -407,14 +409,14 @@ export function ProgrammerManager() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-[#86868b]" /> Contraseña
+                    <Lock className="w-3.5 h-3.5 text-[#86868b]" /> {t('emp_mgr_form_pass', 'Contraseña')}
                   </label>
                   <button
                     type="button"
                     onClick={handleGeneratePassword}
                     className="text-[11px] text-[#2997ff] hover:underline"
                   >
-                    Generar Segura
+                    {t('emp_mgr_form_pass_gen', 'Generar Segura')}
                   </button>
                 </div>
                 <div className="relative">
@@ -438,7 +440,7 @@ export function ProgrammerManager() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-[#f5f5f7] flex items-center gap-1.5">
-                  <Code className="w-3.5 h-3.5 text-[#86868b]" /> Especialidad / Cargo
+                  <Code className="w-3.5 h-3.5 text-[#86868b]" /> {t('prog_mgr_form_role', 'Especialidad / Cargo')}
                 </label>
                 <select
                   value={roleTitle}
@@ -459,14 +461,14 @@ export function ProgrammerManager() {
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 rounded-xl text-xs font-medium text-[#86868b] hover:text-white"
                 >
-                  Cancelar
+                  {t('emp_mgr_form_cancel', 'Cancelar')}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="apple-pill-btn apple-btn-primary px-5 py-2.5 text-xs font-semibold disabled:opacity-50"
                 >
-                  {submitting ? 'Registrando...' : 'Otorgar Acceso de Programador'}
+                  {submitting ? t('prog_mgr_form_saving', 'Registrando...') : t('prog_mgr_form_save', 'Otorgar Acceso de Programador')}
                 </button>
               </div>
             </form>

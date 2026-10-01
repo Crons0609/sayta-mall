@@ -10,6 +10,7 @@ import { collection, query as firestoreQuery, where, onSnapshot } from 'firebase
 import { db } from '@/lib/firebase/client';
 import { Search, X, Plus, Sparkles, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 interface SearchProduct {
   id: string;
@@ -30,6 +31,7 @@ export function SearchModal({ isOpen, onClose, onSelectProduct }: SearchModalPro
   const { currentBranch } = useBranch();
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { t, isZh, isEn } = useLanguage();
 
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<SearchProduct[]>([]);
@@ -114,8 +116,8 @@ export function SearchModal({ isOpen, onClose, onSelectProduct }: SearchModalPro
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               currentBranch
-                ? `Buscar productos en ${currentBranch.name}...`
-                : 'Buscar productos...'
+                ? (isZh ? `在 ${currentBranch.name} 中搜索商品...` : isEn ? `Search products in ${currentBranch.name}...` : `Buscar productos en ${currentBranch.name}...`)
+                : (isZh ? '搜索商品...' : isEn ? 'Search products...' : 'Buscar productos...')
             }
             className="w-full bg-transparent text-sm sm:text-base text-white placeholder-[#86868b] focus:outline-none"
           />
@@ -138,8 +140,8 @@ export function SearchModal({ isOpen, onClose, onSelectProduct }: SearchModalPro
               <Sparkles className="w-8 h-8 mx-auto mb-2 text-[#6e6e73] opacity-60" />
               <p className="text-sm font-medium text-[#f5f5f7]">
                 {products.length === 0
-                  ? 'Aún no hay productos publicados en esta sucursal'
-                  : `No encontramos productos con "${query}"`}
+                  ? (isZh ? '此分店暂未上架商品' : isEn ? 'No products published in this branch yet' : 'Aún no hay productos publicados en esta sucursal')
+                  : (isZh ? `未找到与 “${query}” 相关的商品` : isEn ? `No products found matching "${query}"` : `No encontramos productos con "${query}"`)}
               </p>
             </div>
           ) : (
@@ -157,7 +159,7 @@ export function SearchModal({ isOpen, onClose, onSelectProduct }: SearchModalPro
                     {product.image ? (
                       <img src={product.image} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-[10px] text-[#6e6e73]">Sin foto</span>
+                      <span className="text-[10px] text-[#6e6e73]">{isZh ? '无图片' : isEn ? 'No image' : 'Sin foto'}</span>
                     )}
                   </div>
                   <div className="min-w-0">
@@ -192,7 +194,7 @@ export function SearchModal({ isOpen, onClose, onSelectProduct }: SearchModalPro
                           }
                         }}
                         className="p-2 rounded-xl bg-white/[0.08] hover:bg-[#0071e3] text-white transition-colors"
-                        title="Agregar a la bolsa"
+                        title={isZh ? '加入购物车' : isEn ? 'Add to bag' : 'Agregar a la bolsa'}
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -207,7 +209,7 @@ export function SearchModal({ isOpen, onClose, onSelectProduct }: SearchModalPro
                       className="text-xs text-[#2997ff] hover:underline flex items-center gap-1"
                     >
                       <Lock className="w-3 h-3" />
-                      <span>Ver precio</span>
+                      <span>{isZh ? '登录看价' : isEn ? 'View price' : 'Ver precio'}</span>
                     </Link>
                   )}
                 </div>

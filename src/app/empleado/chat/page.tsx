@@ -4,17 +4,23 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { EmployeeChat } from '@/components/chat/EmployeeChat';
+import { useAuth } from '@/providers/AuthProvider';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 
 export default function EmpleadoChatPage() {
+  const { t } = useDashboardPreferences();
+  const { claims } = useAuth();
+  const role = claims?.role === 'programmer' ? 'programmer' : claims?.role === 'owner' ? 'owner' : 'employee';
+
   return (
-    <DashboardLayout role="employee">
+    <DashboardLayout role={role}>
       <div className="space-y-4 animate-fade-in">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Chat Interno del Personal
+            {t('chat_title', 'Chat Interno del Personal')}
           </h1>
           <p className="text-xs text-[#86868b] mt-0.5">
-            Comunícate en tiempo real con tus compañeros de sucursal, consulta stock y coordina turnos.
+            {t('chat_desc', 'Comunícate en tiempo real con tus compañeros de sucursal, consulta stock y coordina turnos.')}
           </p>
         </div>
 

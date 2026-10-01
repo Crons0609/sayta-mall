@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useBranch } from '@/providers/BranchProvider';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import { ProductDocument, CategoryDocument } from '@/types/product.types';
 import { formatCurrency } from '@/lib/utils/currency';
 import { collection, query, where, onSnapshot, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
@@ -98,6 +99,7 @@ interface SharedProductManagerProps {
 export function SharedProductManager({ userRole }: SharedProductManagerProps) {
   const { user, claims } = useAuth();
   const { currentBranch } = useBranch();
+  const { t } = useDashboardPreferences();
 
   // Estados de datos
   const [products, setProducts] = useState<any[]>([]);
@@ -894,17 +896,17 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#2997ff]">
-              Módulo de Inventario Unificado
+              {t('prod_module_badge', 'Módulo de Inventario Unificado')}
             </span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.08] text-[#86868b]">
-              {userRole === 'owner' ? 'Dueño' : userRole === 'programmer' ? 'Programador' : 'Empleado'}
+              {userRole === 'owner' ? t('role_owner', 'Dueño') : userRole === 'programmer' ? t('role_programmer', 'Programador') : t('role_employee', 'Empleado')}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
-            Gestión de Productos y Descuentos
+            {t('prod_management_title', 'Gestión de Productos y Descuentos')}
           </h1>
           <p className="text-xs text-[#86868b] mt-1 max-w-2xl leading-relaxed">
-            Dueño y empleados pueden subir productos con sus precios, descripciones y categorías. Los descuentos propuestos por empleados requieren autorización del Dueño o Programador antes de mostrarse en la tienda pública.
+            {t('prod_management_desc', 'Dueño y empleados pueden subir productos con sus precios, descripciones y categorías. Los descuentos propuestos por empleados requieren autorización del Dueño o Programador antes de mostrarse en la tienda pública.')}
           </p>
         </div>
 
@@ -914,7 +916,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             className="apple-pill-btn apple-btn-secondary px-4 py-2.5 text-xs font-semibold flex items-center gap-2"
           >
             <Layers className="w-4 h-4 text-[#bf5af2]" />
-            <span>Nueva Categoría</span>
+            <span>{t('prod_btn_new_category', 'Nueva Categoría')}</span>
           </button>
 
           <button
@@ -922,7 +924,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             className="apple-pill-btn apple-btn-primary px-5 py-2.5 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-[#0071e3]/25"
           >
             <Plus className="w-4 h-4" />
-            <span>Agregar Producto</span>
+            <span>{t('prod_btn_add_product', 'Agregar Producto')}</span>
           </button>
         </div>
       </div>
@@ -934,7 +936,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             <div className="flex items-center gap-2.5">
               <span className="w-3 h-3 rounded-full bg-[#ffd60a] animate-ping" />
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>Solicitudes de Descuento Pendientes de Autorización</span>
+                <span>{t('prod_pending_discounts_title', 'Solicitudes de Descuento Pendientes de Autorización')}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#ffd60a] text-black font-extrabold">
                   {pendingDiscountsCount}
                 </span>
@@ -942,11 +944,11 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             </div>
             {canAuthorizeDiscounts ? (
               <span className="text-xs text-[#ffd60a] font-medium hidden sm:inline">
-                Tienes permisos para aprobar o rechazar estas rebajas
+                {t('prod_can_authorize', 'Tienes permisos para aprobar o rechazar estas rebajas')}
               </span>
             ) : (
               <span className="text-xs text-[#ffd60a] font-medium hidden sm:inline">
-                En espera de revisión por el Dueño o Programador
+                {t('prod_waiting_review', 'En espera de revisión por el Dueño o Programador')}
               </span>
             )}
           </div>
@@ -984,12 +986,12 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
 
                   {p.discountReason && (
                     <p className="text-[11px] text-[#ffd60a] bg-[#ffd60a]/10 px-2.5 py-1.5 rounded-xl border border-[#ffd60a]/20">
-                      <strong>Motivo:</strong> {p.discountReason}
+                      <strong>{t('prod_discount_reason', 'Motivo')}:</strong> {p.discountReason}
                     </p>
                   )}
 
                   <div className="text-[10px] text-[#86868b]">
-                    Propuesto por: <strong className="text-white">{p.discountRequestedBy?.name || 'Empleado'}</strong>
+                    {t('prod_proposed_by', 'Propuesto por')}: <strong className="text-white">{p.discountRequestedBy?.name || t('role_employee', 'Empleado')}</strong>
                   </div>
 
                   {/* Acciones de autorización */}
@@ -1000,18 +1002,18 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
                         className="flex-1 py-1.5 px-3 rounded-xl bg-[#30d158] hover:bg-[#30d158]/90 text-black text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <Check className="w-3.5 h-3.5" />
-                        <span>Aprobar Descuento</span>
+                        <span>{t('prod_btn_approve', 'Aprobar Descuento')}</span>
                       </button>
                       <button
                         onClick={() => handleRejectDiscount(p)}
                         className="py-1.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs text-[#ff453a] font-semibold transition-colors"
                       >
-                        Rechazar
+                        {t('prod_btn_reject', 'Rechazar')}
                       </button>
                     </div>
                   ) : (
                     <div className="p-2 rounded-xl bg-white/[0.04] text-[11px] text-center text-[#ffd60a] font-medium">
-                      🟡 Pendiente de autorización
+                      🟡 {t('prod_pending_badge', 'Pendiente de autorización')}
                     </div>
                   )}
                 </div>
@@ -1026,7 +1028,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
           <Search className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar por nombre, categoría o descripción..."
+            placeholder={t('prod_search_placeholder', 'Buscar por nombre, categoría o descripción...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/40 border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
@@ -1040,7 +1042,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="bg-black/40 border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2997ff]"
           >
-            <option value="Todos">Todas las categorías</option>
+            <option value="Todos">{t('prod_filter_all_cats', 'Todas las categorías')}</option>
             {categories.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -1054,9 +1056,9 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             onChange={(e) => setDiscountFilter(e.target.value as any)}
             className="bg-black/40 border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2997ff]"
           >
-            <option value="all">Todos los estados</option>
-            <option value="discounted">Con descuento activo</option>
-            <option value="pending">Descuentos pendientes</option>
+            <option value="all">{t('prod_filter_all_status', 'Todos los estados')}</option>
+            <option value="discounted">{t('prod_filter_discounted', 'Con descuento activo')}</option>
+            <option value="pending">{t('prod_filter_pending', 'Descuentos pendientes')}</option>
           </select>
         </div>
       </div>
@@ -1072,9 +1074,9 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
         <div className="p-16 text-center apple-card rounded-3xl border-white/[0.06] space-y-4">
           <Package className="w-10 h-10 text-[#86868b] mx-auto" />
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-white">No hay productos en esta vista</h3>
+            <h3 className="text-base font-semibold text-white">{t('prod_empty_title', 'No hay productos en esta vista')}</h3>
             <p className="text-xs text-[#86868b]">
-              Puedes agregar nuevos productos con precios, descripciones y categorías usando el botón superior.
+              {t('prod_empty_desc', 'Puedes agregar nuevos productos con precios, descripciones y categorías usando el botón superior.')}
             </p>
           </div>
           <button
@@ -1082,7 +1084,7 @@ export function SharedProductManager({ userRole }: SharedProductManagerProps) {
             className="apple-pill-btn apple-btn-primary px-5 py-2.5 text-xs font-semibold inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Agregar Primer Producto</span>
+            <span>{t('prod_btn_add_first', 'Agregar Primer Producto')}</span>
           </button>
         </div>
       ) : (

@@ -15,6 +15,7 @@ import {
   Lock,
   Sparkles,
 } from 'lucide-react';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 
 interface Category {
   id: string;
@@ -27,6 +28,7 @@ interface Category {
 }
 
 export function CategoryManager() {
+  const { t } = useDashboardPreferences();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -157,10 +159,10 @@ export function CategoryManager() {
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight flex items-center gap-2">
             <Tag className="w-5 h-5 text-[#ffd60a]" />
-            <span>Gestión de Categorías</span>
+            <span>{t('cat_manager_title', 'Gestión de Categorías')}</span>
           </h2>
           <p className="text-xs text-[#86868b] mt-1">
-            Crea categorías personalizadas para organizar tus productos. Las categorías del sistema son de solo lectura.
+            {t('cat_manager_desc', 'Crea categorías personalizadas para organizar tus productos.')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -176,7 +178,7 @@ export function CategoryManager() {
             className="apple-pill-btn apple-btn-primary px-4 py-2.5 text-xs font-semibold flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span>{showForm ? 'Cancelar' : 'Nueva Categoría'}</span>
+            <span>{showForm ? t('cat_manager_form_cancel', 'Cancelar') : t('cat_manager_new_btn', 'Nueva Categoría')}</span>
           </button>
         </div>
       </div>
@@ -198,12 +200,12 @@ export function CategoryManager() {
         <form onSubmit={handleCreate} className="apple-card p-5 sm:p-6 space-y-4 border-[#ffd60a]/20 animate-fade-in">
           <h3 className="text-sm font-semibold text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#ffd60a]" />
-            Crear Categoría Personalizada
+            {t('cat_manager_form_title', 'Crear Categoría Personalizada')}
           </h3>
 
           {/* Selector de emoji */}
           <div className="space-y-2">
-            <label className="text-[11px] font-medium text-[#86868b]">Icono (Emoji)</label>
+            <label className="text-[11px] font-medium text-[#86868b]">{t('cat_manager_form_icon', 'Ícono (Emoji)')}</label>
             <div className="flex flex-wrap gap-2">
               {COMMON_ICONS.map((emoji) => (
                 <button
@@ -232,33 +234,33 @@ export function CategoryManager() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium text-[#86868b]">Nombre *</label>
+              <label className="text-[11px] font-medium text-[#86868b]">{t('cat_manager_form_name', 'Nombre *')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Artículos de Oficina"
+                placeholder={t('cat_manager_form_name_ph', 'Ej. Artículos de Oficina')}
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#ffd60a]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium text-[#86868b]">Etiqueta (Opcional)</label>
+              <label className="text-[11px] font-medium text-[#86868b]">{t('cat_manager_form_badge', 'Etiqueta (Opcional)')}</label>
               <input
                 type="text"
                 value={badge}
                 onChange={(e) => setBadge(e.target.value)}
-                placeholder="Ej. Nuevo, Popular, Oferta"
+                placeholder={t('cat_manager_form_badge_ph', 'Ej. Nuevo, Popular, Oferta')}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#ffd60a]"
               />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-[11px] font-medium text-[#86868b]">Descripción</label>
+              <label className="text-[11px] font-medium text-[#86868b]">{t('cat_manager_form_desc', 'Descripción')}</label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Breve descripción de qué productos incluye esta categoría"
+                placeholder={t('cat_manager_form_desc_ph', 'Breve descripción de qué productos incluye esta categoría')}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#ffd60a]"
               />
             </div>
@@ -266,11 +268,11 @@ export function CategoryManager() {
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-xs font-medium text-[#86868b] hover:text-white transition-colors">
-              Cancelar
+              {t('cat_manager_form_cancel', 'Cancelar')}
             </button>
             <button type="submit" disabled={saving} className="apple-pill-btn apple-btn-primary px-6 py-2.5 text-xs font-semibold flex items-center gap-2 disabled:opacity-50">
               <Save className="w-3.5 h-3.5" />
-              {saving ? 'Guardando...' : 'Crear Categoría'}
+              {saving ? t('cat_manager_form_saving', 'Guardando...') : t('cat_manager_form_save', 'Crear Categoría')}
             </button>
           </div>
         </form>
@@ -279,18 +281,18 @@ export function CategoryManager() {
       {/* Mis Categorías Personalizadas */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold text-white">Mis Categorías</h3>
+          <h3 className="text-sm font-bold text-white">{t('cat_manager_my_title', 'Mis Categorías')}</h3>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ffd60a]/15 text-[#ffd60a] font-semibold">
-            {customCategories.length} personalizadas
+            {customCategories.length} {t('cat_manager_custom_badge', 'personalizadas')}
           </span>
         </div>
 
         {customCategories.length === 0 ? (
           <div className="apple-card p-8 text-center space-y-2">
             <div className="text-3xl">📂</div>
-            <p className="text-xs text-[#86868b]">Aún no has creado categorías personalizadas.</p>
+            <p className="text-xs text-[#86868b]">{t('cat_manager_empty_title', 'Aún no has creado categorías personalizadas.')}</p>
             <button onClick={() => setShowForm(true)} className="text-xs text-[#ffd60a] hover:underline">
-              Crear primera categoría →
+              {t('cat_manager_empty_btn', 'Crear primera categoría →')}
             </button>
           </div>
         ) : (
@@ -314,9 +316,9 @@ export function CategoryManager() {
                     <input type="text" value={editBadge} onChange={(e) => setEditBadge(e.target.value)}
                       placeholder="Etiqueta (opcional)" className="w-full px-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#ffd60a]" />
                     <div className="flex gap-2">
-                      <button onClick={() => setEditingId(null)} className="flex-1 py-2 rounded-xl text-xs text-[#86868b] bg-white/[0.05] hover:bg-white/[0.1]">Cancelar</button>
+                      <button onClick={() => setEditingId(null)} className="flex-1 py-2 rounded-xl text-xs text-[#86868b] bg-white/[0.05] hover:bg-white/[0.1]">{t('cat_manager_edit_cancel', 'Cancelar')}</button>
                       <button onClick={() => handleSaveEdit(cat.id)} disabled={saving} className="flex-1 py-2 rounded-xl text-xs font-semibold bg-[#ffd60a]/20 text-[#ffd60a] hover:bg-[#ffd60a]/30 disabled:opacity-50">
-                        {saving ? 'Guardando...' : 'Guardar'}
+                        {saving ? t('cat_manager_form_saving', 'Guardando...') : t('cat_manager_edit_save', 'Guardar')}
                       </button>
                     </div>
                   </div>
@@ -359,9 +361,9 @@ export function CategoryManager() {
       {/* Categorías del Sistema (solo lectura) */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold text-[#86868b]">Categorías del Sistema</h3>
+          <h3 className="text-sm font-bold text-[#86868b]">{t('cat_manager_system_title', 'Categorías del Sistema')}</h3>
           <Lock className="w-3 h-3 text-[#6e6e73]" />
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-[#6e6e73]">Solo lectura</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-[#6e6e73]">{t('cat_manager_readonly_badge', 'Solo lectura')}</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
           {baseCategories.map((cat) => (
@@ -403,14 +405,14 @@ export function CategoryManager() {
               <div className="flex gap-3">
                 <button onClick={() => setDeleteConfirmId(null)}
                   className="flex-1 py-2.5 rounded-xl text-xs font-medium text-[#86868b] bg-white/[0.06] hover:bg-white/[0.1]">
-                  Cancelar
+                  {t('cat_manager_delete_cancel', 'Cancelar')}
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirmId)}
                   disabled={deleting === deleteConfirmId}
                   className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50"
                 >
-                  {deleting === deleteConfirmId ? 'Eliminando...' : 'Sí, Eliminar'}
+                  {deleting === deleteConfirmId ? t('cat_manager_form_saving', 'Eliminando...') : t('cat_manager_delete_confirm', 'Sí, Eliminar')}
                 </button>
               </div>
             </div>

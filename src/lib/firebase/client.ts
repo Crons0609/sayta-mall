@@ -41,3 +41,22 @@ if (typeof window !== 'undefined') {
 }
 
 export default app;
+
+/**
+ * Obtiene el ID token de Firebase del usuario actualmente autenticado.
+ * Usa `auth.currentUser` (el objeto real de Firebase Auth) en lugar del
+ * `user` del AuthProvider, que en el flujo fallback es un objeto plano
+ * sin el método `getIdToken()`.
+ *
+ * @returns El ID token JWT, o cadena vacía si no hay usuario Firebase activo.
+ */
+export async function getAuthToken(): Promise<string> {
+  try {
+    if (auth.currentUser) {
+      return await auth.currentUser.getIdToken();
+    }
+  } catch (e) {
+    console.warn('[getAuthToken] No se pudo obtener el token:', e);
+  }
+  return '';
+}

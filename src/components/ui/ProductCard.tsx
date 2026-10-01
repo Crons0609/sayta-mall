@@ -8,6 +8,8 @@ import { useCart } from '@/providers/CartProvider';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Plus, Check, Lock, LogIn } from 'lucide-react';
 
+import { useLanguage } from '@/providers/LanguageProvider';
+
 export interface DisplayProduct {
   id: string;
   name: string;
@@ -30,6 +32,7 @@ interface ProductCardProps {
 export function ProductCard({ product, onQuickView }: ProductCardProps) {
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { t, isZh } = useLanguage();
   const [added, setAdded] = useState(false);
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -81,7 +84,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[#6e6e73] text-xs">
-              Sin imagen
+              {isZh ? '暂无图片' : 'Sin imagen'}
             </div>
           )}
         </div>
@@ -114,7 +117,9 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
                 )}
               </div>
               <span className="text-[10px] text-[#30d158] block">
-                {product.available ? '● En stock' : '○ Agotado'}
+                {product.available
+                  ? (isZh ? '● 有现货' : '● En stock')
+                  : (isZh ? '○ 暂时缺货' : '○ Agotado')}
               </span>
             </div>
 
@@ -131,11 +136,11 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             >
               {added ? (
                 <span className="flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> Agregado
+                  <Check className="w-3.5 h-3.5" /> {t('prod_added', 'Agregado')}
                 </span>
               ) : (
                 <span className="flex items-center gap-1">
-                  <Plus className="w-3.5 h-3.5" /> Agregar
+                  <Plus className="w-3.5 h-3.5" /> {t('prod_add', 'Agregar')}
                 </span>
               )}
             </button>
@@ -149,7 +154,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
               className="text-[11px] text-[#2997ff] hover:underline flex items-center gap-1 font-medium"
             >
               <Lock className="w-3 h-3 text-[#2997ff] flex-shrink-0" />
-              <span>Inicia sesión para ver el precio</span>
+              <span>{t('prod_login_to_see_price', 'Inicia sesión para ver el precio')}</span>
             </Link>
 
             <Link
@@ -158,7 +163,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
               className="apple-pill-btn apple-btn-secondary px-3 py-1 text-xs text-center flex items-center justify-center gap-1"
             >
               <LogIn className="w-3 h-3" />
-              <span>Acceder</span>
+              <span>{t('nav_login', 'Acceder')}</span>
             </Link>
           </div>
         )}

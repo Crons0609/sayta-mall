@@ -4,6 +4,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
+import { getAuthToken } from '@/lib/firebase/client';
 import {
   Send,
   MessageSquare,
@@ -33,6 +35,7 @@ interface Contact {
 }
 
 export function EmployeeChat() {
+  const { t } = useDashboardPreferences();
   const { user, claims } = useAuth();
 
   const [activeChannelId, setActiveChannelId] = useState<string>('general');
@@ -55,7 +58,7 @@ export function EmployeeChat() {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (user) {
       try {
-        const token = await user.getIdToken();
+        const token = await getAuthToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
       } catch {}
       if (user.uid) headers['x-user-id'] = user.uid;
@@ -197,10 +200,10 @@ export function EmployeeChat() {
                 <MessageSquare className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white tracking-tight">Chat de Empleados</h3>
+                <h3 className="text-sm font-bold text-white tracking-tight">{t('nav_chat_staff', 'Chat de Empleados')}</h3>
                 <p className="text-[10px] text-[#30d158] flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#30d158] animate-pulse" />
-                  Red Interna Conectada
+                  {t('status_connected', 'Red Interna Conectada')}
                 </p>
               </div>
             </div>
@@ -218,7 +221,7 @@ export function EmployeeChat() {
             <Search className="w-3.5 h-3.5 text-[#86868b] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar canal o compañero..."
+              placeholder={t('search_placeholder', 'Buscar canal o compañero...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-[#86868b] focus:outline-none focus:border-[#2997ff]/60 transition-colors"
@@ -231,7 +234,7 @@ export function EmployeeChat() {
           {/* Canales Oficiales */}
           <div className="space-y-1">
             <span className="text-[10px] text-[#86868b] font-semibold uppercase tracking-wider px-2 block">
-              Salas de Equipo
+              {t('chat_team_rooms', 'Salas de Equipo')}
             </span>
             {DEFAULT_CHANNELS.map((ch) => {
               const isActive = activeChannelId === ch.id;
@@ -254,9 +257,9 @@ export function EmployeeChat() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold truncate text-white">{ch.name}</span>
+                      <span className="text-xs font-semibold truncate text-white">{t(`chat_ch_${ch.id}`, ch.name)}</span>
                     </div>
-                    <p className="text-[10px] text-[#86868b] truncate mt-0.5">{ch.description}</p>
+                    <p className="text-[10px] text-[#86868b] truncate mt-0.5">{t(`chat_ch_${ch.id}_desc`, ch.description)}</p>
                   </div>
                 </button>
               );
@@ -266,10 +269,10 @@ export function EmployeeChat() {
           {/* Contactos / Empleados */}
           <div className="space-y-1">
             <span className="text-[10px] text-[#86868b] font-semibold uppercase tracking-wider px-2 block">
-              Compañeros de Turno ({filteredContacts.length})
+              {t('chat_coworkers', 'Compañeros de Turno')} ({filteredContacts.length})
             </span>
             {filteredContacts.length === 0 ? (
-              <p className="text-[11px] text-[#86868b] px-2 py-1">No se encontraron compañeros.</p>
+              <p className="text-[11px] text-[#86868b] px-2 py-1">{t('chat_no_coworkers', 'No se encontraron compañeros.')}</p>
             ) : (
               filteredContacts.map((contact) => {
                 const isSelected = activeChannelTitle.includes(contact.displayName);
@@ -297,7 +300,7 @@ export function EmployeeChat() {
                         </span>
                       </div>
                       <p className="text-[10px] text-[#30d158] mt-0.5 flex items-center gap-1">
-                        <span>En turno</span>
+                        <span>{t('chat_on_shift', 'En turno')}</span>
                       </p>
                     </div>
                   </button>
@@ -329,10 +332,10 @@ export function EmployeeChat() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white tracking-tight leading-tight">
-                {activeChannelTitle}
+                {activeChannelId.startsWith('direct_') ? activeChannelTitle : t(`chat_ch_${activeChannelId}`, activeChannelTitle)}
               </h2>
               <p className="text-[11px] text-[#86868b] truncate max-w-xs sm:max-w-md">
-                {activeChannelSubtitle}
+                {activeChannelId.startsWith('direct_') ? activeChannelSubtitle : t(`chat_ch_${activeChannelId}_desc`, activeChannelSubtitle)}
               </p>
             </div>
           </div>
@@ -340,7 +343,7 @@ export function EmployeeChat() {
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 hidden sm:inline-flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#30d158] animate-pulse" />
-              Canal Activo
+              {t('chat_active_channel', 'Canal Activo')}
             </span>
             <button
               onClick={() => loadMessages(activeChannelId)}
@@ -357,16 +360,16 @@ export function EmployeeChat() {
           {loading ? (
             <div className="h-full flex items-center justify-center text-xs text-[#86868b] gap-2">
               <div className="w-4 h-4 border-2 border-[#2997ff] border-t-transparent rounded-full animate-spin" />
-              <span>Sincronizando mensajes del canal...</span>
+              <span>{t('chat_syncing', 'Sincronizando mensajes del canal...')}</span>
             </div>
           ) : messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2">
               <div className="w-12 h-12 rounded-2xl bg-white/[0.04] text-[#86868b] flex items-center justify-center">
                 <MessageSquare className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-white">No hay mensajes aún en este canal</h4>
+              <h4 className="text-sm font-bold text-white">{t('chat_empty_title', 'No hay mensajes aún en este canal')}</h4>
               <p className="text-xs text-[#86868b] max-w-xs">
-                ¡Sé el primero en escribir! Puedes consultar stock, coordinar turnos o avisar a tus compañeros.
+                {t('chat_empty_desc', '¡Sé el primero en escribir! Puedes consultar stock, coordinar turnos o avisar a tus compañeros.')}
               </p>
             </div>
           ) : (
@@ -419,19 +422,19 @@ export function EmployeeChat() {
                     {isUrgent && (
                       <div className="flex items-center gap-1 text-[10px] font-bold text-[#ff453a] mb-1">
                         <Flame className="w-3 h-3" />
-                        <span>AVISO URGENTE</span>
+                        <span>{t('chat_urgent_badge', 'AVISO URGENTE')}</span>
                       </div>
                     )}
                     {isShift && (
                       <div className="flex items-center gap-1 text-[10px] font-bold text-[#bf5af2] mb-1">
                         <Clock className="w-3 h-3" />
-                        <span>RELEVO DE TURNO</span>
+                        <span>{t('chat_shift_badge', 'RELEVO DE TURNO')}</span>
                       </div>
                     )}
                     {isStock && (
                       <div className="flex items-center gap-1 text-[10px] font-bold text-[#ffd60a] mb-1">
                         <Package className="w-3 h-3" />
-                        <span>CONSULTA DE STOCK</span>
+                        <span>{t('chat_stock_badge', 'CONSULTA DE STOCK')}</span>
                       </div>
                     )}
 
@@ -454,7 +457,7 @@ export function EmployeeChat() {
         {/* Barra de Etiquetas Rápidas */}
         <div className="px-4 py-2 border-t border-white/[0.06] bg-white/[0.01] flex items-center gap-2 overflow-x-auto">
           <span className="text-[10px] text-[#86868b] uppercase tracking-wider font-semibold shrink-0">
-            Avisos Rápidos:
+            {t('chat_quick_tags', 'Avisos Rápidos:')}
           </span>
           <button
             onClick={() => setMsgType(msgType === 'urgent' ? 'text' : 'urgent')}
@@ -465,7 +468,7 @@ export function EmployeeChat() {
             }`}
           >
             <Flame className="w-3 h-3" />
-            <span>Urgente</span>
+            <span>{t('chat_tag_urgent', 'Urgente')}</span>
           </button>
           <button
             onClick={() => setMsgType(msgType === 'shift' ? 'text' : 'shift')}
@@ -476,7 +479,7 @@ export function EmployeeChat() {
             }`}
           >
             <Clock className="w-3 h-3" />
-            <span>Turno</span>
+            <span>{t('chat_tag_shift', 'Turno')}</span>
           </button>
           <button
             onClick={() => setMsgType(msgType === 'stock_alert' ? 'text' : 'stock_alert')}
@@ -487,7 +490,7 @@ export function EmployeeChat() {
             }`}
           >
             <Package className="w-3 h-3" />
-            <span>Stock</span>
+            <span>{t('chat_tag_stock', 'Stock')}</span>
           </button>
 
           {/* Emojis rápidos */}
@@ -512,12 +515,12 @@ export function EmployeeChat() {
             type="text"
             placeholder={
               msgType === 'urgent'
-                ? 'Escribe un aviso prioritario o urgente...'
+                ? t('chat_placeholder_urgent', 'Escribe un aviso prioritario o urgente...')
                 : msgType === 'shift'
-                ? 'Reporta inicio, cambio o pausa de turno...'
+                ? t('chat_placeholder_shift', 'Reporta inicio, cambio o pausa de turno...')
                 : msgType === 'stock_alert'
-                ? 'Pregunta o avisa sobre stock de un producto...'
-                : `Mensaje para ${activeChannelTitle}...`
+                ? t('chat_placeholder_stock', 'Pregunta o avisa sobre stock de un producto...')
+                : `${t('chat_placeholder_general', 'Mensaje para')} ${activeChannelId.startsWith('direct_') ? activeChannelTitle : t(`chat_ch_${activeChannelId}`, activeChannelTitle)}...`
             }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -530,10 +533,12 @@ export function EmployeeChat() {
             className="apple-pill-btn apple-btn-primary px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 shadow-lg disabled:opacity-40"
           >
             <Send className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Enviar</span>
+            <span className="hidden sm:inline">{t('chat_btn_send', 'Enviar')}</span>
           </button>
         </form>
       </div>
     </div>
   );
 }
+
+

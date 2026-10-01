@@ -6,14 +6,17 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { EmployeeManager } from '@/components/dashboard/EmployeeManager';
 import { BranchOnboardingWizard } from '@/components/branch/BranchOnboardingWizard';
 import { useBranch } from '@/providers/BranchProvider';
+import { useAuth } from '@/providers/AuthProvider';
 import { Store, Plus, AlertCircle, Sparkles } from 'lucide-react';
 
 export default function DuenoEmpleadosPage() {
   const { branchCount, loading } = useBranch();
+  const { claims } = useAuth();
+  const role = claims?.role === 'programmer' ? 'programmer' : 'owner';
   const [showWizard, setShowWizard] = useState(false);
 
   return (
-    <DashboardLayout role="owner">
+    <DashboardLayout role={role}>
       <div className="space-y-6">
         {loading ? (
           <div className="py-20 text-center text-xs text-[#86868b] animate-pulse">

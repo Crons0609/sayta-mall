@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DeliveryCompany } from '@/types/delivery.types';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import {
   Truck,
   Plus,
@@ -29,6 +30,8 @@ import {
 } from 'lucide-react';
 
 export default function ProgrammerDeliveryPage() {
+  const { t } = useDashboardPreferences();
+
   const [companies, setCompanies] = useState<DeliveryCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -226,19 +229,18 @@ export default function ProgrammerDeliveryPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2997ff]">
-                Logística & Distribución
+                {t('delivery_badge', 'Logística & Distribución')}
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#30d158]/20 text-[#30d158] border border-[#30d158]/30 font-bold">
-                EN VIVO
+                {t('delivery_live_badge', 'EN VIVO')}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1 flex items-center gap-2.5">
-              <span>Empresas de Delivery / Envíos</span>
+              <span>{t('delivery_title', 'Empresas de Delivery / Envíos')}</span>
               <Truck className="w-6 h-6 text-[#2997ff]" />
             </h1>
             <p className="text-xs text-[#86868b] mt-1 max-w-2xl">
-              Registra y gestiona las empresas de repartos locales. Los clientes podrán seleccionarlas en el checkout
-              y enviarles los pedidos directamente a su WhatsApp o canalizarlos por la web.
+              {t('delivery_desc', 'Registra y gestiona las empresas de repartos locales.')}
             </p>
           </div>
 
@@ -248,7 +250,7 @@ export default function ProgrammerDeliveryPage() {
               className="apple-pill-btn apple-btn-primary px-4 py-2.5 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-[#2997ff]/20"
             >
               <Plus className="w-4 h-4" />
-              <span>Registrar Empresa</span>
+              <span>{t('delivery_btn_register', 'Registrar Empresa')}</span>
             </button>
           </div>
         </div>
@@ -283,38 +285,38 @@ export default function ProgrammerDeliveryPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           <div className="apple-card p-4">
             <div className="flex items-center justify-between text-[#86868b]">
-              <span className="text-[11px] font-medium">Total Empresas</span>
+              <span className="text-[11px] font-medium">{t('delivery_stat_total', 'Total Empresas')}</span>
               <Truck className="w-4 h-4 text-[#2997ff]" />
             </div>
             <div className="text-2xl font-bold text-white mt-2 font-mono">{companies.length}</div>
-            <div className="text-[10px] text-[#86868b] mt-0.5">Registradas en el sistema</div>
+            <div className="text-[10px] text-[#86868b] mt-0.5">{t('delivery_stat_total_sub', 'Registradas en el sistema')}</div>
           </div>
 
           <div className="apple-card p-4">
             <div className="flex items-center justify-between text-[#86868b]">
-              <span className="text-[11px] font-medium">Activas en Checkout</span>
+              <span className="text-[11px] font-medium">{t('delivery_stat_active', 'Activas en Checkout')}</span>
               <CheckCircle2 className="w-4 h-4 text-[#30d158]" />
             </div>
             <div className="text-2xl font-bold text-[#30d158] mt-2 font-mono">{totalActivas}</div>
-            <div className="text-[10px] text-[#86868b] mt-0.5">Disponibles para clientes</div>
+            <div className="text-[10px] text-[#86868b] mt-0.5">{t('delivery_stat_active_sub', 'Disponibles para clientes')}</div>
           </div>
 
           <div className="apple-card p-4">
             <div className="flex items-center justify-between text-[#86868b]">
-              <span className="text-[11px] font-medium">Zonas Cubiertas</span>
+              <span className="text-[11px] font-medium">{t('delivery_stat_zones', 'Zonas Cubiertas')}</span>
               <MapPin className="w-4 h-4 text-[#ffd60a]" />
             </div>
             <div className="text-2xl font-bold text-white mt-2 font-mono">{totalZonas}</div>
-            <div className="text-[10px] text-[#86868b] mt-0.5">Áreas de reparto activas</div>
+            <div className="text-[10px] text-[#86868b] mt-0.5">{t('delivery_stat_zones_sub', 'Áreas de reparto activas')}</div>
           </div>
 
           <div className="apple-card p-4">
             <div className="flex items-center justify-between text-[#86868b]">
-              <span className="text-[11px] font-medium">Pedidos Canalizados</span>
+              <span className="text-[11px] font-medium">{t('delivery_stat_orders', 'Pedidos Canalizados')}</span>
               <Package className="w-4 h-4 text-purple-400" />
             </div>
             <div className="text-2xl font-bold text-purple-300 mt-2 font-mono">{totalPedidos}</div>
-            <div className="text-[10px] text-[#86868b] mt-0.5">Vía Web y WhatsApp</div>
+            <div className="text-[10px] text-[#86868b] mt-0.5">{t('delivery_stat_orders_sub', 'Vía Web y WhatsApp')}</div>
           </div>
         </div>
 
@@ -324,7 +326,7 @@ export default function ProgrammerDeliveryPage() {
             <Search className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Buscar por nombre, WhatsApp o zona..."
+              placeholder={t('delivery_search_placeholder', 'Buscar por nombre, WhatsApp o zona...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-black/40 border border-white/[0.08] rounded-xl text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
@@ -340,7 +342,7 @@ export default function ProgrammerDeliveryPage() {
                   : 'text-[#86868b] hover:text-white'
               }`}
             >
-              Todas ({companies.length})
+              {t('delivery_filter_all', 'Todas')} ({companies.length})
             </button>
             <button
               onClick={() => setFilterStatus('active')}
@@ -350,7 +352,7 @@ export default function ProgrammerDeliveryPage() {
                   : 'text-[#86868b] hover:text-white'
               }`}
             >
-              Activas ({totalActivas})
+              {t('delivery_filter_active', 'Activas')} ({totalActivas})
             </button>
             <button
               onClick={() => setFilterStatus('inactive')}
@@ -360,7 +362,7 @@ export default function ProgrammerDeliveryPage() {
                   : 'text-[#86868b] hover:text-white'
               }`}
             >
-              Inactivas ({companies.length - totalActivas})
+              {t('delivery_filter_inactive', 'Inactivas')} ({companies.length - totalActivas})
             </button>
           </div>
         </div>
@@ -368,25 +370,25 @@ export default function ProgrammerDeliveryPage() {
         {/* Lista de Empresas */}
         {loading ? (
           <div className="p-12 text-center text-xs text-[#86868b] animate-pulse">
-            Cargando empresas de delivery...
+            {t('delivery_loading', 'Cargando empresas de delivery...')}
           </div>
         ) : filteredCompanies.length === 0 ? (
           <div className="apple-card p-12 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-white/[0.04] text-[#86868b] flex items-center justify-center mx-auto">
               <Truck className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-bold text-white">No se encontraron empresas de delivery</h3>
+            <h3 className="text-sm font-bold text-white">{t('delivery_empty_title', 'No se encontraron empresas de delivery')}</h3>
             <p className="text-xs text-[#86868b] max-w-sm mx-auto">
               {searchQuery
-                ? 'Ninguna empresa coincide con la búsqueda. Intenta con otro término.'
-                : 'Registra tu primera empresa de delivery para que los clientes puedan elegirla al pagar.'}
+                ? t('delivery_empty_search', 'Ninguna empresa coincide con la búsqueda.')
+                : t('delivery_empty_first', 'Registra tu primera empresa de delivery.')}
             </p>
             <button
               onClick={openCreateModal}
               className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 mt-2"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Registrar Empresa Ahora</span>
+              <span>{t('delivery_btn_register_now', 'Registrar Empresa Ahora')}</span>
             </button>
           </div>
         ) : (

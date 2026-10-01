@@ -27,6 +27,7 @@ import {
   Languages,
   Check,
 } from 'lucide-react';
+import { useLanguage } from '@/providers/LanguageProvider';
 import { PhoneVerificationModal } from '@/components/auth/PhoneVerificationModal';
 
 interface NavbarProps {
@@ -40,48 +41,13 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
   const { totalItems, toggleCart } = useCart();
   const { currentBranch, branchCount } = useBranch();
   const { theme, setTheme, resolvedTheme, toggleTheme } = useTheme();
+  const { lang: currentLang, setLang: handleSelectLang, t } = useLanguage();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState<'es' | 'en' | 'zh'>('es');
-
-  // Cargar y sincronizar preferencia de idioma
-  React.useEffect(() => {
-    try {
-      const saved = (localStorage.getItem('sayta_global_lang') || localStorage.getItem('sayta_dashboard_lang')) as 'es' | 'en' | 'zh';
-      if (saved && ['es', 'en', 'zh'].includes(saved)) {
-        setCurrentLang(saved);
-        if (typeof document !== 'undefined') {
-          document.documentElement.lang = saved === 'zh' ? 'zh-CN' : saved;
-        }
-      }
-    } catch {}
-
-    const handleLangSync = (e: any) => {
-      const lang = e?.detail as 'es' | 'en' | 'zh';
-      if (lang && ['es', 'en', 'zh'].includes(lang)) {
-        setCurrentLang(lang);
-      }
-    };
-    window.addEventListener('sayta_lang_change', handleLangSync);
-    return () => window.removeEventListener('sayta_lang_change', handleLangSync);
-  }, []);
-
-  const handleSelectLang = (newLang: 'es' | 'en' | 'zh') => {
-    setCurrentLang(newLang);
-    setLangDropdownOpen(false);
-    try {
-      localStorage.setItem('sayta_global_lang', newLang);
-      localStorage.setItem('sayta_dashboard_lang', newLang);
-      if (typeof document !== 'undefined') {
-        document.documentElement.lang = newLang === 'zh' ? 'zh-CN' : newLang;
-        window.dispatchEvent(new CustomEvent('sayta_lang_change', { detail: newLang }));
-      }
-    } catch {}
-  };
 
   const navLabels = {
     es: {
@@ -91,6 +57,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
       cart: 'Cesta',
       account: 'Mi Cuenta',
       login: 'Entrar',
+      logout: 'Cerrar sesión',
       branch: 'Sucursal',
       change: 'Cambiar',
       visualTheme: 'Tema Visual',
@@ -104,6 +71,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
       cart: 'Cart',
       account: 'My Account',
       login: 'Sign In',
+      logout: 'Log Out',
       branch: 'Branch',
       change: 'Change',
       visualTheme: 'Visual Theme',
@@ -116,7 +84,8 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
       search: '搜索商品',
       cart: '购物车',
       account: '我的账户',
-      login: '登录',
+      login: '立即登录',
+      logout: '退出登录',
       branch: '当前分店',
       change: '切换分店',
       visualTheme: '视觉配色主题',
@@ -156,7 +125,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
               Sayta Mall
             </span>
             <span className="text-[9px] text-[#86868b] tracking-wider hidden sm:inline">
-              Super Ahorro Y Todo Aquí
+              {t('nav_subtitle')}
             </span>
           </div>
         </Link>
@@ -181,14 +150,14 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
         </nav>
 
         {/* Acciones Derecha */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Indicador de Sucursal: Solo si hay sucursales registradas */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3">
+          {/* Indicador de Sucursal: Solo en pantallas medianas/grandes */}
           {branchCount > 0 && currentBranch && (
             branchCount >= 2 ? (
               <button
                 onClick={onOpenBranchModal}
                 type="button"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-[#86868b] hover:text-[#f5f5f7] transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-[#86868b] hover:text-[#f5f5f7] transition-all"
                 title="Cambiar sucursal"
               >
                 <MapPin className="w-3 h-3 text-[#30d158]" />
@@ -213,8 +182,8 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Selector de Tema: Rápido, Directo y Visible con 1 Clic */}
-          <div className="hidden xs:flex items-center bg-white/[0.06] p-0.5 rounded-full border border-white/[0.1] backdrop-blur-md sm:flex">
+          {/* Selector de Tema: Visible en desktop (>= md), en móvil está disponible en el menú hamburguesa */}
+          <div className="hidden md:flex items-center bg-white/[0.06] p-0.5 rounded-full border border-white/[0.1] backdrop-blur-md">
             <button
               onClick={() => setTheme('light')}
               type="button"
@@ -256,25 +225,22 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
             </button>
           </div>
 
-          {/* Selector de Idioma: Español / English / 中文 (简体) */}
+          {/* Selector de Idioma: Compacto y adaptativo */}
           <div className="relative">
             <button
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
               type="button"
-              className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs text-white transition-all cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs text-white transition-all cursor-pointer"
               title="Idioma / Language / 语言"
               aria-label="Seleccionar Idioma"
             >
-              {/* Mobile: solo bandera sin texto ni chevron */}
-              <span className="text-sm sm:hidden">
+              <span className="text-xs sm:text-sm">
                 {currentLang === 'zh' ? '🇨🇳' : currentLang === 'en' ? '🇺🇸' : '🇳🇮'}
               </span>
-              {/* Desktop: ícono + texto + chevron */}
-              <Languages className="w-3.5 h-3.5 text-[#2997ff] hidden sm:block" />
               <span className="font-semibold text-[11px] hidden sm:inline">
-                {currentLang === 'zh' ? '🇨🇳 中文' : currentLang === 'en' ? '🇺🇸 EN' : '🇳🇮 ES'}
+                {currentLang === 'zh' ? '中文' : currentLang === 'en' ? 'EN' : 'ES'}
               </span>
-              <ChevronDown className="w-3 h-3 text-[#86868b] hidden sm:block" />
+              <ChevronDown className="w-3 h-3 text-[#86868b]" />
             </button>
 
             {langDropdownOpen && (
@@ -363,7 +329,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                     {phoneVerified ? (
                       <div className="px-3 py-1 text-[11px] text-[#30d158] font-semibold flex items-center gap-1.5">
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        <span> Verificada</span>
+                        <span> {t('nav_verified')}</span>
                       </div>
                     ) : (
                       <button
@@ -374,7 +340,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                         className="w-full text-left px-3 py-1.5 rounded-lg text-xs text-[#ffd60a] hover:bg-white/[0.08] transition-colors flex items-center gap-1.5"
                       >
                         <Smartphone className="w-3.5 h-3.5" />
-                        <span>Verificar Celular</span>
+                        <span>{t('nav_verify_phone')}</span>
                       </button>
                     )}
                   </div>
@@ -385,7 +351,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                       href="/dueno/productos"
                       className="block px-3 py-1.5 rounded-lg text-xs text-white hover:bg-white/[0.08] transition-colors"
                     >
-                      Gestión de Productos
+                      {t('nav_manage_products')}
                     </Link>
                   )}
                   {claims?.role === 'employee' && (
@@ -393,7 +359,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                       href="/empleado/productos"
                       className="block px-3 py-1.5 rounded-lg text-xs text-white hover:bg-white/[0.08] transition-colors"
                     >
-                      Gestión de Productos
+                      {t('nav_manage_products')}
                     </Link>
                   )}
 
@@ -402,7 +368,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                       href="/programador/dashboard"
                       className="block px-3 py-1.5 rounded-lg text-xs text-[#2997ff] hover:bg-white/[0.08] transition-colors"
                     >
-                      Consola Programador
+                      {t('nav_console_dev')}
                     </Link>
                   )}
                   {claims?.role === 'owner' && (
@@ -410,7 +376,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                       href="/dueno/dashboard"
                       className="block px-3 py-1.5 rounded-lg text-xs text-[#30d158] hover:bg-white/[0.08] transition-colors"
                     >
-                      Portal Dueño
+                      {t('nav_portal_owner')}
                     </Link>
                   )}
                   {claims?.role === 'employee' && (
@@ -418,14 +384,14 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                       href="/empleado/dashboard"
                       className="block px-3 py-1.5 rounded-lg text-xs text-[#2997ff] hover:bg-white/[0.08] transition-colors"
                     >
-                      Mi Estación
+                      {t('nav_my_station')}
                     </Link>
                   )}
                   <button
                     onClick={() => logout()}
                     className="w-full text-left px-3 py-1.5 rounded-lg text-xs text-rose-400 hover:bg-rose-500/10 transition-colors mt-1"
                   >
-                    Cerrar sesión
+                    {navLabels.logout}
                   </button>
                 </div>
               )}
@@ -436,7 +402,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
               className="apple-pill-btn apple-btn-primary px-3 py-1 text-xs font-medium flex items-center gap-1"
             >
               <LogIn className="w-3 h-3" />
-              <span>Entrar</span>
+              <span>{navLabels.login}</span>
             </Link>
           )}
 
@@ -474,8 +440,8 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                 }}
                 className="flex items-center justify-between w-full text-xs text-[#86868b] py-2"
               >
-                <span>Sucursal: {currentBranch?.name}</span>
-                <span className="text-[#2997ff]">Cambiar</span>
+                <span>{t('nav_branch')}: {currentBranch?.name}</span>
+                <span className="text-[#2997ff]">{navLabels.change}</span>
               </button>
             </div>
           )}
@@ -500,7 +466,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                   >
                     <Icon className="w-4 h-4" />
                     <span className="text-[10px] text-center leading-tight">
-                      {value === 'light' ? 'Claro' : value === 'dark' ? 'Oscuro' : 'Sistema'}
+                      {value === 'light' ? t('nav_theme_light') : value === 'dark' ? t('nav_theme_dark') : t('nav_theme_system')}
                     </span>
                   </button>
                 );

@@ -19,6 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useBranch } from '@/providers/BranchProvider';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 
 interface BranchManagerProps {
   onBranchDeleted?: () => void;
@@ -38,6 +39,7 @@ interface BranchEditState {
 }
 
 export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManagerProps) {
+  const { t } = useDashboardPreferences();
   const { branches } = useBranch();
   const [owners, setOwners] = useState<Array<{ id: string; name: string; storeName: string; email?: string }>>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -178,7 +180,7 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
   if (!branches || branches.length === 0) {
     return (
       <div className="apple-card p-8 text-center text-xs text-[#86868b]">
-        No hay sucursales registradas.
+        {t('branch_mgr_empty_title', 'No hay sucursales registradas.')}
       </div>
     );
   }
@@ -234,7 +236,7 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
                       : 'Delivery'}
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#30d158]/15 text-[#30d158]">
-                    ● Activa
+                    ● {t('status_on_duty', 'Activa')}
                   </span>
                   {(branch.ownerName || branch.ownerId) && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2997ff]/10 text-[#2997ff] flex items-center gap-1 font-medium">
@@ -255,14 +257,14 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
                 className="px-3 py-1.5 rounded-xl text-[11px] font-medium bg-[#2997ff]/10 text-[#2997ff] hover:bg-[#2997ff]/20 flex items-center gap-1.5 transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                {editingId === branch.id ? 'Cancelar' : 'Editar'}
+                {editingId === branch.id ? t('emp_mgr_form_cancel', 'Cancelar') : t('branch_mgr_btn_edit', 'Editar')}
               </button>
               <button
                 onClick={() => setDeleteConfirmId(branch.id)}
                 className="px-3 py-1.5 rounded-xl text-[11px] font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center gap-1.5 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Eliminar
+                {t('branch_mgr_btn_delete', 'Eliminar')}
               </button>
             </div>
           </div>
@@ -272,14 +274,14 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
             <div className="border-t border-white/[0.08] p-4 sm:p-5 space-y-4 bg-white/[0.02] animate-fade-in">
               <h4 className="text-xs font-semibold text-[#f5f5f7] flex items-center gap-2">
                 <Edit3 className="w-3.5 h-3.5 text-[#2997ff]" />
-                Editar datos de la sucursal
+                {t('branch_mgr_btn_edit', 'Editar datos de la sucursal')}
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Nombre */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-[#86868b] flex items-center gap-1">
-                    <Building2 className="w-3 h-3" /> Nombre *
+                    <Building2 className="w-3 h-3" /> {t('branch_mgr_field_name', 'Nombre')} *
                   </label>
                   <input
                     type="text"
@@ -293,7 +295,7 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
                 {/* Ciudad */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-[#86868b] flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> Ciudad
+                    <MapPin className="w-3 h-3" /> {t('branch_mgr_field_city', 'Ciudad')}
                   </label>
                   <input
                     type="text"
@@ -321,7 +323,7 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
                 {/* Teléfono */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-medium text-[#86868b] flex items-center gap-1">
-                    <Phone className="w-3 h-3" /> Teléfono
+                    <Phone className="w-3 h-3" /> {t('branch_mgr_field_phone', 'Teléfono')}
                   </label>
                   <input
                     type="tel"
@@ -429,7 +431,7 @@ export function BranchManager({ onBranchDeleted, onBranchUpdated }: BranchManage
                   className="apple-pill-btn apple-btn-primary px-5 py-2 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                  {saving ? t('branch_mgr_btn_saving', 'Guardando...') : t('branch_mgr_btn_save', 'Guardar Cambios')}
                 </button>
               </div>
             </div>

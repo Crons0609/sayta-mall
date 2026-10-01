@@ -1,8 +1,9 @@
-﻿// src/components/auth/AgeVerificationModal.tsx
+// src/components/auth/AgeVerificationModal.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { AlertTriangle, ShieldCheck, X, Lock, Heart } from 'lucide-react';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 interface AgeVerificationModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export function setAgeVerified(): void {
 }
 
 export function AgeVerificationModal({ isOpen, onConfirm, onCancel }: AgeVerificationModalProps) {
+  const { t } = useLanguage();
   const [confirmed, setConfirmed] = useState(false);
 
   if (!isOpen) return null;
@@ -49,7 +51,7 @@ export function AgeVerificationModal({ isOpen, onConfirm, onCancel }: AgeVerific
           <button
             onClick={onCancel}
             className="absolute top-4 right-4 p-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-[#86868b] hover:text-white transition-all"
-            aria-label="Cerrar"
+            aria-label={t('age_modal_btn_cancel', 'Cerrar')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -58,19 +60,17 @@ export function AgeVerificationModal({ isOpen, onConfirm, onCancel }: AgeVerific
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#bf5af2]/15 border border-[#bf5af2]/30 text-[#bf5af2] text-[11px] font-semibold mb-3">
             <Lock className="w-3 h-3" />
-            <span>Contenido para Adultos — Solo +18</span>
+            <span>{t('age_modal_badge', 'Contenido para Adultos — Solo +18')}</span>
           </div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Verificación de Edad</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">{t('age_modal_title', 'Verificación de Edad')}</h2>
           <p className="mt-2 text-xs text-[#86868b] leading-relaxed max-w-sm mx-auto">
-            Esta sección contiene productos íntimos exclusivamente para adultos.
-            Para acceder debes confirmar que tienes <strong className="text-white">18 años o más</strong>.
+            {t('age_modal_desc', 'Esta sección contiene productos íntimos exclusivamente para adultos. Para acceder debes confirmar que tienes 18 años o más.')}
           </p>
         </div>
         <div className="mx-6 mb-4 p-3 rounded-xl bg-[#ffd60a]/[0.07] border border-[#ffd60a]/20 flex items-start gap-2.5">
           <AlertTriangle className="w-4 h-4 text-[#ffd60a] mt-0.5 flex-shrink-0" />
           <p className="text-[11px] text-[#ffd60a]/90 leading-relaxed">
-            El acceso por menores de 18 años está <strong>estrictamente prohibido</strong>.
-            Al continuar, confirmas bajo tu responsabilidad que eres mayor de edad.
+            {t('age_modal_warning', 'El acceso por menores de 18 años está estrictamente prohibido. Al continuar, confirmas bajo tu responsabilidad que eres mayor de edad.')}
           </p>
         </div>
         <div className="mx-6 mb-6">
@@ -92,8 +92,7 @@ export function AgeVerificationModal({ isOpen, onConfirm, onCancel }: AgeVerific
               </div>
             </div>
             <span className="text-[12px] text-[#86868b] group-hover:text-[#f5f5f7] transition-colors leading-relaxed">
-              Confirmo que tengo <strong className="text-white">18 años o más</strong> y acepto ver
-              contenido para adultos de carácter íntimo y personal.
+              {t('age_modal_checkbox', 'Confirmo que tengo 18 años o más y acepto ver contenido para adultos de carácter íntimo y personal.')}
             </span>
           </label>
         </div>
@@ -108,19 +107,18 @@ export function AgeVerificationModal({ isOpen, onConfirm, onCancel }: AgeVerific
             }`}
           >
             <Heart className="w-4 h-4" />
-            Soy mayor de 18 años — Ingresar
+            {t('age_modal_btn_confirm', 'Soy mayor de 18 años — Ingresar')}
           </button>
           <button
             onClick={onCancel}
             className="flex-1 sm:flex-initial py-3 sm:px-5 rounded-2xl text-sm font-medium bg-white/[0.04] border border-white/[0.08] text-[#86868b] hover:text-white hover:bg-white/[0.08] transition-all"
           >
-            Cancelar
+            {t('age_modal_btn_cancel', 'Cancelar')}
           </button>
         </div>
         <div className="px-6 pb-5 text-center">
           <p className="text-[10px] text-[#3d3d3f] leading-relaxed">
-            Sayta Mall promueve el uso responsable y legal de productos para adultos.
-            Esta verificación es de buena fe. El titular del local no se hace responsable del uso indebido.
+            {t('age_modal_disclaimer', 'Sayta Mall promueve el uso responsable y legal de productos para adultos. Esta verificación es de buena fe. El titular del local no se hace responsable del uso indebido.')}
           </p>
         </div>
       </div>

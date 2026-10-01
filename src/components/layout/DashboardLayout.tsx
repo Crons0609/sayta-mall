@@ -46,11 +46,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
-  return (
-    <DashboardPreferencesProvider>
-      <DashboardLayoutInner role={role}>{children}</DashboardLayoutInner>
-    </DashboardPreferencesProvider>
-  );
+  return <DashboardLayoutInner role={role}>{children}</DashboardLayoutInner>;
 }
 
 function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
@@ -169,9 +165,39 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
     }
   };
 
+  // Rol efectivo del usuario autenticado (garantiza que al navegar a módulos compartidos como chat o productos no se pierdan enlaces)
+  const effectiveRole: 'programmer' | 'owner' | 'employee' = React.useMemo(() => {
+    const cookies = typeof document !== 'undefined' ? document.cookie : '';
+    const cookieRole = cookies
+      .split('; ')
+      .find((c) => c.startsWith('sayta_simulated_role='))
+      ?.split('=')[1];
+
+    const isImpersonating = cookies
+      .split('; ')
+      .some((c) => c.startsWith('sayta_impersonating_owner='));
+
+    if (cookieRole === 'programmer' || cookieRole === 'owner' || cookieRole === 'employee') {
+      return cookieRole;
+    }
+    if (isImpersonating) {
+      return 'owner';
+    }
+    if (claims?.role === 'programmer') {
+      return 'programmer';
+    }
+    if (claims?.role === 'owner') {
+      return 'owner';
+    }
+    if (claims?.role === 'employee') {
+      return 'employee';
+    }
+    return role;
+  }, [claims?.role, role]);
+
   // Enlaces según el rol
   const getNavLinks = () => {
-    if (role === 'programmer') {
+    if (effectiveRole === 'programmer') {
       return [
         { label: t('nav_dashboard_programmer', 'Centro de Comando'), href: '/programador/dashboard', icon: LayoutDashboard },
         { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: t('badge_live', 'En Vivo') },
@@ -184,7 +210,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
         { label: t('nav_settings', 'Ajustes de mi Panel'), href: '/programador/ajustes', icon: Settings },
       ];
     }
-    if (role === 'owner') {
+    if (effectiveRole === 'owner') {
       return [
         { label: t('nav_dashboard_owner', 'Panel Ejecutivo'), href: '/dueno/dashboard', icon: LayoutDashboard },
         { label: t('nav_chat_staff', 'Chat del Personal'), href: '/empleado/chat', icon: MessageSquare, badge: t('badge_live', 'En Vivo') },
@@ -312,7 +338,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             {branchCount === 0 ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ff453a]/15 text-[#ff453a] text-[11px] font-medium border border-[#ff453a]/25">
                 <Store className="w-3 h-3" />
-                <span>Sin sucursales</span>
+                <span>{t('no_branches', 'Sin sucursales')}</span>
               </span>
             ) : branchCount === 1 ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] text-[#86868b] text-[11px] font-medium border border-white/[0.08]">
@@ -336,7 +362,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 {branchDropdownOpen && (
                   <div className="absolute left-0 mt-2 w-56 rounded-2xl bg-[#1c1c1e] border border-white/[0.12] p-1.5 shadow-2xl z-50 animate-fade-in">
                     <span className="block px-2.5 py-1 text-[10px] uppercase font-semibold text-[#86868b] tracking-wider">
-                      Cambiar de Sucursal
+                      {t('change_branch', 'Cambiar de Sucursal')}
                     </span>
                     {branches.map((b) => (
                       <button
@@ -371,7 +397,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-[#86868b] hover:text-white transition-all"
           >
             <Search className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Buscar...</span>
+            <span className="hidden md:inline">{t('search_placeholder', 'Buscar...')}</span>
             <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white/[0.08] text-[#86868b] rounded border border-white/[0.1]">
               ⌘K
             </kbd>
@@ -379,7 +405,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
 
           {/* Notificaciones */}
           <button
-            title="Notificaciones"
+            title={t('tab_chat', 'Notificaciones')}
             className="p-2 rounded-xl text-[#86868b] hover:text-white hover:bg-white/[0.06] transition-colors relative"
           >
             <Bell className="w-4 h-4" />
@@ -412,7 +438,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
               title="Verificar cuenta mediante SMS de Firebase"
             >
               <Smartphone className="w-3 h-3 text-[#30d158]" />
-              <span>Verificar Celular</span>
+              <span>{t('verify_phone', 'Verificar Celular')}</span>
             </button>
           )}
 
@@ -423,7 +449,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 {user?.displayName || user?.email || 'Administrador'}
               </span>
               <span className="block text-[10px] uppercase font-semibold text-[#86868b] tracking-wider">
-                {role === 'programmer' ? t('superadmin', 'Superadmin') : role === 'owner' ? t('role_owner', 'Dueño') : t('role_employee', 'Empleado')}
+                {effectiveRole === 'programmer' ? t('superadmin', 'Superadmin') : effectiveRole === 'owner' ? t('role_owner', 'Dueño') : t('role_employee', 'Empleado')}
               </span>
             </div>
             <button
@@ -447,7 +473,10 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           {/* Navegación */}
           <div className="p-3 space-y-1 flex-1">
             {navLinks.map((item) => {
-              const active = pathname === item.href;
+              const active =
+                pathname === item.href ||
+                (item.href === '/dueno/productos' && pathname === '/empleado/productos') ||
+                (item.href === '/dueno/empleados' && pathname === '/programador/empleados');
               const Icon = item.icon;
               return (
                 <Link
@@ -524,7 +553,10 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
 
                 <div className="space-y-1">
                   {navLinks.map((item) => {
-                    const active = pathname === item.href;
+                    const active =
+                      pathname === item.href ||
+                      (item.href === '/dueno/productos' && pathname === '/empleado/productos') ||
+                      (item.href === '/dueno/empleados' && pathname === '/programador/empleados');
                     const Icon = item.icon;
                     return (
                       <Link
@@ -575,7 +607,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
         aria-label="Navegación móvil inferior"
         className="fixed bottom-0 left-0 right-0 z-40 bg-[#000000]/95 backdrop-blur-2xl border-t border-white/[0.1] lg:hidden safe-bottom px-2 py-1 flex items-center justify-around shadow-2xl"
       >
-        {role === 'programmer' && (
+        {effectiveRole === 'programmer' && (
           <>
             <Link
               href="/programador/dashboard"
@@ -636,7 +668,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           </>
         )}
 
-        {role === 'owner' && (
+        {effectiveRole === 'owner' && (
           <>
             <Link
               href="/dueno/dashboard"
@@ -697,7 +729,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           </>
         )}
 
-        {role === 'employee' && (
+        {effectiveRole === 'employee' && (
           <>
             <Link
               href="/empleado/dashboard"
@@ -770,3 +802,4 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
     </div>
   );
 }
+

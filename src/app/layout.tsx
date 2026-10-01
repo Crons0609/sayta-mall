@@ -3,9 +3,11 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { LanguageProvider } from '@/providers/LanguageProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { BranchProvider } from '@/providers/BranchProvider';
 import { CartProvider } from '@/providers/CartProvider';
+import { DashboardPreferencesProvider } from '@/providers/DashboardPreferencesProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -78,13 +80,17 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider>
-          <AuthProvider>
-            <BranchProvider>
-              <CartProvider>
-                {children}
-              </CartProvider>
-            </BranchProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <BranchProvider>
+                <CartProvider>
+                  <DashboardPreferencesProvider>
+                    {children}
+                  </DashboardPreferencesProvider>
+                </CartProvider>
+              </BranchProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

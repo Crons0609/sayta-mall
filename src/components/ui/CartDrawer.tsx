@@ -1,4 +1,4 @@
-// src/components/ui/CartDrawer.tsx
+﻿// src/components/ui/CartDrawer.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,8 +6,9 @@ import { useCart } from '@/providers/CartProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useBranch } from '@/providers/BranchProvider';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { db, getAuthToken } from '@/lib/firebase/client';
 import { DeliveryCompany, DeliveryOrder } from '@/types/delivery.types';
+import { useLanguage } from '@/providers/LanguageProvider';
 import {
   X,
   Trash2,
@@ -47,6 +48,7 @@ export function CartDrawer() {
 
   const { user } = useAuth();
   const { currentBranch } = useBranch();
+  const { t, isZh } = useLanguage();
 
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState(false);
@@ -139,8 +141,14 @@ export function CartDrawer() {
       return;
     }
 
+    if (!user) {
+      setOrderError('Debes iniciar sesión para realizar tu pedido.');
+      return;
+    }
+
     try {
       setSubmittingOrder(true);
+      const idToken = await getAuthToken();
 
       const payload = {
         cliente: {
@@ -156,17 +164,17 @@ export function CartDrawer() {
           price: it.price,
           image: it.image,
         })),
-        empresa_delivery_id: activeDelivery.id,
-        canal_pedido: 'whatsapp',
-        metodo_pago: 'efectivo',
+        empresaDeliveryId: activeDelivery.id,
+        sucursalId: currentBranch?.id || 'branch-central',
         descuento: discount,
-        moneda: 'NIO',
-        sucursal_nombre: currentBranch?.name || 'nuestra tienda',
       };
 
-      const res = await fetch('/api/orders', {
+      const res = await fetch('/api/orders/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -175,14 +183,15 @@ export function CartDrawer() {
         throw new Error(data.error || 'Error procesando el pedido');
       }
 
-      setOrderId(data.orderId);
-      setWhatsappUrl(data.whatsappUrl);
+      setOrderId(data.orderNumber || data.orderId);
+      const targetWaUrl = data.whatsappDeliveryUrl || data.whatsappUrl;
+      setWhatsappUrl(targetWaUrl);
       setCheckoutStep('success');
 
       // Abrir WhatsApp automáticamente
-      if (data.whatsappUrl) {
+      if (targetWaUrl) {
         try {
-          window.open(data.whatsappUrl, '_blank');
+          window.open(targetWaUrl, '_blank');
         } catch {
           // El navegador puede bloquear popups; el botón lo mostrará igual
         }
@@ -233,12 +242,12 @@ export function CartDrawer() {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-white tracking-tight">
-                      {checkoutStep === 'success' ? 'Pedido Enviado' : 'Bolsa de Compras'}
+                      {checkoutStep === 'success' ? t('cart_success_title') : t('cart_title')}
                     </h2>
                     <p className="text-xs text-[#86868b]">
                       {checkoutStep === 'success'
-                        ? 'Tu pedido fue enviado al delivery'
-                        : `${totalItems} ${totalItems === 1 ? 'artículo' : 'artículos'} seleccionados`}
+                        ? (isZh ? '订单已生成并已发送给骑手' : 'Tu pedido fue enviado al delivery')
+                        : `${totalItems} ${t('cart_items_selected')}`}
                     </p>
                   </div>
                 </>
@@ -265,13 +274,13 @@ export function CartDrawer() {
               </div>
 
               <span className="text-[11px] font-bold uppercase tracking-widest text-[#30d158] mb-2">
-                ¡Pedido listo!
+                ¡Pedido Creado!
               </span>
               <h3 className="text-2xl font-black text-white mb-2 tracking-tight">
-                Orden {orderId}
+                Orden #{orderId}
               </h3>
               <p className="text-xs text-[#86868b] mb-6 max-w-xs leading-relaxed">
-                Tu pedido ha sido preparado y enviado a <strong className="text-white">{activeDelivery?.nombre || 'el servicio de delivery'}</strong>. Si WhatsApp no se abrió automáticamente, haz clic en el botón de abajo.
+                Tu pedido quedó registrado en estado <strong className="text-[#ffd60a]">pendiente</strong> y el stock ha sido reservado. El personal prepara tus artículos y el repartidor de <strong className="text-white">{activeDelivery?.nombre || 'Delivery'}</strong> se presentará en la sucursal para validar la compra escaneando el código QR.
               </p>
 
               {/* Botón principal WhatsApp */}
@@ -284,10 +293,10 @@ export function CartDrawer() {
                     className="w-full py-4 px-4 rounded-2xl font-bold text-black bg-[#30d158] hover:bg-[#2dba4e] shadow-xl shadow-[#30d158]/25 transition-all flex items-center justify-center gap-2.5 text-sm"
                   >
                     <MessageCircle className="w-5 h-5" />
-                    <span>Abrir WhatsApp y Enviar Pedido</span>
+                    <span>{t('cart_open_whatsapp')}</span>
                   </a>
                   <span className="text-[10px] text-[#86868b] mt-2 block text-center">
-                    El mensaje con todos tus productos ya está listo para enviar.
+                    {isZh ? '包含您所购商品的清单已准备好发送。' : 'El mensaje con todos tus productos ya está listo para enviar.'}
                   </span>
                 </div>
               )}
@@ -304,7 +313,7 @@ export function CartDrawer() {
                 onClick={handleResetCheckout}
                 className="w-full py-3 rounded-xl font-semibold text-xs text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] transition-all"
               >
-                Volver a la Tienda
+                {t('cart_back_to_shop')}
               </button>
             </div>
 
@@ -349,7 +358,7 @@ export function CartDrawer() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                     <ShoppingBag className="w-3.5 h-3.5 text-[#2997ff]" />
-                    <span>Tu pedido ({items.length} {items.length === 1 ? 'producto' : 'productos'})</span>
+                    <span>{t('cart_order_summary')} ({items.length} {isZh ? '件商品' : items.length === 1 ? 'producto' : 'productos'})</span>
                   </label>
                   <div className="rounded-2xl bg-white/[0.02] border border-white/[0.07] divide-y divide-white/[0.05] overflow-hidden">
                     {items.map((item) => (
@@ -360,7 +369,7 @@ export function CartDrawer() {
                       </div>
                     ))}
                     <div className="flex justify-between px-3 py-2.5 bg-white/[0.03]">
-                      <span className="text-xs font-bold text-white">Total</span>
+                      <span className="text-xs font-bold text-white">{t('cart_total')}</span>
                       <span className="text-xs font-bold text-[#30d158] font-mono">C$ {totalAPagar.toLocaleString('es-NI')} NIO</span>
                     </div>
                   </div>
@@ -370,12 +379,12 @@ export function CartDrawer() {
                 <div className="space-y-3 pt-1 border-t border-white/[0.08]">
                   <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5 pt-1">
                     <MapPin className="w-3.5 h-3.5 text-[#ffd60a]" />
-                    <span>Tus datos de entrega</span>
+                    <span>{t('cart_delivery_info')}</span>
                   </span>
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#86868b] mb-1">
-                      Tu Nombre Completo *
+                      {t('cart_name_label')}
                     </label>
                     <div className="relative">
                       <User className="w-3.5 h-3.5 text-[#86868b] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -384,7 +393,7 @@ export function CartDrawer() {
                         required
                         value={clienteNombre}
                         onChange={(e) => setClienteNombre(e.target.value)}
-                        placeholder="Ej. María González"
+                        placeholder={t('cart_name_placeholder')}
                         className="w-full pl-8 pr-3 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] transition-colors"
                       />
                     </div>
@@ -392,7 +401,7 @@ export function CartDrawer() {
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#86868b] mb-1">
-                      Tu Teléfono (WhatsApp)
+                      {t('cart_phone_label')}
                     </label>
                     <div className="relative">
                       <Phone className="w-3.5 h-3.5 text-[#86868b] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -400,7 +409,7 @@ export function CartDrawer() {
                         type="tel"
                         value={clienteTelefono}
                         onChange={(e) => setClienteTelefono(e.target.value)}
-                        placeholder="+505 8888 1234"
+                        placeholder={t('cart_phone_placeholder')}
                         className="w-full pl-8 pr-3 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] font-mono transition-colors"
                       />
                     </div>
@@ -408,7 +417,7 @@ export function CartDrawer() {
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#86868b] mb-1">
-                      Dirección de Entrega *
+                      {t('cart_address_label')}
                     </label>
                     <div className="relative">
                       <Home className="w-3.5 h-3.5 text-[#86868b] absolute left-3 top-3 pointer-events-none" />
@@ -417,7 +426,7 @@ export function CartDrawer() {
                         required
                         value={clienteDireccion}
                         onChange={(e) => setClienteDireccion(e.target.value)}
-                        placeholder="Calle principal, de la iglesia 2c al norte, casa esquinera..."
+                        placeholder={t('cart_address_placeholder')}
                         className="w-full pl-8 pr-3 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] transition-colors resize-none"
                       />
                     </div>
@@ -425,13 +434,13 @@ export function CartDrawer() {
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#86868b] mb-1">
-                      Referencias del domicilio (opcional)
+                      {t('cart_reference_label')}
                     </label>
                     <input
                       type="text"
                       value={clienteReferencias}
                       onChange={(e) => setClienteReferencias(e.target.value)}
-                      placeholder="Portón negro, muro verde, casa azul..."
+                      placeholder={t('cart_reference_placeholder')}
                       className="w-full px-3 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] transition-colors"
                     />
                   </div>
@@ -612,26 +621,26 @@ export function CartDrawer() {
                   {/* Resumen */}
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between text-[#86868b]">
-                      <span>Subtotal de artículos</span>
+                      <span>{t('cart_subtotal')}</span>
                       <span className="font-mono text-white">C$ {subtotal.toLocaleString('es-NI')} NIO</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-[#30d158]">
-                        <span>Descuento</span>
+                        <span>{t('cart_discount')}</span>
                         <span className="font-mono">-C$ {discount.toLocaleString('es-NI')} NIO</span>
                       </div>
                     )}
                     <div className="flex justify-between text-[#86868b]">
                       <span className="flex items-center gap-1">
                         <Truck className="w-3.5 h-3.5 text-[#2997ff]" />
-                        <span>Delivery</span>
+                        <span>{t('cart_delivery')}</span>
                       </span>
                       <span className="text-[#ffd60a] font-semibold">
-                        {loadingDelivery ? 'Verificando...' : activeDelivery ? activeDelivery.nombre : 'No disponible'}
+                        {loadingDelivery ? (isZh ? '核验中...' : 'Verificando...') : activeDelivery ? activeDelivery.nombre : (isZh ? '暂无服务' : 'No disponible')}
                       </span>
                     </div>
                     <div className="pt-2 border-t border-white/[0.08] flex justify-between items-baseline">
-                      <span className="text-sm font-bold text-white">Total</span>
+                      <span className="text-sm font-bold text-white">{t('cart_total')}</span>
                       <span className="text-lg font-black text-white font-mono">
                         C$ {(subtotal - discount).toLocaleString('es-NI')}{' '}
                         <span className="text-xs font-normal text-[#86868b]">NIO</span>
@@ -645,7 +654,7 @@ export function CartDrawer() {
                     className="w-full group relative flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm text-black bg-[#30d158] hover:bg-[#2dba4e] shadow-xl shadow-[#30d158]/25 transition-all duration-200 active:scale-[0.98]"
                   >
                     <MessageCircle className="w-5 h-5" />
-                    <span>Comprar</span>
+                    <span>{t('cart_btn_checkout')}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
@@ -657,3 +666,4 @@ export function CartDrawer() {
     </div>
   );
 }
+

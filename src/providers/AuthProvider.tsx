@@ -173,6 +173,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             uid: idCookie || `simulated-${Date.now()}`,
             email: emailCookie || null,
             displayName: nameCookie || (emailCookie ? emailCookie.split('@')[0] : 'Colaborador'),
+            getIdToken: async () => '',
+            getIdTokenResult: async () => ({
+              claims: simulatedClaims as any,
+              token: '',
+              authTime: '',
+              issuedAtTime: '',
+              expirationTime: '',
+              signInProvider: null,
+              signInSecondFactor: null,
+            }),
           } as any);
         } else {
           setUser(null);
@@ -255,6 +265,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           uid: data.userId || `emp-${Date.now()}`,
           email: data.email || emailInput.trim(),
           displayName: data.displayName || emailInput.trim().split('@')[0],
+          getIdToken: async () => '',
+          getIdTokenResult: async () => ({
+            claims: resolvedClaims as any,
+            token: '',
+            authTime: '',
+            issuedAtTime: '',
+            expirationTime: '',
+            signInProvider: null,
+            signInSecondFactor: null,
+          }),
         } as any);
 
         document.cookie = `sayta_simulated_role=${resolvedClaims.role}; path=/; max-age=604800; SameSite=Lax`;

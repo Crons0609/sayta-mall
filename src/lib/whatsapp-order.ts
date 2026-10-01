@@ -61,3 +61,40 @@ export function buildWhatsAppOrderUrl(order: DeliveryOrder): string {
   const text = generateWhatsAppOrderMessage(order);
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
+
+/**
+ * Notificación formal al delivery para que retire el pedido en sucursal y valide con QR
+ */
+export function buildWhatsAppDeliveryNotification(
+  order: any,
+  empresa: any,
+  items: any[]
+): string {
+  const cleanPhone = sanitizeWhatsAppNumber(empresa.whatsapp || order.empresaDeliveryWhatsapp);
+  const itemsText = (items || [])
+    .map((it) => `• ${it.quantity || it.cantidad}x ${it.name || it.nombre}`)
+    .join('\n');
+
+  const text = [
+    `🛵 *NUEVO PEDIDO SAYTA MALL* 🛵`,
+    `━━━━━━━━━━━━━━━━━━`,
+    `📦 *Orden:* #${order.orderNumber || order.id?.slice(-6)}`,
+    `👤 *Cliente:* ${order.customerName || order.cliente?.nombre || 'Cliente'}`,
+    `📞 *Teléfono:* ${order.customerPhone || order.cliente?.telefono || 'No indicado'}`,
+    `📍 *Dirección:* ${order.deliveryAddress?.street || order.cliente?.direccion || 'A coordinar'}`,
+    order.deliveryAddress?.referencias || order.cliente?.referencias
+      ? `🏠 *Referencias:* ${order.deliveryAddress?.referencias || order.cliente?.referencias}`
+      : '',
+    ``,
+    `📋 *Productos para entrega:*`,
+    itemsText,
+    ``,
+    `💰 *Total a liquidar:* C$ ${Number(order.total || 0).toLocaleString('es-NI')} NIO`,
+    `━━━━━━━━━━━━━━━━━━`,
+    `⚠️ *IMPORTANTE PARA EL REPARTIDOR:*`,
+    `Al llegar a la sucursal, solicita escanear el *CÓDIGO QR* en caja para seleccionar al cliente y validar el pago de la compra.`,
+    `¡Gracias por tu servicio!`
+  ].filter(Boolean).join('\n');
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+}

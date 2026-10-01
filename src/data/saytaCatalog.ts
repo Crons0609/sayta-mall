@@ -85,6 +85,65 @@ export const SAYTA_DEPARTMENTS: SaytaDepartment[] = [
   },
 ];
 
+export function getDepartmentInfo(dept: SaytaDepartment, lang: 'es' | 'en' | 'zh'): SaytaDepartment {
+  const map: Record<string, Record<'en' | 'zh', { name: string; description: string; badge?: string }>> = {
+    herramientas: {
+      en: { name: 'Hardware & Tools', description: 'Drills, screwdrivers, hammers, and wrenches', badge: 'Popular' },
+      zh: { name: '五金工具 & 电工器材', description: '手电钻、螺丝刀、锤子、扳手与锁具', badge: '热销' },
+    },
+    calzado: {
+      en: { name: 'Footwear & Shoes', description: 'Sneakers, sandals, boots, and casual shoes' },
+      zh: { name: '精选鞋履 & 运动鞋', description: '运动球鞋、凉鞋、工装靴与休闲鞋' },
+    },
+    ropa: {
+      en: { name: 'Clothing & Fashion', description: 'Shirts, t-shirts, pants, and dresses' },
+      zh: { name: '时尚服装 & 潮流男女装', description: '男女衬衫、休闲T恤、长裤与洋装套组' },
+    },
+    'ropa-intima-fajas': {
+      en: { name: 'Underwear & Shapewear', description: 'Body shapers, lingerie, and boxers', badge: 'Bestseller' },
+      zh: { name: '美体塑身 & 贴身内衣', description: '强效收腹塑身衣、无痕内衣与保暖裤', badge: '全店热销' },
+    },
+    cosmeticos: {
+      en: { name: 'Cosmetics & Beauty', description: 'Makeup, eyeshadows, lipsticks, and skincare' },
+      zh: { name: '美妆护肤 & 个人护理', description: '专业彩妆、眼影盘、口红与面部护理' },
+    },
+    electronica: {
+      en: { name: 'Electronics & Gadgets', description: 'Earbuds, fast chargers, cables, and watches', badge: 'Trending' },
+      zh: { name: '数码科技 & 潮流数码', description: '蓝牙耳机、快充充电头、数据线与智能手表', badge: '流行趋势' },
+    },
+    'bocadillos-chinos': {
+      en: { name: 'Chinese Snacks & Treats', description: 'Spicy latiao, Asian ramen, and sweets', badge: 'Exclusive' },
+      zh: { name: '正宗中华零食 & 美食', description: '麻辣辣条、正宗拉面、特色膨化与糖果', badge: '独家专供' },
+    },
+    'gorras-accesorios': {
+      en: { name: 'Caps & Accessories', description: 'Snapbacks, hats, belts, and sunglasses' },
+      zh: { name: '潮流帽子 & 时尚配饰', description: '棒球帽、太阳帽、皮带与防晒太阳镜' },
+    },
+    'hogar-cocina': {
+      en: { name: 'Home & Kitchen', description: 'Choppers, pans, containers, and organizers' },
+      zh: { name: '居家生活 & 厨房好物', description: '厨房绞肉料理器、不粘煎锅与收纳保鲜盒' },
+    },
+    temporada: {
+      en: { name: 'Seasonal Goods', description: 'Decorative lights, gifts, and seasonal items' },
+      zh: { name: '季节特惠 & 节日好物', description: '节日装饰彩灯、精美礼品与当季热销品' },
+    },
+    'juguetes-sexuales': {
+      en: { name: 'Adult Novelties', description: 'Intimate products — 18+ only', badge: '+18' },
+      zh: { name: '成人私密生活用品', description: '成年人专属私密用品 — 仅限18岁以上', badge: '18禁' },
+    },
+  };
+
+  if (lang !== 'es' && map[dept.id] && map[dept.id][lang]) {
+    return {
+      ...dept,
+      name: map[dept.id][lang].name,
+      description: map[dept.id][lang].description,
+      badge: map[dept.id][lang].badge || dept.badge,
+    };
+  }
+  return dept;
+}
+
 /** Categoría de contenido para adultos */
 export const ADULT_CATEGORY_ID = 'juguetes-sexuales';
 export const ADULT_CATEGORY_NAME = 'Juguetes Sexuales';

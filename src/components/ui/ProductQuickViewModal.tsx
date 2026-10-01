@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { ProductItem } from '@/data/mockProducts';
 import { useCart } from '@/providers/CartProvider';
 import { useBranch } from '@/providers/BranchProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 import {
   X,
   Star,
@@ -13,7 +14,6 @@ import {
   RotateCcw,
   Check,
   ShoppingBag,
-  Sparkles,
 } from 'lucide-react';
 
 interface ProductQuickViewModalProps {
@@ -26,6 +26,7 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
   const { currentBranchId } = useBranch();
+  const { t } = useLanguage();
 
   if (!product) return null;
 
@@ -124,16 +125,13 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
               {/* Precios */}
               <div className="flex items-baseline gap-3 mt-4">
                 <span className="text-3xl font-black text-white font-mono">
-                  ${product.price.toLocaleString('es-MX')}
+                  C${product.price.toLocaleString('es-MX')}
                 </span>
                 {product.originalPrice > product.price && (
                   <span className="text-base text-slate-400 line-through">
-                    ${product.originalPrice}
+                    C${product.originalPrice}
                   </span>
                 )}
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  Ahorras ${(product.originalPrice - product.price).toLocaleString('es-MX')}
-                </span>
               </div>
 
               {/* Descripción */}
@@ -159,12 +157,12 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
               {/* Disponibilidad por Sucursal */}
               <div className="mt-4 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-between text-xs">
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Sucursal activa:</span>
+                  <span className="text-slate-400 block text-[11px]">{t('hero_branch_prefix', 'Sucursal activa')}:</span>
                   <span className="font-bold text-white">{currentBranchStock?.branchName}</span>
                 </div>
                 <div className="text-right">
                   <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
-                    <Check className="w-3.5 h-3.5" /> En Stock ({currentBranchStock?.stock} uds)
+                    <Check className="w-3.5 h-3.5" /> {currentBranchStock?.stock}
                   </span>
                 </div>
               </div>
@@ -179,12 +177,12 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
                 {added ? (
                   <>
                     <Check className="w-5 h-5 text-emerald-300" />
-                    <span>¡Agregado a la bolsa!</span>
+                    <span>{t('prod_added', '¡Agregado!')}</span>
                   </>
                 ) : (
                   <>
                     <ShoppingBag className="w-5 h-5" />
-                    <span>Añadir a la Bolsa · ${product.price.toLocaleString('es-MX')} MXN</span>
+                    <span>{t('prod_add', 'Añadir a la Bolsa')} · C${product.price.toLocaleString('es-MX')}</span>
                   </>
                 )}
               </button>
@@ -192,13 +190,13 @@ export function ProductQuickViewModal({ product, onClose }: ProductQuickViewModa
               {/* Badges de Confianza */}
               <div className="grid grid-cols-3 gap-2 text-[10px] text-center text-slate-400 pt-1">
                 <span className="flex items-center justify-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-sky-400" /> Garantía Sayta
+                  <ShieldCheck className="w-3.5 h-3.5 text-sky-400" /> {t('trust_p4_title', 'Garantía')}
                 </span>
                 <span className="flex items-center justify-center gap-1">
-                  <Truck className="w-3.5 h-3.5 text-emerald-400" /> Entrega Express
+                  <Truck className="w-3.5 h-3.5 text-emerald-400" /> {t('trust_p2_title', 'Delivery')}
                 </span>
                 <span className="flex items-center justify-center gap-1">
-                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" /> Devolución 30d
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" /> {t('trust_p1_title', '30d')}
                 </span>
               </div>
             </div>

@@ -51,23 +51,41 @@ export const PRODUCT_STATUS_LABELS: Record<ProductStatus, string> = {
 
 // ─── Estados de pedidos ────────────────────────────────────────────────────────
 export const ORDER_STATUS = {
-  PENDING: 'pending',
-  CONFIRMED: 'confirmed',
-  PREPARING: 'preparing',
-  READY: 'ready',
-  DELIVERED: 'delivered',
-  CANCELLED: 'cancelled',
+  PENDING: 'pendiente',                       // Creado, esperando preparación
+  EN_PREPARACION: 'en_preparacion',           // Empleado lo tomó y está preparando
+  EN_ESPERA_CLIENTE: 'en_espera_cliente',     // ⏸️ Pausado por falta de producto(s), esperando al cliente
+  LISTO_PARA_ENTREGA: 'listo_para_entrega',   // Listo, esperando al delivery
+  COMPRADO: 'comprado',                       // ✅ Validado y pagado por el delivery
+  EN_CAMINO: 'en_camino',                     // El delivery lo lleva al cliente
+  DELIVERED: 'entregado',                     // Entregado al cliente
+  CANCELLED: 'cancelado',                     // Cancelado
+  EXPIRED: 'expirado',                        // Expiró sin ser validado
 } as const;
 
 export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmado',
-  preparing: 'En Preparación',
-  ready: 'Listo para Recoger',
-  delivered: 'Entregado',
-  cancelled: 'Cancelado',
+  pendiente: 'Pendiente',
+  en_preparacion: 'En Preparación',
+  en_espera_cliente: 'En Espera del Cliente ⏳',
+  listo_para_entrega: 'Listo para Entrega',
+  comprado: 'Comprado ✅',
+  en_camino: 'En Camino',
+  entregado: 'Entregado',
+  cancelado: 'Cancelado',
+  expirado: 'Expirado',
+};
+
+export const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
+  pendiente: '#ffd60a',
+  en_preparacion: '#2997ff',
+  en_espera_cliente: '#ff453a',
+  listo_para_entrega: '#ff9f0a',
+  comprado: '#30d158',
+  en_camino: '#64d2ff',
+  entregado: '#30d158',
+  cancelado: '#ff453a',
+  expirado: '#6e6e73',
 };
 
 // ─── Tipos de entrega ──────────────────────────────────────────────────────────

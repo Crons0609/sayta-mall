@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import {
   Users,
   UserPlus,
@@ -47,6 +48,7 @@ interface BranchOption {
 }
 
 export default function ProgrammerOwnersPage() {
+  const { t } = useDashboardPreferences();
   const [owners, setOwners] = useState<Owner[]>([]);
   const [branches, setBranches] = useState<BranchOption[]>([]);
   const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
@@ -259,17 +261,17 @@ export default function ProgrammerOwnersPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2997ff]">
-                Consola Superadmin
+                {t('owners_badge', 'Consola Superadmin')}
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.08] text-[#86868b]">
-                {owners.length} Dueños Registrados
+                {owners.length} {t('owners_count_label', 'Dueños Registrados')}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
-              Gestión de Dueños de Tienda
+              {t('owners_title', 'Gestión de Dueños de Tienda')}
             </h1>
             <p className="text-xs text-[#86868b] mt-1 max-w-2xl">
-              Administra los accesos de franquiciatarios y dueños de tienda. Invítalos mediante correo, suspende accesos temporalmente, utiliza el modo soporte para asistirlos o elimina registros con confirmación en dos pasos.
+              {t('owners_desc', 'Administra los accesos de franquiciatarios y dueños de tienda.')}
             </p>
           </div>
 
@@ -278,7 +280,7 @@ export default function ProgrammerOwnersPage() {
             className="apple-pill-btn apple-btn-primary px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-[#2997ff]/20"
           >
             <UserPlus className="w-4 h-4" />
-            <span>Agregar Dueño</span>
+            <span>{t('owners_btn_add', 'Agregar Dueño')}</span>
           </button>
         </div>
 
@@ -309,7 +311,7 @@ export default function ProgrammerOwnersPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por nombre, correo o nombre de tienda..."
+              placeholder={t('owners_search_placeholder', 'Buscar por nombre, correo o nombre de tienda...')}
               className="w-full pl-9 pr-4 py-2 bg-white/[0.04] border border-white/[0.08] rounded-xl text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff]"
             />
           </div>
@@ -329,12 +331,12 @@ export default function ProgrammerOwnersPage() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-white/[0.08] bg-white/[0.02] text-[#86868b] font-medium uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-4">Dueño & Correo</th>
-                  <th className="py-3 px-4">Tienda Asignada</th>
-                  <th className="py-3 px-4">Sucursales</th>
-                  <th className="py-3 px-4">Estado</th>
-                  <th className="py-3 px-4">Fecha de Alta</th>
-                  <th className="py-3 px-4 text-right">Acciones</th>
+                  <th className="py-3 px-4">{t('owners_col_owner', 'Dueño & Correo')}</th>
+                  <th className="py-3 px-4">{t('owners_col_store', 'Tienda Asignada')}</th>
+                  <th className="py-3 px-4">{t('owners_col_branches', 'Sucursales')}</th>
+                  <th className="py-3 px-4">{t('owners_col_status', 'Estado')}</th>
+                  <th className="py-3 px-4">{t('owners_col_date', 'Fecha de Alta')}</th>
+                  <th className="py-3 px-4 text-right">{t('owners_col_actions', 'Acciones')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -342,13 +344,13 @@ export default function ProgrammerOwnersPage() {
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-[#86868b]">
                       <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[#2997ff]" />
-                      <span>Cargando directorio de dueños...</span>
+                      <span>{t('loading', 'Cargando...')}</span>
                     </td>
                   </tr>
                 ) : filteredOwners.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-[#86868b]">
-                      No se encontraron dueños registrados.
+                      {t('owners_empty_title', 'Ningún dueño registrado aún.')}
                     </td>
                   </tr>
                 ) : (
@@ -371,7 +373,7 @@ export default function ProgrammerOwnersPage() {
                       {/* Sucursales */}
                       <td className="py-3 px-4">
                         <div className="font-mono text-white font-medium">
-                          {owner.branchCount} {owner.branchCount === 1 ? 'sucursal' : 'sucursales'}
+                          {owner.branchCount} {owner.branchCount === 1 ? t('owners_branches_label', 'sucursal') : t('owners_branches_plural', 'sucursales')}
                         </div>
                         {owner.branchIds && owner.branchIds.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1 max-w-[200px]">
@@ -405,11 +407,11 @@ export default function ProgrammerOwnersPage() {
                               owner.status === 'active' ? 'bg-[#30d158]' : 'bg-[#ff453a]'
                             }`}
                           />
-                          {owner.status === 'active' ? 'Activo' : 'Suspendido'}
+                          {owner.status === 'active' ? t('owners_status_active', 'Activo') : t('owners_status_suspended', 'Suspendido')}
                         </span>
                         {owner.invitationStatus === 'pending' && (
                           <span className="ml-1 text-[9px] text-[#ffd60a] bg-[#ffd60a]/10 px-1.5 py-0.5 rounded-full">
-                            7d Pendiente
+                            {t('owners_status_pending', '7d Pendiente')}
                           </span>
                         )}
                       </td>
@@ -479,7 +481,7 @@ export default function ProgrammerOwnersPage() {
                 <div className="w-8 h-8 rounded-xl bg-[#2997ff]/20 text-[#2997ff] flex items-center justify-center">
                   <UserPlus className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-bold text-white">Agregar Nuevo Dueño</h3>
+                <h3 className="text-base font-bold text-white">{t('owners_modal_title', 'Agregar Nuevo Dueño')}</h3>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}

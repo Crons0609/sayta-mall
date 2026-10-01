@@ -14,13 +14,15 @@ import { useAuth } from '@/providers/AuthProvider';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { ArrowUpDown, PackageOpen, MapPin, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { ADULT_CATEGORY_NAME } from '@/data/saytaCatalog';
+import { ADULT_CATEGORY_NAME, SAYTA_DEPARTMENTS, getDepartmentInfo } from '@/data/saytaCatalog';
 import { AgeVerificationModal, hasAgeVerified } from '@/components/auth/AgeVerificationModal';
 import { getProductsFromRtdb } from '@/lib/firebase/rtdb';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function CatalogoPage() {
   const { currentBranch, branchCount, loading: loadingBranches } = useBranch();
   const { user } = useAuth();
+  const { lang, t } = useLanguage();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
@@ -239,18 +241,18 @@ export default function CatalogoPage() {
       <main className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 md:py-16 pb-28 md:pb-16">
         <div className="mb-6 sm:mb-8 text-left">
           <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
-            Catálogo de Productos
+            {t('catalog_title', 'Catálogo de Productos')}
           </h1>
           {currentBranch && (
             <p className="text-xs sm:text-sm text-[#86868b] mt-1 flex items-center gap-1.5 flex-wrap">
               <MapPin className="w-3.5 h-3.5 text-[#30d158] shrink-0" />
-              <span>Mostrando productos de <strong className="text-white">{currentBranch.name}</strong></span>
+              <span>{t('catalog_showing_from', 'Mostrando productos de')} <strong className="text-white">{currentBranch.name}</strong></span>
               {branchCount >= 2 && (
                 <button
                   onClick={() => setIsBranchModalOpen(true)}
                   className="text-[#2997ff] hover:underline"
                 >
-                  (Cambiar)
+                  {t('catalog_change', '(Cambiar)')}
                 </button>
               )}
             </p>
@@ -264,6 +266,16 @@ export default function CatalogoPage() {
             {categories.map((cat) => {
               const isAdultChip = cat === ADULT_CATEGORY_NAME;
               const isSelected = selectedCategory === cat;
+              const deptMatch = SAYTA_DEPARTMENTS.find(
+                (d) => d.name.toLowerCase() === cat.toLowerCase() || d.id === cat
+              );
+              const label =
+                cat === 'Todos'
+                  ? t('dept_all', 'Todos')
+                  : deptMatch
+                  ? getDepartmentInfo(deptMatch, lang).name
+                  : cat;
+
               return (
                 <button
                   key={cat}
@@ -279,7 +291,7 @@ export default function CatalogoPage() {
                   }`}
                 >
                   {isAdultChip && <span>🔞</span>}
-                  <span>{cat}</span>
+                  <span>{label}</span>
                   {isAdultChip && (
                     <span className="text-[10px] px-1 py-0.2 rounded bg-[#bf5af2]/30 text-white font-bold">
                       +18
@@ -299,7 +311,7 @@ export default function CatalogoPage() {
                 onChange={(e) => setOnlyInStock(e.target.checked)}
                 className="w-4 h-4 rounded bg-white/10 border-white/20 text-[#2997ff]"
               />
-              <span>Solo en stock</span>
+              <span>{t('catalog_only_stock', 'Solo en stock')}</span>
             </label>
 
             {user && (
@@ -310,9 +322,9 @@ export default function CatalogoPage() {
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="bg-transparent text-white focus:outline-none cursor-pointer"
                 >
-                  <option value="featured" className="bg-[#1c1c1e] text-white">Destacados</option>
-                  <option value="price-asc" className="bg-[#1c1c1e] text-white">Menor precio</option>
-                  <option value="price-desc" className="bg-[#1c1c1e] text-white">Mayor precio</option>
+                  <option value="featured" className="bg-[#1c1c1e] text-white">{t('catalog_sort_featured', 'Destacados')}</option>
+                  <option value="price-asc" className="bg-[#1c1c1e] text-white">{t('catalog_sort_price_asc', 'Menor precio')}</option>
+                  <option value="price-desc" className="bg-[#1c1c1e] text-white">{t('catalog_sort_price_desc', 'Mayor precio')}</option>
                 </select>
               </div>
             )}
@@ -327,18 +339,18 @@ export default function CatalogoPage() {
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#bf5af2]/15 border border-[#bf5af2]/30 text-[#bf5af2] text-xs font-bold">
               <span>🔞</span>
-              <span>Solo +18 · Contenido Exclusivo para Adultos</span>
+              <span>{t('adult_badge', 'Solo +18 · Contenido Exclusivo para Adultos')}</span>
             </div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Acceso Solo para Usuarios Registrados</h3>
+            <h3 className="text-xl font-bold text-white tracking-tight">{t('adult_restricted_title', 'Acceso Solo para Usuarios Registrados')}</h3>
             <p className="text-xs text-[#86868b] leading-relaxed">
-              La categoría <strong className="text-white">Juguetes Sexuales</strong> está estrictamente restringida a personas mayores de 18 años. Debes registrarte o iniciar sesión para acceder.
+              {t('catalog_adult_registered_desc', 'La categoría Juguetes Sexuales está estrictamente restringida a personas mayores de 18 años. Debes registrarte o iniciar sesión para acceder.')}
             </p>
             <div className="pt-2">
               <Link
                 href="/login"
                 className="apple-pill-btn px-6 py-3 text-xs sm:text-sm font-semibold inline-flex items-center gap-2 bg-[#bf5af2] text-white hover:bg-[#a348d6] transition-all shadow-xl shadow-[#bf5af2]/30"
               >
-                <span>Iniciar Sesión / Registrarse</span>
+                <span>{t('cat_login_btn', 'Iniciar Sesión / Registrarse')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -348,9 +360,9 @@ export default function CatalogoPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#bf5af2]/20 border border-[#bf5af2]/40 flex items-center justify-center mx-auto text-3xl shadow-lg shadow-[#bf5af2]/20">
               🔞
             </div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Confirmación de Mayoría de Edad</h3>
+            <h3 className="text-xl font-bold text-white tracking-tight">{t('age_modal_title', 'Confirmación de Mayoría de Edad')}</h3>
             <p className="text-xs text-[#86868b] leading-relaxed">
-              Para ver el catálogo de productos íntimos debes confirmar bajo tu responsabilidad legal que tienes <strong className="text-white">18 años o más</strong>.
+              {t('catalog_adult_confirm_notice', 'Para ver el catálogo de productos íntimos debes confirmar bajo tu responsabilidad legal que tienes 18 años o más.')}
             </p>
             <div className="pt-2">
               <button
@@ -358,7 +370,7 @@ export default function CatalogoPage() {
                 className="apple-pill-btn px-6 py-3 text-xs sm:text-sm font-semibold inline-flex items-center gap-2 bg-[#bf5af2] text-white hover:bg-[#a348d6] transition-all shadow-xl shadow-[#bf5af2]/30 active:scale-95"
               >
                 <EyeOff className="w-4 h-4" />
-                <span>Confirmar que tengo 18 años o más</span>
+                <span>{t('catalog_adult_confirm_btn', 'Confirmar que tengo 18 años o más')}</span>
               </button>
             </div>
           </div>
@@ -369,7 +381,7 @@ export default function CatalogoPage() {
               <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#bf5af2]/10 border border-[#bf5af2]/20 text-[#bf5af2] text-xs font-medium mb-6">
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-[#bf5af2]" />
-                  <span>Acceso verificado a Juguetes Sexuales (+18). Navega con total privacidad.</span>
+                  <span>{t('catalog_adult_banner', 'Acceso verificado a Juguetes Sexuales (+18). Navega con total privacidad.')}</span>
                 </div>
                 <button
                   onClick={() => {
@@ -379,7 +391,7 @@ export default function CatalogoPage() {
                   }}
                   className="text-[#86868b] hover:text-white transition-colors text-xs font-normal"
                 >
-                  Bloquear sección
+                  {t('catalog_adult_lock', 'Bloquear sección')}
                 </button>
               </div>
             )}
@@ -394,12 +406,12 @@ export default function CatalogoPage() {
               <div className="apple-card p-12 text-center max-w-md mx-auto space-y-4 my-8">
                 <PackageOpen className="w-12 h-12 text-[#6e6e73] mx-auto" />
                 <h3 className="text-lg font-semibold text-white">
-                  {isAdultCategorySelected ? 'Próximamente en esta categoría' : 'Aún no hay productos publicados'}
+                  {isAdultCategorySelected ? t('cat_empty_cat_title', 'Próximamente en esta categoría') : t('cat_empty_title', 'Aún no hay productos publicados')}
                 </h3>
                 <p className="text-xs text-[#86868b] leading-relaxed">
                   {isAdultCategorySelected
-                    ? 'Los artículos para adultos aparecerán aquí cuando sean agregados al inventario.'
-                    : 'No se encontraron productos disponibles con los filtros seleccionados.'}
+                    ? t('cat_empty_desc', 'Los artículos para adultos aparecerán aquí cuando sean agregados al inventario.')
+                    : t('cat_empty_cat_desc', 'No se encontraron productos disponibles con los filtros seleccionados.')}
                 </p>
               </div>
             ) : (

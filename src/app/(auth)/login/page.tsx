@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 import {
   Mail,
   Lock,
@@ -57,6 +58,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
+  const { t } = useLanguage();
 
   const {
     signInWithGoogle,
@@ -269,7 +271,7 @@ function LoginForm() {
           className="inline-flex items-center gap-1.5 text-xs text-[#86868b] hover:text-white transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          <span>Volver a la tienda</span>
+          <span>{t('login_back_to_store', 'Volver a la tienda')}</span>
         </Link>
 
         <div className="flex items-center gap-2.5">
@@ -295,16 +297,16 @@ function LoginForm() {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] text-xs text-[#30d158]">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span className="font-medium">Identidad Verificada · Personas Naturales</span>
+                <span className="font-medium">{t('login_feature_verified', 'Identidad Verificada · Personas Naturales')}</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
-                Super Ahorro. <br />
-                <span className="apple-text-gradient">Todo en un solo lugar.</span>
+                {t('hero_title_1', 'Super Ahorro.')} <br />
+                <span className="apple-text-gradient">{t('hero_title_2', 'Todo en un solo lugar.')}</span>
               </h1>
 
               <p className="text-sm text-[#86868b] leading-relaxed max-w-md">
-                Inicia sesión con tu cuenta de Google, correo o mediante tu <strong>número celular</strong> para confirmar tu condición de .
+                {t('hero_subtitle', 'Tu gran tienda por departamentos digital. Descubre lo mejor a precios de super ahorro en Córdobas (C$).')}
               </p>
             </div>
 
@@ -315,9 +317,9 @@ function LoginForm() {
                   <Smartphone className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-white">Verificación por Celular</h4>
+                  <h4 className="text-xs font-semibold text-white">{t('login_feature_phone', 'Verificación por Celular')}</h4>
                   <p className="text-[11px] text-[#86868b] mt-0.5">
-                    Validación por SMS que previene cuentas falsas y garantiza usuarios legítimos.
+                    {t('login_feature_phone_desc', 'Validación por SMS que previene cuentas falsas y garantiza usuarios legítimos.')}
                   </p>
                 </div>
               </div>
@@ -327,9 +329,9 @@ function LoginForm() {
                   <Store className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-white">Acceso a Paneles de Gestión</h4>
+                  <h4 className="text-xs font-semibold text-white">{t('login_feature_admin', 'Acceso a Paneles de Gestión')}</h4>
                   <p className="text-[11px] text-[#86868b] mt-0.5">
-                    Dueños y empleados pueden subir y gestionar productos, precios y categorías colaborativamente.
+                    {t('login_feature_admin_desc', 'Dueños y empleados pueden subir y gestionar productos, precios y categorías colaborativamente.')}
                   </p>
                 </div>
               </div>
@@ -339,9 +341,9 @@ function LoginForm() {
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-white">Descuentos con Autorización</h4>
+                  <h4 className="text-xs font-semibold text-white">{t('login_feature_discount', 'Descuentos con Autorización')}</h4>
                   <p className="text-[11px] text-[#86868b] mt-0.5">
-                    Rebajas de precio aprobadas directamente por el Dueño o Programador del local.
+                    {t('login_feature_discount_desc', 'Rebajas de precio aprobadas directamente por el Dueño o Programador del local.')}
                   </p>
                 </div>
               </div>
@@ -363,7 +365,7 @@ function LoginForm() {
                   : 'text-[#86868b] hover:text-white'
                   }`}
               >
-                Ingresar
+                {t('login_tab_signin', 'Ingresar')}
               </button>
               <button
                 type="button"
@@ -376,7 +378,7 @@ function LoginForm() {
                   : 'text-[#86868b] hover:text-white'
                   }`}
               >
-                Registrarse
+                {t('login_tab_signup', 'Registrarse')}
               </button>
               <button
                 type="button"
@@ -390,20 +392,20 @@ function LoginForm() {
                   }`}
               >
                 <Smartphone className="w-3 h-3" />
-                <span>Teléfono</span>
+                <span>{t('login_tab_phone', 'Teléfono')}</span>
               </button>
             </div>
 
             <div className="mb-5 text-left">
               <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                {mode === 'signin' && 'Te damos la bienvenida'}
-                {mode === 'signup' && 'Crea tu cuenta de cliente'}
-                {mode === 'phone' && 'Verificación '}
+                {mode === 'signin' && t('login_welcome_title', 'Te damos la bienvenida')}
+                {mode === 'signup' && t('login_signup_title', 'Crea tu cuenta de cliente')}
+                {mode === 'phone' && t('login_phone_title', 'Verificación Móvil')}
               </h3>
               <p className="text-xs text-[#86868b] mt-1">
-                {mode === 'signin' && 'Ingresa con cualquier correo y contraseña o con Google.'}
-                {mode === 'signup' && 'Regístrate con tu correo para ver precios y comprar en Sayta Mall.'}
-                {mode === 'phone' && 'Verifica tu número telefónico mediante SMS para validar tu cuenta.'}
+                {mode === 'signin' && t('login_welcome_sub', 'Ingresa con cualquier correo y contraseña o con Google.')}
+                {mode === 'signup' && t('login_signup_sub', 'Regístrate con tu correo para ver precios y comprar en Sayta Mall.')}
+                {mode === 'phone' && t('login_phone_sub', 'Verifica tu número telefónico mediante SMS para validar tu cuenta.')}
               </p>
             </div>
 
@@ -558,7 +560,7 @@ function LoginForm() {
                 {/* Campo Nombre en Registro */}
                 {mode === 'signup' && (
                   <div className="space-y-1 text-left animate-fade-in">
-                    <label className="text-xs font-medium text-[#86868b]">Nombre Completo</label>
+                    <label className="text-xs font-medium text-[#86868b]">{t('login_label_name', 'Nombre Completo')}</label>
                     <div className="relative">
                       <User className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                       <input
@@ -566,7 +568,7 @@ function LoginForm() {
                         name="displayName"
                         id="displayName"
                         autoComplete="name"
-                        placeholder="Ej. Juan Pérez"
+                        placeholder={t('login_placeholder_name', 'Ej. Juan Pérez')}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         required
@@ -580,8 +582,8 @@ function LoginForm() {
                 {mode === 'signup' && (
                   <div className="space-y-1 text-left animate-fade-in">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-[#86868b]">Edad del Cliente</label>
-                      <span className="text-[10px] text-[#2997ff]">Obligatorio</span>
+                      <label className="text-xs font-medium text-[#86868b]">{t('login_label_age', 'Edad del Cliente')}</label>
+                      <span className="text-[10px] text-[#2997ff]">{t('login_label_required', 'Obligatorio')}</span>
                     </div>
                     <div className="relative">
                       <Calendar className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
@@ -591,7 +593,7 @@ function LoginForm() {
                         id="age"
                         min="12"
                         max="120"
-                        placeholder="Ej. 25 años"
+                        placeholder={t('login_placeholder_age', 'Ej. 25 años')}
                         value={age}
                         onChange={(e) => setAge(e.target.value)}
                         required
@@ -605,8 +607,8 @@ function LoginForm() {
                 {mode === 'signup' && (
                   <div className="space-y-1 text-left animate-fade-in">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-[#86868b]">Dirección de Entrega</label>
-                      <span className="text-[10px] text-[#ff9f0a] font-semibold">Obligatorio</span>
+                      <label className="text-xs font-medium text-[#86868b]">{t('login_label_address', 'Dirección de Entrega')}</label>
+                      <span className="text-[10px] text-[#ff9f0a] font-semibold">{t('login_label_required', 'Obligatorio')}</span>
                     </div>
                     <div className="relative">
                       <MapPin className="w-4 h-4 text-[#86868b] absolute left-3.5 top-3 pointer-events-none z-10" />
@@ -614,7 +616,7 @@ function LoginForm() {
                         name="direccion"
                         id="direccion"
                         rows={2}
-                        placeholder="Ej. Barrio El Carmen, de la farmacia 2c al norte, casa azul"
+                        placeholder={t('login_placeholder_address', 'Ej. Barrio El Carmen, de la farmacia 2c al norte, casa azul')}
                         value={direccion}
                         onChange={(e) => setDireccion(e.target.value)}
                         required
@@ -622,7 +624,7 @@ function LoginForm() {
                       />
                     </div>
                     <p className="text-[10px] text-[#86868b]">
-                      Esta dirección se usará para enviarte tus pedidos. Podrás cambiarla al momento de comprar.
+                      {t('login_address_note', 'Esta dirección se usará para enviarte tus pedidos. Podrás cambiarla al momento de comprar.')}
                     </p>
                   </div>
                 )}
@@ -630,14 +632,14 @@ function LoginForm() {
                 {/* Referencias del domicilio (solo en registro) */}
                 {mode === 'signup' && (
                   <div className="space-y-1 text-left animate-fade-in">
-                    <label className="text-xs font-medium text-[#86868b]">Referencias del domicilio <span className="text-[#6e6e73]">(opcional)</span></label>
+                    <label className="text-xs font-medium text-[#86868b]">{t('login_label_reference', 'Referencias del domicilio (opcional)')}</label>
                     <div className="relative">
                       <Home className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                       <input
                         type="text"
                         name="referencias"
                         id="referencias"
-                        placeholder="Portón negro, muro verde, casa esquinera..."
+                        placeholder={t('login_placeholder_reference', 'Portón negro, muro verde, casa esquinera...')}
                         value={referencias}
                         onChange={(e) => setReferencias(e.target.value)}
                         className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#111318] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] focus:ring-1 focus:ring-[#2997ff]/50 transition-all"
@@ -649,7 +651,7 @@ function LoginForm() {
                 {/* Campo Correo */}
                 <div className="space-y-1 text-left">
                   <label className="text-xs font-medium text-[#86868b]">
-                    Correo Electrónico (Gmail, Outlook, Yahoo o cualquiera)
+                    {t('login_label_email', 'Correo Electrónico (Gmail, Outlook, Yahoo o cualquiera)')}
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
@@ -669,7 +671,7 @@ function LoginForm() {
 
                 {/* Campo Contraseña */}
                 <div className="space-y-1 text-left">
-                  <label className="text-xs font-medium text-[#86868b]">Contraseña</label>
+                  <label className="text-xs font-medium text-[#86868b]">{t('login_label_password', 'Contraseña')}</label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                     <input
@@ -677,7 +679,7 @@ function LoginForm() {
                       name="password"
                       id="password"
                       autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder={t('login_placeholder_password', 'Mínimo 6 caracteres')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -696,7 +698,7 @@ function LoginForm() {
                 {/* Confirmar Contraseña en Registro */}
                 {mode === 'signup' && (
                   <div className="space-y-1 text-left animate-fade-in">
-                    <label className="text-xs font-medium text-[#86868b]">Confirmar Contraseña</label>
+                    <label className="text-xs font-medium text-[#86868b]">{t('login_label_confirm_password', 'Confirmar Contraseña')}</label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                       <input
@@ -722,10 +724,10 @@ function LoginForm() {
                 >
                   <span>
                     {loading
-                      ? 'Procesando...'
+                      ? t('login_btn_processing', 'Procesando...')
                       : mode === 'signin'
-                        ? 'Iniciar Sesión'
-                        : 'Crear Mi Cuenta'}
+                        ? t('login_btn_signin', 'Iniciar Sesión')
+                        : t('login_btn_signup', 'Crear Mi Cuenta')}
                   </span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -736,7 +738,7 @@ function LoginForm() {
             <div className="flex items-center gap-3 my-5">
               <div className="flex-1 h-px bg-white/[0.08]" />
               <span className="text-[10px] text-[#86868b] uppercase tracking-wider">
-                O también accede con
+                {t('login_or_continue_with', 'O también accede con')}
               </span>
               <div className="flex-1 h-px bg-white/[0.08]" />
             </div>
@@ -749,19 +751,11 @@ function LoginForm() {
               className="w-full py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-medium text-white transition-all flex items-center justify-center gap-2.5 active:scale-[0.99]"
             >
               <GoogleIcon />
-              <span>Continuar con Google</span>
+              <span>{t('login_btn_google', 'Continuar con Google')}</span>
             </button>
 
             <p className="text-[10px] text-[#6e6e73] text-center mt-5">
-              Al continuar aceptas nuestros{' '}
-              <a href="#" className="underline hover:text-[#2997ff]">
-                Términos
-              </a>{' '}
-              y{' '}
-              <a href="#" className="underline hover:text-[#2997ff]">
-                Privacidad
-              </a>
-              . Precios expresados en Córdobas (C$ NIO).
+              {t('login_terms_privacy', 'Al continuar aceptas nuestros Términos y Privacidad. Precios expresados en Córdobas (C$ NIO).')}
             </p>
           </div>
         </div>
@@ -769,9 +763,9 @@ function LoginForm() {
 
       {/* Footer */}
       <footer className="relative z-10 p-5 text-center text-[11px] text-[#6e6e73] space-y-1">
-        <p>© {new Date().getFullYear()} Sayta Mall · Super Ahorro Y Todo Aquí</p>
+        <p>© {new Date().getFullYear()} {t('footer_rights', 'Sayta Mall · Super Ahorro Y Todo Aquí')}</p>
         <p className="text-[#86868b]">
-          Desarrollado por <span className="font-semibold text-white">ProLine System</span>
+          {t('footer_dev', 'Desarrollado por')} <span className="font-semibold text-white">ProLine System</span>
         </p>
       </footer>
     </div>
