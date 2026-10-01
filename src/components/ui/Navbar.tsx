@@ -214,7 +214,7 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
           </button>
 
           {/* Selector de Tema: Rápido, Directo y Visible con 1 Clic */}
-          <div className="flex items-center bg-white/[0.06] p-0.5 rounded-full border border-white/[0.1] backdrop-blur-md">
+          <div className="hidden xs:flex items-center bg-white/[0.06] p-0.5 rounded-full border border-white/[0.1] backdrop-blur-md sm:flex">
             <button
               onClick={() => setTheme('light')}
               type="button"
@@ -261,18 +261,20 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
             <button
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
               type="button"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs text-white transition-all cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs text-white transition-all cursor-pointer"
               title="Idioma / Language / 语言"
               aria-label="Seleccionar Idioma"
             >
-              <Languages className="w-3.5 h-3.5 text-[#2997ff]" />
+              {/* Mobile: solo bandera sin texto ni chevron */}
+              <span className="text-sm sm:hidden">
+                {currentLang === 'zh' ? '🇨🇳' : currentLang === 'en' ? '🇺🇸' : '🇳🇮'}
+              </span>
+              {/* Desktop: ícono + texto + chevron */}
+              <Languages className="w-3.5 h-3.5 text-[#2997ff] hidden sm:block" />
               <span className="font-semibold text-[11px] hidden sm:inline">
                 {currentLang === 'zh' ? '🇨🇳 中文' : currentLang === 'en' ? '🇺🇸 EN' : '🇳🇮 ES'}
               </span>
-              <span className="sm:hidden text-xs">
-                {currentLang === 'zh' ? '🇨🇳' : currentLang === 'en' ? '🇺🇸' : '🇳🇮'}
-              </span>
-              <ChevronDown className="w-3 h-3 text-[#86868b]" />
+              <ChevronDown className="w-3 h-3 text-[#86868b] hidden sm:block" />
             </button>
 
             {langDropdownOpen && (

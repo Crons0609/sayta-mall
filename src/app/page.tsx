@@ -159,7 +159,7 @@ export default function HomePage() {
           });
           updateCombinedProducts(loaded);
         }
-      }).catch(() => {});
+      }).catch(() => { });
 
       const handleUpdate = () => {
         updateCombinedProducts([]);
@@ -183,7 +183,7 @@ export default function HomePage() {
             });
             updateCombinedProducts(loaded);
           }
-        }).catch(() => {});
+        }).catch(() => { });
       };
       window.addEventListener('sayta_products_updated', handleUpdate);
 
@@ -393,11 +393,11 @@ export default function HomePage() {
                 Departamentos Sayta
               </span>
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                Explora por CategorÃ­a
+                Explora por Categoría
               </h2>
             </div>
             <a href="#catalogo" className="text-xs text-[#2997ff] hover:underline flex items-center gap-1">
-              <span>Ver todos los artÃ­culos</span>
+              <span>Ver todos los artículos</span>
               <ArrowRight className="w-3 h-3" />
             </a>
           </div>
@@ -438,392 +438,394 @@ export default function HomePage() {
           </div>
         </section>
 
-      {/* ─── SECCIÓN DEL CATÁLOGO DE PRODUCTOS ─── */}
-      <section id="catalogo" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2997ff] block">
-              Inventario Disponible
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Catálogo de Productos
-            </h2>
-            <p className="text-xs text-[#86868b] mt-1">
-              {currentBranch
-                ? `Mostrando existencias para ${currentBranch.name}`
-                : 'Catálogo de novedades y ofertas Sayta Mall'}
-            </p>
+        {/* ─── SECCIÓN DEL CATÁLOGO DE PRODUCTOS ─── */}
+        <section id="catalogo" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2997ff] block">
+                Inventario Disponible
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                Catálogo de Productos
+              </h2>
+              <p className="text-xs text-[#86868b] mt-1">
+                {currentBranch
+                  ? `Mostrando existencias para ${currentBranch.name}`
+                  : 'Catálogo de novedades y ofertas Sayta Mall'}
+              </p>
+            </div>
+
+            {/* Chips de Categorías con Scroll Horizontal en Móvil */}
+            {categories.length > 1 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none max-w-full">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat
+                      ? 'bg-white text-black font-semibold shadow-sm'
+                      : 'bg-white/[0.05] text-[#86868b] hover:text-white hover:bg-white/[0.08]'
+                      }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Chips de Categorías con Scroll Horizontal en Móvil */}
-          {categories.length > 1 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none max-w-full">
-              {categories.map((cat) => (
+          {/* Aviso Informativo si no ha iniciado sesión */}
+          {!user && (
+            <div className="mb-6 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-[#ffd60a]">
+                <Lock className="w-4 h-4 shrink-0" />
+                <span>
+                  <strong>Precios protegidos:</strong> Inicia sesión con cualquier correo o con Google para ver precios exactos en <strong>Córdobas (C$)</strong> y comprar.
+                </span>
+              </div>
+              <Link
+                href="/login"
+                className="apple-pill-btn apple-btn-primary px-4 py-1.5 text-xs font-semibold shrink-0 text-center"
+              >
+                Iniciar Sesión / Registrarse
+              </Link>
+            </div>
+          )}
+
+          {/* Grid de Productos */}
+          {loadingProducts ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} className="apple-card p-6 h-64 animate-pulse bg-white/[0.02] rounded-3xl" />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="p-12 text-center apple-card rounded-3xl border-white/[0.06] space-y-3">
+              <Package className="w-8 h-8 mx-auto text-[#86868b]" />
+              <h3 className="text-sm font-semibold text-white">
+                {products.length === 0
+                  ? 'No hay productos disponibles por el momento'
+                  : 'No hay productos en esta categoría'}
+              </h3>
+              <p className="text-xs text-[#86868b]">
+                {products.length === 0
+                  ? 'Los productos añadidos a la tienda aparecerán aquí automáticamente.'
+                  : 'Selecciona otra categoría o restablece el filtro para ver todo.'}
+              </p>
+              {products.length > 0 && selectedCategory !== 'Todos' && (
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat
-                    ? 'bg-white text-black font-semibold shadow-sm'
-                    : 'bg-white/[0.05] text-[#86868b] hover:text-white hover:bg-white/[0.08]'
-                    }`}
+                  onClick={() => setSelectedCategory('Todos')}
+                  className="text-xs text-[#2997ff] hover:underline mt-2"
                 >
-                  {cat}
+                  Ver todos los productos
                 </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Aviso Informativo si no ha iniciado sesión */}
-        {!user && (
-          <div className="mb-6 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5 text-[#ffd60a]">
-              <Lock className="w-4 h-4 shrink-0" />
-              <span>
-                <strong>Precios protegidos:</strong> Inicia sesión con cualquier correo o con Google para ver precios exactos en <strong>Córdobas (C$)</strong> y comprar.
+        {/* ─── 4 PILARES DE CONFIANZA SAYTA MALL ─── */}
+        <section className="w-full border-t border-white/[0.08] bg-[var(--bg-section)] py-16 transition-colors duration-300">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-xl mx-auto mb-12 space-y-2">
+              <span className="text-[11px] font-semibold text-[#30d158] uppercase tracking-wider">
+                Super Ahorro Garantizado
               </span>
-            </div>
-            <Link
-              href="/login"
-              className="apple-pill-btn apple-btn-primary px-4 py-1.5 text-xs font-semibold shrink-0 text-center"
-            >
-              Iniciar Sesión / Registrarse
-            </Link>
-          </div>
-        )}
-
-        {/* Grid de Productos */}
-        {loadingProducts ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="apple-card p-6 h-64 animate-pulse bg-white/[0.02] rounded-3xl" />
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="p-12 text-center apple-card rounded-3xl border-white/[0.06] space-y-3">
-            <Package className="w-8 h-8 mx-auto text-[#86868b]" />
-            <h3 className="text-sm font-semibold text-white">
-              {products.length === 0
-                ? 'No hay productos disponibles por el momento'
-                : 'No hay productos en esta categoría'}
-            </h3>
-            <p className="text-xs text-[#86868b]">
-              {products.length === 0
-                ? 'Los productos añadidos a la tienda aparecerán aquí automáticamente.'
-                : 'Selecciona otra categoría o restablece el filtro para ver todo.'}
-            </p>
-            {products.length > 0 && selectedCategory !== 'Todos' && (
-              <button
-                onClick={() => setSelectedCategory('Todos')}
-                className="text-xs text-[#2997ff] hover:underline mt-2"
-              >
-                Ver todos los productos
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ─── 4 PILARES DE CONFIANZA SAYTA MALL ─── */}
-      <section className="w-full border-t border-white/[0.08] bg-[var(--bg-section)] py-16 transition-colors duration-300">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-xl mx-auto mb-12 space-y-2">
-            <span className="text-[11px] font-semibold text-[#30d158] uppercase tracking-wider">
-              Super Ahorro Garantizado
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              ¿Por qué comprar en Sayta Mall?
-            </h2>
-            <p className="text-xs text-[#86868b]">
-              Tu tienda de confianza con la mayor variedad de productos y el mejor trato al cliente.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
-              <div className="w-10 h-10 rounded-2xl bg-[#ffd60a]/15 text-[#ffd60a] flex items-center justify-center font-bold text-base">
-                C$
-              </div>
-              <h3 className="text-sm font-bold text-white">Precios en Córdobas (C$)</h3>
-              <p className="text-xs text-[#86868b] leading-relaxed">
-                Precios directos de fábrica e importación sin conversiones sorpresas ni comisiones ocultas.
+              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                ¿Por qué comprar en Sayta Mall?
+              </h2>
+              <p className="text-xs text-[#86868b]">
+                Tu tienda de confianza con la mayor variedad de productos y el mejor trato al cliente.
               </p>
             </div>
 
-            <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
-              <div className="w-10 h-10 rounded-2xl bg-[#30d158]/15 text-[#30d158] flex items-center justify-center">
-                <Truck className="w-5 h-5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
+                <div className="w-10 h-10 rounded-2xl bg-[#ffd60a]/15 text-[#ffd60a] flex items-center justify-center font-bold text-base">
+                  C$
+                </div>
+                <h3 className="text-sm font-bold text-white">Precios en Córdobas (C$)</h3>
+                <p className="text-xs text-[#86868b] leading-relaxed">
+                  Precios directos de fábrica e importación sin conversiones sorpresas ni comisiones ocultas.
+                </p>
               </div>
-              <h3 className="text-sm font-bold text-white">Entregas Rápidas en tu Ciudad</h3>
-              <p className="text-xs text-[#86868b] leading-relaxed">
-                Despachos inmediatos a domicilio en moto o retiro rápido en sucursal.
-              </p>
-            </div>
 
-            <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
-              <div className="w-10 h-10 rounded-2xl bg-[#2997ff]/15 text-[#2997ff] flex items-center justify-center">
-                <Store className="w-5 h-5" />
+              <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
+                <div className="w-10 h-10 rounded-2xl bg-[#30d158]/15 text-[#30d158] flex items-center justify-center">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-white">Entregas Rápidas en tu Ciudad</h3>
+                <p className="text-xs text-[#86868b] leading-relaxed">
+                  Despachos inmediatos a domicilio en moto o retiro rápido en sucursal.
+                </p>
               </div>
-              <h3 className="text-sm font-bold text-white">Variedad Multisucursal</h3>
-              <p className="text-xs text-[#86868b] leading-relaxed">
-                Herramientas, moda, fajas, cosméticos, snacks y tecnología en un solo lugar.
-              </p>
-            </div>
 
-            <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
-              <div className="w-10 h-10 rounded-2xl bg-[#bf5af2]/15 text-[#bf5af2] flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
+                <div className="w-10 h-10 rounded-2xl bg-[#2997ff]/15 text-[#2997ff] flex items-center justify-center">
+                  <Store className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-white">Variedad Multisucursal</h3>
+                <p className="text-xs text-[#86868b] leading-relaxed">
+                  Herramientas, moda, fajas, cosméticos, snacks y tecnología en un solo lugar.
+                </p>
               </div>
-              <h3 className="text-sm font-bold text-white">Garantía de Satisfacción</h3>
-              <p className="text-xs text-[#86868b] leading-relaxed">
-                Revisamos cada artículo antes de su entrega para asegurar que recibas calidad al 100%.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ─── LLAMADO A LA ACCIÓN ─── */}
-      {!user && (
-        <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-[#0071e3]/20 via-[#30d158]/15 to-[#0071e3]/20 border border-white/[0.1] text-center space-y-4 relative overflow-hidden">
-            <span className="text-[11px] font-semibold text-[#30d158] uppercase tracking-wider">
-              Desbloquea Precios Exclusivos
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Crea tu cuenta gratis en Sayta Mall
-            </h2>
-            <p className="text-xs sm:text-sm text-[#86868b] max-w-lg mx-auto leading-relaxed">
-              Regístrate con tu correo o cuenta de Google en menos de 1 minuto y empieza a comprar con precios de super ahorro.
-            </p>
-            <div className="pt-2">
-              <Link
-                href="/login"
-                className="apple-pill-btn apple-btn-primary px-8 py-3.5 text-xs sm:text-sm font-semibold inline-flex items-center gap-2 shadow-xl shadow-[#0071e3]/25"
-              >
-                <span>Crear Cuenta Gratis</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="apple-card p-6 space-y-3 bg-[#161617]/80">
+                <div className="w-10 h-10 rounded-2xl bg-[#bf5af2]/15 text-[#bf5af2] flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-white">Garantía de Satisfacción</h3>
+                <p className="text-xs text-[#86868b] leading-relaxed">
+                  Revisamos cada artículo antes de su entrega para asegurar que recibas calidad al 100%.
+                </p>
+              </div>
             </div>
           </div>
         </section>
-      )}
 
-      {/* ─── SECCIÓN ADULTOS +18 ─── */}
-      <section className="w-full border-t border-[#bf5af2]/15 py-12">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header +18 */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#bf5af2]/15 border border-[#bf5af2]/30 text-[#bf5af2] text-[11px] font-bold mb-2">
-                <span>🔞</span>
-                <span>Solo +18 · Contenido para Adultos</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                Juguetes Sexuales
+        {/* ─── LLAMADO A LA ACCIÓN ─── */}
+        {!user && (
+          <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-[#0071e3]/20 via-[#30d158]/15 to-[#0071e3]/20 border border-white/[0.1] text-center space-y-4 relative overflow-hidden">
+              <span className="text-[11px] font-semibold text-[#30d158] uppercase tracking-wider">
+                Desbloquea Precios Exclusivos
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Crea tu cuenta gratis en Sayta Mall
               </h2>
-              <p className="text-xs text-[#86868b] mt-1">
-                Artículos íntimos exclusivos para adultos verificados. Registro y confirmación de edad requeridos.
+              <p className="text-xs sm:text-sm text-[#86868b] max-w-lg mx-auto leading-relaxed">
+                Regístrate con tu correo o cuenta de Google en menos de 1 minuto y empieza a comprar con precios de super ahorro.
               </p>
-            </div>
-          </div>
-
-          {/* Gate: No ha iniciado sesión */}
-          {!user ? (
-            <div className="relative overflow-hidden rounded-3xl border border-[#bf5af2]/20 bg-gradient-to-br from-[#1a0a1e]/80 to-[#0d0010]/80 p-10 text-center space-y-4">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#bf5af2]/5 to-transparent opacity-30" />
-              <div className="relative z-10 space-y-4">
-                <div className="mx-auto w-14 h-14 rounded-2xl bg-[#bf5af2]/20 border border-[#bf5af2]/30 flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-[#bf5af2]" />
-                </div>
-                <h3 className="text-lg font-bold text-white">Acceso Restringido</h3>
-                <p className="text-xs text-[#86868b] max-w-sm mx-auto leading-relaxed">
-                  Debes <strong className="text-white">crear una cuenta o iniciar sesión</strong> y confirmar tu mayoría de edad para ver esta sección.
-                </p>
+              <div className="pt-2">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#bf5af2] text-white text-sm font-semibold hover:bg-[#a348d6] transition-colors shadow-lg shadow-[#bf5af2]/30"
+                  className="apple-pill-btn apple-btn-primary px-8 py-3.5 text-xs sm:text-sm font-semibold inline-flex items-center gap-2 shadow-xl shadow-[#0071e3]/25"
                 >
-                  <span>Iniciar Sesión / Registrarse</span>
+                  <span>Crear Cuenta Gratis</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
-          ) : !adultAccessGranted ? (
-            /* Gate: Usuario con sesión pero sin verificar edad */
-            <div className="relative overflow-hidden rounded-3xl border border-[#bf5af2]/25 bg-gradient-to-br from-[#1a0a1e]/90 to-[#0d0010]/90 p-10 text-center space-y-4">
-              <div className="relative z-10 space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#bf5af2]/30 to-[#9b3cc7]/20 border border-[#bf5af2]/40 flex items-center justify-center">
-                  <span className="text-2xl">🔞</span>
+          </section>
+        )}
+
+        {/* ─── SECCIÓN ADULTOS +18 ─── */}
+        <section className="w-full border-t border-[#bf5af2]/15 py-12">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header +18 */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#bf5af2]/15 border border-[#bf5af2]/30 text-[#bf5af2] text-[11px] font-bold mb-2">
+                  <span>🔞</span>
+                  <span>Solo +18 · Contenido para Adultos</span>
                 </div>
-                <h3 className="text-lg font-bold text-white">Verifica tu Edad para Continuar</h3>
-                <p className="text-xs text-[#86868b] max-w-sm mx-auto leading-relaxed">
-                  Esta sección está disponible solo para <strong className="text-white">mayores de 18 años</strong>.
-                  Confirma tu edad para acceder a los productos íntimos para adultos.
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                  Juguetes Sexuales
+                </h2>
+                <p className="text-xs text-[#86868b] mt-1">
+                  Artículos íntimos exclusivos para adultos verificados. Registro y confirmación de edad requeridos.
                 </p>
-                <button
-                  onClick={() => setIsAgeModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#bf5af2] text-white text-sm font-semibold hover:bg-[#a348d6] transition-colors shadow-lg shadow-[#bf5af2]/30 active:scale-95"
-                >
-                  <EyeOff className="w-4 h-4" />
-                  <span>Confirmar que soy mayor de 18 años</span>
-                </button>
               </div>
             </div>
-          ) : (
-            /* Contenido adulto desbloqueado */
-            <div className="space-y-4">
-              {/* Banner verificado */}
-              <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#bf5af2]/[0.08] border border-[#bf5af2]/20 text-[#bf5af2] text-xs font-medium">
-                <Eye className="w-4 h-4 flex-shrink-0" />
-                <span>Acceso verificado — Mayor de 18 años. Navega con responsabilidad.</span>
-                <button
-                  onClick={() => { setAdultAccessGranted(false); sessionStorage.removeItem('sayta_age_verified'); }}
-                  className="ml-auto text-[#86868b] hover:text-white transition-colors text-[11px]"
-                >
-                  Ocultar sección
-                </button>
-              </div>
 
-              {/* Grid o estado vacío */}
-              {loadingProducts ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-                  {[1, 2, 3, 4].map((n) => (
-                    <div key={n} className="apple-card p-6 h-64 animate-pulse bg-white/[0.02] rounded-3xl" />
-                  ))}
-                </div>
-              ) : adultProducts.length === 0 ? (
-                <div className="p-12 text-center rounded-3xl border border-[#bf5af2]/15 bg-[#1a0a1e]/40 space-y-3">
-                  <Package className="w-8 h-8 mx-auto text-[#bf5af2]/50" />
-                  <h3 className="text-sm font-semibold text-white">
-                    Próximamente — Categoría en preparación
-                  </h3>
-                  <p className="text-xs text-[#86868b]">
-                    Los productos de esta categoría aparecerán aquí cuando el personal los agregue al inventario.
+            {/* Gate: No ha iniciado sesión */}
+            {!user ? (
+              <div className="relative overflow-hidden rounded-3xl border border-[#bf5af2]/20 bg-gradient-to-br from-[#1a0a1e]/80 to-[#0d0010]/80 p-10 text-center space-y-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#bf5af2]/5 to-transparent opacity-30" />
+                <div className="relative z-10 space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-2xl bg-[#bf5af2]/20 border border-[#bf5af2]/30 flex items-center justify-center">
+                    <Lock className="w-6 h-6 text-[#bf5af2]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Acceso Restringido</h3>
+                  <p className="text-xs text-[#86868b] max-w-sm mx-auto leading-relaxed">
+                    Debes <strong className="text-white">crear una cuenta o iniciar sesión</strong> y confirmar tu mayoría de edad para ver esta sección.
                   </p>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#bf5af2] text-white text-sm font-semibold hover:bg-[#a348d6] transition-colors shadow-lg shadow-[#bf5af2]/30"
+                  >
+                    <span>Iniciar Sesión / Registrarse</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-                  {adultProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+              </div>
+            ) : !adultAccessGranted ? (
+              /* Gate: Usuario con sesión pero sin verificar edad */
+              <div className="relative overflow-hidden rounded-3xl border border-[#bf5af2]/25 bg-gradient-to-br from-[#1a0a1e]/90 to-[#0d0010]/90 p-10 text-center space-y-4">
+                <div className="relative z-10 space-y-4">
+                  <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#bf5af2]/30 to-[#9b3cc7]/20 border border-[#bf5af2]/40 flex items-center justify-center">
+                    <span className="text-2xl">🔞</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Verifica tu Edad para Continuar</h3>
+                  <p className="text-xs text-[#86868b] max-w-sm mx-auto leading-relaxed">
+                    Esta sección está disponible solo para <strong className="text-white">mayores de 18 años</strong>.
+                    Confirma tu edad para acceder a los productos íntimos para adultos.
+                  </p>
+                  <button
+                    onClick={() => setIsAgeModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#bf5af2] text-white text-sm font-semibold hover:bg-[#a348d6] transition-colors shadow-lg shadow-[#bf5af2]/30 active:scale-95"
+                  >
+                    <EyeOff className="w-4 h-4" />
+                    <span>Confirmar que soy mayor de 18 años</span>
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+              </div>
+            ) : (
+              /* Contenido adulto desbloqueado */
+              <div className="space-y-4">
+                {/* Banner verificado */}
+                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#bf5af2]/[0.08] border border-[#bf5af2]/20 text-[#bf5af2] text-xs font-medium">
+                  <Eye className="w-4 h-4 flex-shrink-0" />
+                  <span>Acceso verificado — Mayor de 18 años. Navega con responsabilidad.</span>
+                  <button
+                    onClick={() => { setAdultAccessGranted(false); sessionStorage.removeItem('sayta_age_verified'); }}
+                    className="ml-auto text-[#86868b] hover:text-white transition-colors text-[11px]"
+                  >
+                    Ocultar sección
+                  </button>
+                </div>
 
-      {/* Modal de Verificación de Edad */}
-      <AgeVerificationModal
-        isOpen={isAgeModalOpen}
-        onConfirm={() => {
-          setAdultAccessGranted(true);
-          setIsAgeModalOpen(false);
-        }}
-        onCancel={() => setIsAgeModalOpen(false)}
-      />
-    </main>
+                {/* Grid o estado vacío */}
+                {loadingProducts ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                    {[1, 2, 3, 4].map((n) => (
+                      <div key={n} className="apple-card p-6 h-64 animate-pulse bg-white/[0.02] rounded-3xl" />
+                    ))}
+                  </div>
+                ) : adultProducts.length === 0 ? (
+                  <div className="p-12 text-center rounded-3xl border border-[#bf5af2]/15 bg-[#1a0a1e]/40 space-y-3">
+                    <Package className="w-8 h-8 mx-auto text-[#bf5af2]/50" />
+                    <h3 className="text-sm font-semibold text-white">
+                      Próximamente — Categoría en preparación
+                    </h3>
+                    <p className="text-xs text-[#86868b]">
+                      Los productos de esta categoría aparecerán aquí cuando el personal los agregue al inventario.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                    {adultProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Modal de Verificación de Edad */}
+        <AgeVerificationModal
+          isOpen={isAgeModalOpen}
+          onConfirm={() => {
+            setAdultAccessGranted(true);
+            setIsAgeModalOpen(false);
+          }}
+          onCancel={() => setIsAgeModalOpen(false)}
+        />
+      </main>
 
 
       {/* ─── FOOTER APPLE STYLE ─── */}
       <footer className="w-full border-t border-white/[0.08] bg-[var(--footer-bg)] py-12 text-xs text-[#86868b] transition-colors duration-300">
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-7 h-7 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
-              <Image
-                src="/images/logo.png"
-                alt="Sayta Mall"
-                width={28}
-                height={28}
-                className="w-full h-full object-contain rounded-xl"
-              />
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="relative w-7 h-7 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+                  <Image
+                    src="/images/logo.png"
+                    alt="Sayta Mall"
+                    width={28}
+                    height={28}
+                    className="w-full h-full object-contain rounded-xl"
+                  />
+                </div>
+                <span className="font-bold text-white text-sm">Sayta Mall</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                Super Ahorro Y Todo Aquí. Tienda departamental multisucursal: herramientas, calzado, ropa, fajas, cosméticos, electrónica, bocadillos chinos y hogar en Córdobas (C$).
+              </p>
             </div>
-            <span className="font-bold text-white text-sm">Sayta Mall</span>
+
+            <div>
+              <h4 className="text-xs font-semibold text-white mb-3">Departamentos Destacados</h4>
+              <ul className="space-y-2 text-[11px]">
+                <li><a href="#catalogo" className="hover:text-white transition-colors">Herramientas & Ferretería</a></li>
+                <li><a href="#catalogo" className="hover:text-white transition-colors">Calzado & Ropa</a></li>
+                <li><a href="#catalogo" className="hover:text-white transition-colors">Ropa Íntima & Fajas</a></li>
+                <li><a href="#catalogo" className="hover:text-white transition-colors">Cosméticos & Belleza</a></li>
+                <li><a href="#catalogo" className="hover:text-white transition-colors">Electrónica & Gadgets</a></li>
+                <li><a href="#catalogo" className="hover:text-white transition-colors">Bocadillos Chinos & Snacks</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-white mb-3">Accesos del Sistema</h4>
+              <ul className="space-y-2 text-[11px]">
+                <li><Link href="/login" className="hover:text-white transition-colors">Iniciar Sesión / Registrarse</Link></li>
+                <li><Link href="/dueno/dashboard" className="hover:text-white transition-colors">Portal del Dueño</Link></li>
+                <li><Link href="/empleado/dashboard" className="hover:text-white transition-colors">Portal de Empleados</Link></li>
+                <li><Link href="/programador/dashboard" className="hover:text-white transition-colors">Consola Superadmin</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-white mb-3">Atención Inmediata</h4>
+              <p className="text-[11px] leading-relaxed mb-3">
+                ¿Consultas sobre un producto, pedido especial o cotización por mayor? Escríbenos directamente.
+              </p>
+              <a
+                href="https://wa.me/50588880000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#30d158]/15 text-[#30d158] hover:bg-[#30d158]/25 text-[11px] font-semibold transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>WhatsApp de Pedidos</span>
+              </a>
+            </div>
           </div>
-          <p className="text-[11px] leading-relaxed">
-            Super Ahorro Y Todo Aquí. Tienda departamental multisucursal: herramientas, calzado, ropa, fajas, cosméticos, electrónica, bocadillos chinos y hogar en Córdobas (C$).
-          </p>
-        </div>
 
-        <div>
-          <h4 className="text-xs font-semibold text-white mb-3">Departamentos Destacados</h4>
-          <ul className="space-y-2 text-[11px]">
-            <li><a href="#catalogo" className="hover:text-white transition-colors">Herramientas & Ferretería</a></li>
-            <li><a href="#catalogo" className="hover:text-white transition-colors">Calzado & Ropa</a></li>
-            <li><a href="#catalogo" className="hover:text-white transition-colors">Ropa Íntima & Fajas</a></li>
-            <li><a href="#catalogo" className="hover:text-white transition-colors">Cosméticos & Belleza</a></li>
-            <li><a href="#catalogo" className="hover:text-white transition-colors">Electrónica & Gadgets</a></li>
-            <li><a href="#catalogo" className="hover:text-white transition-colors">Bocadillos Chinos & Snacks</a></li>
-          </ul>
+          <div className="pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#6e6e73]">
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-center sm:text-left">
+              <p>© {new Date().getFullYear()} Sayta Mall. Super Ahorro Y Todo Aquí. Todos los derechos reservados.</p>
+              <span className="hidden sm:inline">·</span>
+              <p className="text-[#86868b]">
+                Desarrollado por <span className="font-semibold text-white">ProLine System</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>Moneda Oficial: NIO (C$)</span>
+              <span>·</span>
+              <a href="#" className="hover:text-white">Términos</a>
+              <span>·</span>
+              <a href="#" className="hover:text-white">Privacidad</a>
+            </div>
+          </div>
         </div>
+      </footer>
 
-        <div>
-          <h4 className="text-xs font-semibold text-white mb-3">Accesos del Sistema</h4>
-          <ul className="space-y-2 text-[11px]">
-            <li><Link href="/login" className="hover:text-white transition-colors">Iniciar Sesión / Registrarse</Link></li>
-            <li><Link href="/dueno/dashboard" className="hover:text-white transition-colors">Portal del Dueño</Link></li>
-            <li><Link href="/empleado/dashboard" className="hover:text-white transition-colors">Portal de Empleados</Link></li>
-            <li><Link href="/programador/dashboard" className="hover:text-white transition-colors">Consola Superadmin</Link></li>
-          </ul>
-        </div>
+      {/* ─── BOTÓN FLOTANTE DE WHATSAPP ─── Usa el número registrado en la sucursal */}
+      {currentBranch?.whatsapp && (
+        <a
+          href={`https://wa.me/${currentBranch.whatsapp.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 rounded-full bg-[#30d158] text-black flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform"
+          title={`Contactar ${currentBranch.name} por WhatsApp`}
+        >
+          <MessageCircle className="w-6 h-6 fill-current" />
+        </a>
+      )}
 
-        <div>
-          <h4 className="text-xs font-semibold text-white mb-3">Atención Inmediata</h4>
-          <p className="text-[11px] leading-relaxed mb-3">
-            ¿Consultas sobre un producto, pedido especial o cotización por mayor? Escríbenos directamente.
-          </p>
-          <a
-            href="https://wa.me/50588880000"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#30d158]/15 text-[#30d158] hover:bg-[#30d158]/25 text-[11px] font-semibold transition-colors"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>WhatsApp de Pedidos</span>
-          </a>
-        </div>
-      </div>
-
-      <div className="pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#6e6e73]">
-        <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-center sm:text-left">
-          <p>© {new Date().getFullYear()} Sayta Mall. Super Ahorro Y Todo Aquí. Todos los derechos reservados.</p>
-          <span className="hidden sm:inline">·</span>
-          <p className="text-[#86868b]">
-            Desarrollado por <span className="font-semibold text-white">ProLine System</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <span>Moneda Oficial: NIO (C$)</span>
-          <span>·</span>
-          <a href="#" className="hover:text-white">Términos</a>
-          <span>·</span>
-          <a href="#" className="hover:text-white">Privacidad</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  {/* ─── BOTÓN FLOTANTE DE WHATSAPP (Ajustado para no tapar la barra móvil) ─── */}
-  <a
-    href="https://wa.me/50588880000"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 rounded-full bg-[#30d158] text-black flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform"
-    title="Atención por WhatsApp"
-  >
-    <MessageCircle className="w-6 h-6 fill-current" />
-  </a>
-
-  {/* ─── MODALES DE BÚSQUEDA Y SUCURSAL ─── */ }
+      {/* ─── MODALES DE BÚSQUEDA Y SUCURSAL ─── */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <BranchModal isOpen={isBranchModalOpen} onClose={() => setIsBranchModalOpen(false)} />
       <CartDrawer />
