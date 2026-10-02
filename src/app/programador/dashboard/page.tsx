@@ -394,7 +394,7 @@ export default function ProgramadorDashboardPage() {
               </div>
 
               {/* Tarjeta Tabla de Usuarios & Credenciales (Exclusivo Programador) */}
-              <div className="apple-card p-6 space-y-4 md:col-span-3 bg-gradient-to-r from-purple-950/20 via-blue-950/20 to-black border-[#2997ff]/20">
+              <div className="apple-card p-6 space-y-4 md:col-span-3 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-transparent border-[#2997ff]/20">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#2997ff]/20 text-[#2997ff] flex items-center justify-center">

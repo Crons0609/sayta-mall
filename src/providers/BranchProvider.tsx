@@ -23,6 +23,8 @@ interface BranchContextValue {
 
 const BranchContext = createContext<BranchContextValue | null>(null);
 const BRANCH_STORAGE_KEY = 'sayta_current_branch_id_v2';
+const CACHE_BRANCHES_KEY = 'sayta_cached_branches_v2';
+const CACHE_CURRENT_BRANCH_KEY = 'sayta_cached_current_branch_v2';
 
 export function BranchProvider({ children }: { children: ReactNode }) {
   const [branches, setBranches] = useState<BranchDocument[]>([]);
@@ -30,93 +32,126 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   const [currentBranch, setCurrentBranch] = useState<BranchDocument | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Suscripción en tiempo real a las sucursales públicas activas en Firestore
+  // 1. Hidratación instantánea desde caché local para mostrar sucursales en 0ms
   useEffect(() => {
     try {
+      const cachedRaw = localStorage.getItem(CACHE_BRANCHES_KEY);
+      const savedBranchId = localStorage.getItem(BRANCH_STORAGE_KEY);
+      if (cachedRaw) {
+        const parsed: BranchDocument[] = JSON.parse(cachedRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBranches(parsed);
+          const found = (savedBranchId && parsed.find((b) => b.id === savedBranchId)) || parsed[0];
+          setCurrentBranch(found);
+          setCurrentBranchIdState(found.id);
+          setLoading(false);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Función auxiliar para actualizar y persistir en caché
+  const updateBranchesData = (loadedBranches: BranchDocument[]) => {
+    if (!Array.isArray(loadedBranches)) return;
+    setBranches(loadedBranches);
+    try {
+      localStorage.setItem(CACHE_BRANCHES_KEY, JSON.stringify(loadedBranches));
+    } catch {}
+
+    if (loadedBranches.length === 0) {
+      setCurrentBranch(null);
+      setCurrentBranchIdState(null);
+    } else {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(BRANCH_STORAGE_KEY) : null;
+      const found = (saved && loadedBranches.find((b) => b.id === saved)) || loadedBranches[0];
+      setCurrentBranch(found);
+      setCurrentBranchIdState(found.id);
+      try {
+        localStorage.setItem(BRANCH_STORAGE_KEY, found.id);
+        localStorage.setItem(CACHE_CURRENT_BRANCH_KEY, JSON.stringify(found));
+      } catch {}
+    }
+    setLoading(false);
+  };
+
+  // 2. Sincronización rápida vía API y tiempo real vía Firestore
+  useEffect(() => {
+    let isMounted = true;
+
+    // A. Llamada inmediata a la API de sucursales (consulta RTDB + Firestore en el backend sin delay)
+    fetch('/api/branches')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!isMounted) return;
+        if (data.success && Array.isArray(data.branches) && data.branches.length > 0) {
+          updateBranchesData(data.branches);
+        }
+      })
+      .catch((e) => {
+        console.warn('[BranchProvider] Fetch API branches:', e);
+      });
+
+    // B. Listener en tiempo real de Firestore para actualizaciones en vivo
+    try {
       const branchesRef = collection(db, 'branches');
-      // Filtramos por active == true
       const q = query(branchesRef, where('active', '==', true));
 
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const loadedBranches: BranchDocument[] = [];
+          if (!isMounted) return;
+          const loaded: BranchDocument[] = [];
           snapshot.forEach((doc) => {
             const data = doc.data();
-            // Solo incluimos sucursales públicas si está definido, o si active es true
             if (data.isPublic !== false) {
-              loadedBranches.push({ id: doc.id, ...data } as BranchDocument);
+              loaded.push({ id: doc.id, ...data } as BranchDocument);
             }
           });
 
-          setBranches(loadedBranches);
-
-          if (loadedBranches.length === 0) {
+          if (loaded.length > 0) {
+            updateBranchesData(loaded);
+          } else {
+            // Si Firestore aún no tiene o está vacío, asegurarse con la API
             fetch('/api/branches')
               .then((r) => r.json())
-              .then((data) => {
-                if (data.branches && data.branches.length > 0) {
-                  setBranches(data.branches);
-                  setCurrentBranch(data.branches[0]);
-                  setCurrentBranchIdState(data.branches[0].id);
+              .then((d) => {
+                if (!isMounted) return;
+                if (d.success && Array.isArray(d.branches) && d.branches.length > 0) {
+                  updateBranchesData(d.branches);
                 } else {
-                  setCurrentBranch(null);
-                  setCurrentBranchIdState(null);
+                  setLoading(false);
                 }
               })
-              .catch(() => {
-                setCurrentBranch(null);
-                setCurrentBranchIdState(null);
-              });
-          } else if (loadedBranches.length === 1) {
-            setCurrentBranch(loadedBranches[0]);
-            setCurrentBranchIdState(loadedBranches[0].id);
-          } else {
-            const saved = localStorage.getItem(BRANCH_STORAGE_KEY);
-            const found = loadedBranches.find((b) => b.id === saved) || loadedBranches[0];
-            setCurrentBranch(found);
-            setCurrentBranchIdState(found.id);
+              .catch(() => setLoading(false));
           }
-
-          setLoading(false);
         },
         (error) => {
-          console.warn('[BranchProvider] Escucha de sucursales:', error.message);
+          if (!isMounted) return;
+          console.warn('[BranchProvider] Firestore snapshot fallback:', error.message);
+          // Si las reglas de Firestore restringen la lectura directa del cliente, la API de backend resuelve
           fetch('/api/branches')
             .then((r) => r.json())
-            .then((data) => {
-              if (data.branches && data.branches.length > 0) {
-                setBranches(data.branches);
-                setCurrentBranch(data.branches[0]);
-                setCurrentBranchIdState(data.branches[0].id);
-              } else {
-                setBranches([]);
-                setCurrentBranch(null);
-                setCurrentBranchIdState(null);
+            .then((d) => {
+              if (!isMounted) return;
+              if (d.success && Array.isArray(d.branches)) {
+                updateBranchesData(d.branches);
               }
             })
-            .catch(() => {
-              setBranches([]);
-              setCurrentBranch(null);
-              setCurrentBranchIdState(null);
-            })
-            .finally(() => setLoading(false));
+            .catch(() => {})
+            .finally(() => {
+              if (isMounted) setLoading(false);
+            });
         }
       );
 
-      return () => unsubscribe();
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
     } catch (e) {
-      fetch('/api/branches')
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.branches && data.branches.length > 0) {
-            setBranches(data.branches);
-            setCurrentBranch(data.branches[0]);
-            setCurrentBranchIdState(data.branches[0].id);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+      return () => {
+        isMounted = false;
+      };
     }
   }, []);
 
@@ -124,7 +159,12 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(BRANCH_STORAGE_KEY, id);
     setCurrentBranchIdState(id);
     const found = branches.find((b) => b.id === id);
-    if (found) setCurrentBranch(found);
+    if (found) {
+      setCurrentBranch(found);
+      try {
+        localStorage.setItem(CACHE_CURRENT_BRANCH_KEY, JSON.stringify(found));
+      } catch {}
+    }
   };
 
   return (

@@ -39,6 +39,7 @@ import { SearchModal } from '@/components/ui/SearchModal';
 import { PhoneVerificationModal } from '@/components/auth/PhoneVerificationModal';
 import { DashboardPreferencesProvider, useDashboardPreferences } from '@/providers/DashboardPreferencesProvider';
 import { DashboardSettingsModal } from '@/components/dashboard/DashboardSettingsModal';
+import { useTheme } from '@/providers/ThemeProvider';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -53,8 +54,11 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, claims, logout, phoneVerified, loading: authLoading } = useAuth();
-  const { branches, currentBranch, branchCount, setBranchId } = useBranch();
-  const { themeConfig, setSettingsModalOpen, t, language } = useDashboardPreferences();
+  const { branches, currentBranch, branchCount, setBranchId, loading: branchLoading } = useBranch();
+  const { theme, themeConfig, setSettingsModalOpen, t, language } = useDashboardPreferences();
+  const { resolvedTheme } = useTheme();
+
+  const isLight = resolvedTheme === 'light' || theme === 'light';
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -282,8 +286,10 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
 
   return (
     <div
-      className="min-h-screen text-[#f5f5f7] flex flex-col selection:bg-[#2997ff]/30 selection:text-[#2997ff] transition-colors duration-300"
-      style={{ backgroundColor: themeConfig.previewBg }}
+      className={`min-h-screen flex flex-col selection:bg-[#2997ff]/30 selection:text-[#2997ff] transition-colors duration-300 ${
+        isLight ? 'bg-[#f5f5f7] text-[#1d1d1f]' : 'text-[#f5f5f7]'
+      }`}
+      style={{ backgroundColor: isLight ? '#f5f5f7' : themeConfig.previewBg }}
     >
       {/* Banner de Modo Soporte si aplica */}
       {impersonatingOwner && (
@@ -292,7 +298,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             <span className="w-2 h-2 rounded-full bg-[#ffd60a] animate-pulse" />
             <span>
               <strong>Modo Soporte Activo:</strong> Estás visualizando el sistema como{' '}
-              <strong className="text-white">{impersonatingOwner.name}</strong> ({impersonatingOwner.storeName})
+              <strong className={isLight ? 'text-black font-bold' : 'text-white font-bold'}>{impersonatingOwner.name}</strong> ({impersonatingOwner.storeName})
             </span>
           </div>
           <button
@@ -305,12 +311,18 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
       )}
 
       {/* Topbar Apple Style */}
-      <header className="sticky top-0 z-40 bg-[#000000]/80 backdrop-blur-2xl border-b border-white/[0.08] px-4 sm:px-6 h-14 flex items-center justify-between">
+      <header className={`sticky top-0 z-40 backdrop-blur-2xl border-b px-4 sm:px-6 h-14 flex items-center justify-between transition-colors ${
+        isLight
+          ? 'bg-white/90 border-black/[0.08] text-[#1d1d1f]'
+          : 'bg-[#000000]/80 border-white/[0.08] text-white'
+      }`}>
         <div className="flex items-center gap-3">
           {/* Botón menú móvil */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-xl text-[#86868b] hover:text-white hover:bg-white/[0.06] transition-colors"
+            className={`lg:hidden p-2 rounded-xl transition-colors ${
+              isLight ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]' : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+            }`}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -326,31 +338,46 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 priority
               />
             </div>
-            <span className="font-semibold text-sm tracking-tight text-white hidden sm:inline">
+            <span className={`font-semibold text-sm tracking-tight hidden sm:inline ${
+              isLight ? 'text-[#1d1d1f]' : 'text-white'
+            }`}>
               Sayta Mall
             </span>
           </Link>
 
-          <div className="h-4 w-px bg-white/10 hidden sm:block" />
+          <div className={`h-4 w-px hidden sm:block ${isLight ? 'bg-black/10' : 'bg-white/10'}`} />
 
           {/* Selector o Indicador de Sucursal */}
           <div className="relative">
-            {branchCount === 0 ? (
+            {branchLoading && branchCount === 0 ? (
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border animate-pulse ${
+                isLight ? 'bg-black/[0.04] text-[#515154] border-black/[0.08]' : 'bg-white/[0.06] text-[#86868b] border-white/[0.08]'
+              }`}>
+                <Store className="w-3 h-3 text-[#2997ff] animate-spin" />
+                <span>Sincronizando sucursal...</span>
+              </span>
+            ) : branchCount === 0 ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ff453a]/15 text-[#ff453a] text-[11px] font-medium border border-[#ff453a]/25">
                 <Store className="w-3 h-3" />
                 <span>{t('no_branches', 'Sin sucursales')}</span>
               </span>
             ) : branchCount === 1 ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] text-[#86868b] text-[11px] font-medium border border-white/[0.08]">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
+                isLight ? 'bg-black/[0.04] text-[#515154] border-black/[0.08]' : 'bg-white/[0.06] text-[#86868b] border-white/[0.08]'
+              }`}>
                 <Store className="w-3 h-3 text-[#30d158]" />
-                <span className="text-white font-medium">{currentBranch?.name || 'Sucursal Principal'}</span>
+                <span className={`font-medium ${isLight ? 'text-black' : 'text-white'}`}>{currentBranch?.name || 'Sucursal Principal'}</span>
               </span>
             ) : (
               // 2 o más sucursales: Dropdown
               <div>
                 <button
                   onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs text-white border border-white/[0.1] transition-all"
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs border transition-all ${
+                    isLight
+                      ? 'bg-black/[0.04] hover:bg-black/[0.08] text-black border-black/[0.1]'
+                      : 'bg-white/[0.06] hover:bg-white/[0.1] text-white border-white/[0.1]'
+                  }`}
                 >
                   <Store className="w-3.5 h-3.5 text-[#30d158] shrink-0" />
                   <span className="max-w-[80px] xs:max-w-[110px] sm:max-w-[150px] truncate font-medium">
@@ -360,7 +387,9 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 </button>
 
                 {branchDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-56 rounded-2xl bg-[#1c1c1e] border border-white/[0.12] p-1.5 shadow-2xl z-50 animate-fade-in">
+                  <div className={`absolute left-0 mt-2 w-56 rounded-2xl border p-1.5 shadow-2xl z-50 animate-fade-in ${
+                    isLight ? 'bg-white border-black/[0.12] text-black shadow-black/10' : 'bg-[#1c1c1e] border-white/[0.12] text-white shadow-2xl'
+                  }`}>
                     <span className="block px-2.5 py-1 text-[10px] uppercase font-semibold text-[#86868b] tracking-wider">
                       {t('change_branch', 'Cambiar de Sucursal')}
                     </span>
@@ -371,10 +400,13 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                           setBranchId(b.id);
                           setBranchDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${b.id === currentBranch?.id
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                          b.id === currentBranch?.id
                             ? 'bg-[#2997ff] text-white font-medium'
-                            : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
-                          }`}
+                            : isLight
+                              ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]'
+                              : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+                        }`}
                       >
                         <span className="truncate">{b.name}</span>
                         {b.id === currentBranch?.id && (
@@ -394,11 +426,19 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           {/* Botón de búsqueda rápida */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs text-[#86868b] hover:text-white transition-all"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all ${
+              isLight
+                ? 'bg-black/[0.04] hover:bg-black/[0.08] border-black/[0.08] text-[#515154] hover:text-black'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-[#86868b] hover:text-white'
+            }`}
           >
             <Search className="w-3.5 h-3.5" />
             <span className="hidden md:inline">{t('search_placeholder', 'Buscar...')}</span>
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white/[0.08] text-[#86868b] rounded border border-white/[0.1]">
+            <kbd className={`hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded border ${
+              isLight
+                ? 'bg-black/[0.06] text-[#515154] border-black/[0.1]'
+                : 'bg-white/[0.08] text-[#86868b] border-white/[0.1]'
+            }`}>
               ⌘K
             </kbd>
           </button>
@@ -406,7 +446,11 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           {/* Notificaciones */}
           <button
             title={t('tab_chat', 'Notificaciones')}
-            className="p-2 rounded-xl text-[#86868b] hover:text-white hover:bg-white/[0.06] transition-colors relative"
+            className={`p-2 rounded-xl transition-colors relative ${
+              isLight
+                ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]'
+                : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+            }`}
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#2997ff] ring-2 ring-black" />
@@ -416,25 +460,33 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           <button
             onClick={() => setSettingsModalOpen(true)}
             title={t('settings_title', 'Ajustes del Dashboard')}
-            className="p-2 rounded-xl text-[#86868b] hover:text-white hover:bg-white/[0.06] transition-colors relative group"
+            className={`p-2 rounded-xl transition-colors relative group ${
+              isLight
+                ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]'
+                : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+            }`}
           >
             <Sliders className="w-4 h-4" />
             <span className="sr-only">Ajustes</span>
           </button>
 
-          {/* Indicador de  / Verificación telefónica */}
+          {/* Indicador de Verificación telefónica */}
           {phoneVerified ? (
             <span
               className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/25 text-[11px] font-medium"
-              title="Cuenta con teléfono verificado en Firebase ()"
+              title="Cuenta con teléfono verificado en Firebase"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span></span>
+              <span>Verificado</span>
             </span>
           ) : (
             <button
               onClick={() => setPhoneModalOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-[#30d158]/15 text-[#86868b] hover:text-[#30d158] border border-white/[0.08] hover:border-[#30d158]/30 text-[11px] font-medium transition-all"
+              className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                isLight
+                  ? 'bg-black/[0.04] hover:bg-[#30d158]/15 text-[#515154] hover:text-[#059669] border border-black/[0.08] hover:border-[#30d158]/30'
+                  : 'bg-white/[0.04] hover:bg-[#30d158]/15 text-[#86868b] hover:text-[#30d158] border border-white/[0.08] hover:border-[#30d158]/30'
+              }`}
               title="Verificar cuenta mediante SMS de Firebase"
             >
               <Smartphone className="w-3 h-3 text-[#30d158]" />
@@ -443,9 +495,13 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           )}
 
           {/* Perfil & Salir */}
-          <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
+          <div className={`flex items-center gap-2 pl-2 border-l ${
+            isLight ? 'border-black/[0.1]' : 'border-white/[0.08]'
+          }`}>
             <div className="text-right hidden sm:block">
-              <span className="block text-xs font-medium text-white max-w-[120px] truncate">
+              <span className={`block text-xs font-semibold max-w-[120px] truncate ${
+                isLight ? 'text-black' : 'text-white'
+              }`}>
                 {user?.displayName || user?.email || 'Administrador'}
               </span>
               <span className="block text-[10px] uppercase font-semibold text-[#86868b] tracking-wider">
@@ -467,8 +523,13 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
       <div className="flex-1 flex">
         {/* Sidebar Desktop */}
         <aside
-          className={`hidden lg:flex flex-col border-r border-white/[0.08] bg-[#000000]/60 backdrop-blur-xl transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'
-            }`}
+          className={`hidden lg:flex flex-col backdrop-blur-xl transition-all duration-300 ${
+            collapsed ? 'w-16' : 'w-64'
+          } ${
+            isLight
+              ? 'bg-[#ffffff]/90 border-r border-black/[0.08]'
+              : 'bg-[#000000]/60 border-r border-white/[0.08]'
+          }`}
         >
           {/* Navegación */}
           <div className="p-3 space-y-1 flex-1">
@@ -482,22 +543,28 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-medium transition-all ${active
-                      ? 'bg-white text-black font-semibold shadow-sm'
-                      : 'text-[#86868b] hover:text-white hover:bg-white/[0.04]'
-                    }`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-medium transition-all ${
+                    active
+                      ? isLight
+                        ? 'bg-[#0071e3] text-white font-semibold shadow-md shadow-[#0071e3]/20'
+                        : 'bg-white text-black font-semibold shadow-sm'
+                      : isLight
+                        ? 'text-[#515154] hover:text-black hover:bg-black/[0.04]'
+                        : 'text-[#86868b] hover:text-white hover:bg-white/[0.04]'
+                  }`}
                   title={collapsed ? item.label : undefined}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-black' : ''}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${active ? (isLight ? 'text-white' : 'text-black') : ''}`} />
                   {!collapsed && (
                     <div className="flex-1 flex items-center justify-between">
                       <span>{item.label}</span>
                       {item.badge && (
                         <span
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${active
-                              ? 'bg-black/10 text-black'
-                              : 'bg-white/[0.08] text-[#86868b]'
-                            }`}
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                            active
+                              ? isLight ? 'bg-white/20 text-white' : 'bg-black/10 text-black'
+                              : isLight ? 'bg-black/[0.06] text-[#515154]' : 'bg-white/[0.08] text-[#86868b]'
+                          }`}
                         >
                           {item.badge}
                         </span>
@@ -510,10 +577,14 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           </div>
 
           {/* Pie de sidebar: Volver a la tienda */}
-          <div className="p-3 border-t border-white/[0.08]">
+          <div className={`p-3 border-t ${isLight ? 'border-black/[0.08]' : 'border-white/[0.08]'}`}>
             <Link
               href="/"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-medium text-[#86868b] hover:text-white hover:bg-white/[0.04] transition-colors"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-medium transition-colors ${
+                isLight
+                  ? 'text-[#515154] hover:text-black hover:bg-black/[0.04]'
+                  : 'text-[#86868b] hover:text-white hover:bg-white/[0.04]'
+              }`}
             >
               <ArrowLeft className="w-4 h-4 shrink-0" />
               {!collapsed && <span>{t('view_public_store', 'Ver Tienda Pública')}</span>}
@@ -525,12 +596,16 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
         {sidebarOpen && (
           <div className="fixed inset-0 z-50 lg:hidden animate-fade-in">
             <div
-              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md"
               onClick={() => setSidebarOpen(false)}
             />
-            <div className="fixed left-0 top-0 bottom-0 w-72 bg-[#161617] border-r border-white/[0.1] p-4 flex flex-col justify-between z-50 animate-slide-in">
+            <div className={`fixed left-0 top-0 bottom-0 w-72 p-4 flex flex-col justify-between z-50 animate-slide-in border-r ${
+              isLight ? 'bg-white border-black/[0.1] text-black' : 'bg-[#161617] border-white/[0.1] text-white'
+            }`}>
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <div className={`flex items-center justify-between pb-3 border-b ${
+                  isLight ? 'border-black/[0.08]' : 'border-white/[0.08]'
+                }`}>
                   <div className="flex items-center gap-2.5">
                     <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 flex-shrink-0">
                       <Image
@@ -541,11 +616,11 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                         className="w-full h-full object-contain rounded-xl"
                       />
                     </div>
-                    <span className="font-semibold text-sm text-white">Sayta Mall</span>
+                    <span className={`font-semibold text-sm ${isLight ? 'text-black' : 'text-white'}`}>Sayta Mall</span>
                   </div>
                   <button
                     onClick={() => setSidebarOpen(false)}
-                    className="p-1.5 rounded-lg text-[#86868b] hover:text-white"
+                    className={`p-1.5 rounded-lg ${isLight ? 'text-black hover:bg-black/[0.05]' : 'text-[#86868b] hover:text-white'}`}
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -563,10 +638,11 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                         key={item.href}
                         href={item.href}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium ${active
-                            ? 'bg-white text-black font-semibold'
-                            : 'text-[#86868b] hover:text-white'
-                          }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium ${
+                          active
+                            ? isLight ? 'bg-[#0071e3] text-white font-semibold' : 'bg-white text-black font-semibold'
+                            : isLight ? 'text-[#515154] hover:text-black' : 'text-[#86868b] hover:text-white'
+                        }`}
                       >
                         <Icon className="w-4 h-4" />
                         <span>{item.label}</span>
@@ -576,10 +652,12 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/[0.08] space-y-2">
+              <div className={`pt-4 border-t space-y-2 ${isLight ? 'border-black/[0.08]' : 'border-white/[0.08]'}`}>
                 <Link
                   href="/"
-                  className="flex items-center gap-2 text-xs text-[#86868b] hover:text-white px-2 py-1"
+                  className={`flex items-center gap-2 text-xs px-2 py-1 ${
+                    isLight ? 'text-[#515154] hover:text-black' : 'text-[#86868b] hover:text-white'
+                  }`}
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>{t('back_to_store', 'Volver a la Tienda')}</span>

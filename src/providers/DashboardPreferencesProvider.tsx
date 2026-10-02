@@ -7,7 +7,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
 
-export type DashboardTheme = 'obsidian' | 'midnight' | 'emerald' | 'purple' | 'titanium';
+export type DashboardTheme = 'obsidian' | 'midnight' | 'emerald' | 'purple' | 'titanium' | 'light';
 export type DashboardLanguage = 'es' | 'en' | 'zh';
 
 export interface ThemeConfig {
@@ -39,6 +39,20 @@ export const DASHBOARD_THEMES: Record<DashboardTheme, ThemeConfig> = {
     description: 'Negro puro OLED de contraste ultra alto con acentos sutiles.',
     descriptionEn: 'Pure OLED black with high contrast and subtle accents.',
     descriptionZh: '极致OLED纯黑高对比度背景，搭配细腻微光边框。',
+  },
+  light: {
+    id: 'light',
+    name: 'Apple Claro (Blanco Puro)',
+    nameEn: 'Apple Light (Pure White)',
+    nameZh: '苹果纯白 (明亮白)',
+    previewBg: '#f5f5f7',
+    previewAccent: '#0071e3',
+    cardBg: '#ffffff',
+    borderAccent: 'rgba(0, 0, 0, 0.08)',
+    accentColor: '#0071e3',
+    description: 'Diseño claro y limpio estilo macOS con máxima legibilidad y confort diurno.',
+    descriptionEn: 'Clean light macOS design with maximum day-time readability and comfort.',
+    descriptionZh: '清爽明亮 macOS 纯白风格，高对比清晰易读。',
   },
   midnight: {
     id: 'midnight',
@@ -2024,9 +2038,14 @@ export function DashboardPreferencesProvider({ children }: { children: ReactNode
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem(storageThemeKey) as DashboardTheme;
+      const globalTheme = localStorage.getItem('sayta_theme');
       if (savedTheme && DASHBOARD_THEMES[savedTheme]) {
         setThemeState(savedTheme);
+      } else if (globalTheme === 'light') {
+        // Si no tiene preferencia guardada pero la app está en modo claro, adoptar tema light
+        setThemeState('light');
       }
+
       const savedLang = (localStorage.getItem(storageLangKey) || localStorage.getItem('sayta_global_lang') || localStorage.getItem('sayta_dashboard_lang')) as DashboardLanguage;
       if (savedLang && TRANSLATIONS[savedLang]) {
         setLanguageState(savedLang);
@@ -2052,6 +2071,19 @@ export function DashboardPreferencesProvider({ children }: { children: ReactNode
     setThemeState(newTheme);
     try {
       localStorage.setItem(storageThemeKey, newTheme);
+      if (typeof document !== 'undefined') {
+        if (newTheme === 'light') {
+          localStorage.setItem('sayta_theme', 'light');
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          localStorage.setItem('sayta_theme', 'dark');
+          document.documentElement.classList.remove('light');
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      }
     } catch {}
   }, [storageThemeKey]);
 
