@@ -26,6 +26,7 @@ import {
   Monitor,
   Languages,
   Check,
+  Download,
 } from 'lucide-react';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { PhoneVerificationModal } from '@/components/auth/PhoneVerificationModal';
@@ -349,6 +350,21 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                     )}
                   </div>
 
+                  {/* Acceso a Instalación PWA / Pantalla Principal */}
+                  <div className="py-1 border-t border-white/[0.08]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        window.dispatchEvent(new Event('sayta_open_pwa_install'));
+                      }}
+                      className="w-full text-left px-3 py-1.5 rounded-lg text-xs text-[#2997ff] hover:bg-white/[0.08] transition-colors flex items-center gap-1.5 font-medium"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Instalar SaytaMall</span>
+                    </button>
+                  </div>
+
                   {/* Acceso a Gestión de Productos para personal */}
                   {(claims?.role === 'programmer' || claims?.role === 'owner') && (
                     <Link
@@ -523,6 +539,21 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                 <span className="text-[10px]">中文(简体)</span>
               </button>
             </div>
+          </div>
+
+          {/* Botón de acceso directo / instalar en móvil */}
+          <div className="pt-3 border-t border-white/[0.08]">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                window.dispatchEvent(new Event('sayta_open_pwa_install'));
+              }}
+              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-xs font-semibold text-white flex items-center justify-center gap-2 hover:bg-white/[0.08] transition-colors"
+            >
+              <Download className="w-4 h-4 text-purple-400" />
+              <span>Instalar SaytaMall en Inicio</span>
+            </button>
           </div>
         </div>
       )}

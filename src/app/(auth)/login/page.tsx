@@ -176,12 +176,18 @@ function LoginForm() {
 
       if (mode === 'signup') {
         const claims = await signUpWithEmail(email, password, displayName, age, direccion, referencias);
+        try {
+          sessionStorage.setItem('sayta_show_pwa_prompt', 'true');
+        } catch {}
         setSuccessMessage('¡Cuenta creada exitosamente! Redirigiendo...');
         setTimeout(() => {
           handleRoleRedirect(claims?.role);
         }, 800);
       } else {
         const claims = await signInWithEmail(email, password);
+        try {
+          sessionStorage.setItem('sayta_show_pwa_prompt', 'true');
+        } catch {}
         handleRoleRedirect(claims?.role);
       }
     } catch (err: any) {
@@ -238,7 +244,10 @@ function LoginForm() {
       setLoading(true);
       await confirmPhoneVerification(confirmationResult, otpCode.trim(), fullPhone);
       setPhoneStep('success');
-      setSuccessMessage('¡Teléfono verificado! Eres  confirmada.');
+      setSuccessMessage('¡Teléfono verificado! Eres persona confirmada.');
+      try {
+        sessionStorage.setItem('sayta_show_pwa_prompt', 'true');
+      } catch {}
       setTimeout(() => {
         handleRoleRedirect();
       }, 1200);
@@ -255,6 +264,9 @@ function LoginForm() {
       setLoading(true);
       const googleUser = await signInWithGoogle();
       if (googleUser) {
+        try {
+          sessionStorage.setItem('sayta_show_pwa_prompt', 'true');
+        } catch {}
         // Redirección inmediata y limpia (0ms)
         router.replace(redirectUrl || '/');
         return;
@@ -297,6 +309,9 @@ function LoginForm() {
         direccion: googleProfileData.direccion,
         referencias: googleProfileData.referencias,
       });
+      try {
+        sessionStorage.setItem('sayta_show_pwa_prompt', 'true');
+      } catch {}
       router.push(redirectUrl || '/');
     } catch (err: any) {
       setGoogleProfileError(err.message || 'Error guardando datos. Intenta de nuevo.');

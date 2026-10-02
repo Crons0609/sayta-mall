@@ -8,6 +8,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import { BranchProvider } from '@/providers/BranchProvider';
 import { CartProvider } from '@/providers/CartProvider';
 import { DashboardPreferencesProvider } from '@/providers/DashboardPreferencesProvider';
+import { InstallPwaModal } from '@/components/pwa/InstallPwaModal';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -44,10 +45,11 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Sayta Mall',
+    title: 'SaytaMall',
   },
   other: {
     'darkreader-lock': '',
+    'apple-mobile-web-app-title': 'SaytaMall',
   },
 };
 
@@ -71,6 +73,8 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <meta name="darkreader-lock" content="darkreader-lock" />
+        <meta name="apple-mobile-web-app-title" content="SaytaMall" />
+        <link rel="apple-touch-icon" href="/images/logo.png" />
         {/* Script crítico: aplica el tema e idioma ANTES de que React hidrate para evitar parpadeo */}
         <script
           dangerouslySetInnerHTML={{
@@ -86,6 +90,7 @@ export default function RootLayout({
                 <CartProvider>
                   <DashboardPreferencesProvider>
                     {children}
+                    <InstallPwaModal />
                   </DashboardPreferencesProvider>
                 </CartProvider>
               </BranchProvider>
