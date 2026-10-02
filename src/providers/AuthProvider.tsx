@@ -35,11 +35,13 @@ interface AuthContextValue {
   user: User | null;
   claims: UserClaims | null;
   loading: boolean;
+  needsProfileCompletion: boolean;
   phoneVerified: boolean;
   phoneNumber: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<UserClaims | null>;
   signUpWithEmail: (email: string, password: string, displayName?: string, age?: number | string, direccion?: string, referencias?: string) => Promise<UserClaims | null>;
+  completeGoogleProfile: (data: { age: number; phone: string; direccion: string; referencias?: string }) => Promise<void>;
   sendPhoneVerification: (phoneNumber: string, containerId?: string) => Promise<{ confirmationResult?: any; devMode?: boolean; error?: string }>;
   confirmPhoneVerification: (confirmationResult: any, code: string, phoneNumber: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -53,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [claims, setClaims] = useState<UserClaims | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
   const router = useRouter();
 
   /** Llama al backend para asignar/verificar el rol del usuario recién autenticado */
@@ -94,6 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const upsertUserDocument = useCallback(async (firebaseUser: User, userClaims: UserClaims) => {
     try {
       const userRef = doc(db, 'users', firebaseUser.uid);
+      // Verificar si ya tiene perfil completo
+      const { getDoc } = await import('firebase/firestore');
+      const snap = await getDoc(userRef);
+      const existing = snap.exists() ? snap.data() : {};
+      const isGoogleProvider = firebaseUser.providerData?.some((p) => p.providerId === 'google.com');
+      // Si es usuario de Google y aún no tiene age/phone, marcar para completar
+      if (isGoogleProvider && (!existing.age || !existing.phoneNumber)) {
+        setNeedsProfileCompletion(true);
+      }
       await setDoc(
         userRef,
         {
@@ -105,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           branchIds: userClaims.branchIds,
           area: userClaims.area ?? null,
           suspended: userClaims.suspended ?? false,
+          provider: isGoogleProvider ? 'google' : 'email',
           lastLoginAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
@@ -114,6 +127,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[AuthProvider] Error actualizando documento de usuario:', error);
     }
   }, []);
+
+  /** Completa el perfil de un usuario que se registró con Google */
+  const completeGoogleProfile = useCallback(
+    async (data: { age: number; phone: string; direccion: string; referencias?: string }) => {
+      if (!auth.currentUser) return;
+      try {
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        await setDoc(
+          userRef,
+          {
+            age: data.age,
+            phoneNumber: data.phone,
+            phoneVerified: false,
+            direccion: data.direccion.trim(),
+            referencias: data.referencias?.trim() || null,
+            isNaturalPerson: true,
+            profileCompleted: true,
+            profileCompletedAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        setNeedsProfileCompletion(false);
+      } catch (error) {
+        console.error('[AuthProvider] Error completando perfil Google:', error);
+        throw error;
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -498,11 +541,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         claims,
         loading,
+        needsProfileCompletion,
         phoneVerified,
         phoneNumber,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
+        completeGoogleProfile,
         sendPhoneVerification,
         confirmPhoneVerification,
         logout,

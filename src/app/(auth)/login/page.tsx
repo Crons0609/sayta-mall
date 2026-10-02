@@ -29,6 +29,7 @@ import {
   Calendar,
   MapPin,
   Home,
+  X,
 } from 'lucide-react';
 
 function GoogleIcon() {
@@ -64,9 +65,21 @@ function LoginForm() {
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
+    completeGoogleProfile,
+    needsProfileCompletion,
     sendPhoneVerification,
     confirmPhoneVerification,
   } = useAuth();
+
+  // Estado para el modal de completar perfil de Google
+  const [googleProfileData, setGoogleProfileData] = useState({
+    age: '',
+    phone: '',
+    direccion: '',
+    referencias: '',
+  });
+  const [googleProfileLoading, setGoogleProfileLoading] = useState(false);
+  const [googleProfileError, setGoogleProfileError] = useState<string | null>(null);
 
   // Modo: Iniciar sesión, Crear cuenta o Verificación de Teléfono
   const [mode, setMode] = useState<'signin' | 'signup' | 'phone'>('signin');
@@ -236,18 +249,21 @@ function LoginForm() {
     }
   };
 
+  const [justSignedInWithGoogle, setJustSignedInWithGoogle] = React.useState(false);
+
   const handleGoogleLogin = async () => {
     setErrorMessage(null);
     try {
       setLoading(true);
+      setJustSignedInWithGoogle(true);
       await signInWithGoogle();
-      router.push('/');
     } catch (err: any) {
+      setJustSignedInWithGoogle(false);
       if (err?.code === 'auth/unauthorized-domain') {
         const host = typeof window !== 'undefined' ? window.location.hostname : 'esta IP';
-        setErrorMessage(`El dominio o IP (${host}) no está autorizado en Firebase. Agrégalo en Firebase Console -> Authentication -> Configuración -> Dominios autorizados.`);
+        setErrorMessage(`El dominio o IP (${host}) no está autorizado en Firebase. Agrégalo en Firebase Console → Authentication → Configuración → Dominios autorizados.`);
       } else if (err?.code === 'auth/popup-blocked') {
-        setErrorMessage('Tu navegador móvil bloqueó la ventana emergente de Google. Habilita las ventanas emergentes o ingresa con tu correo.');
+        setErrorMessage('Tu navegador bloqueó la ventana emergente de Google. Habilita las ventanas emergentes o ingresa con tu correo.');
       } else {
         setErrorMessage(err?.message || 'No se pudo completar el acceso con Google. Intenta nuevamente.');
       }
@@ -256,8 +272,165 @@ function LoginForm() {
     }
   };
 
+  // Si entró con Google y ya tiene perfil completo → redirigir
+  React.useEffect(() => {
+    if (justSignedInWithGoogle && !needsProfileCompletion && !loading) {
+      router.push(redirectUrl || '/');
+    }
+  }, [justSignedInWithGoogle, needsProfileCompletion, loading, router, redirectUrl]);
+
+  const handleCompleteGoogleProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGoogleProfileError(null);
+    if (!googleProfileData.age || parseInt(googleProfileData.age, 10) < 12) {
+      setGoogleProfileError('Ingresa una edad válida (mínimo 12 años).');
+      return;
+    }
+    const cleanPhone = googleProfileData.phone.replace(/\D/g, '');
+    if (cleanPhone.length < 8) {
+      setGoogleProfileError('Ingresa un número de teléfono válido (mínimo 8 dígitos).');
+      return;
+    }
+    if (!googleProfileData.direccion.trim()) {
+      setGoogleProfileError('Por favor ingresa tu dirección de entrega.');
+      return;
+    }
+    try {
+      setGoogleProfileLoading(true);
+      await completeGoogleProfile({
+        age: parseInt(googleProfileData.age, 10),
+        phone: googleProfileData.phone,
+        direccion: googleProfileData.direccion,
+        referencias: googleProfileData.referencias,
+      });
+      router.push(redirectUrl || '/');
+    } catch (err: any) {
+      setGoogleProfileError(err.message || 'Error guardando datos. Intenta de nuevo.');
+    } finally {
+      setGoogleProfileLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#000000] text-[#f5f5f7] flex flex-col justify-between relative overflow-hidden">
+      {/* ─── MODAL: Completar Perfil Google ─── */}
+      {needsProfileCompletion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+          <div className="relative w-full max-w-md bg-[#161617] border border-white/[0.12] rounded-3xl p-7 shadow-2xl animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#2997ff]/20 to-[#30d158]/20 flex items-center justify-center">
+                <UserCheck className="w-5 h-5 text-[#2997ff]" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white tracking-tight">Completa tu Perfil</h2>
+                <p className="text-[11px] text-[#86868b]">Necesitamos unos datos para verificar que eres una persona natural</p>
+              </div>
+            </div>
+
+            {/* Badge verificación */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30d158]/10 border border-[#30d158]/20 mb-5 mt-3">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#30d158] shrink-0" />
+              <span className="text-[11px] text-[#30d158] font-medium">Identidad Verificada · Solo Personas Naturales</span>
+            </div>
+
+            {googleProfileError && (
+              <div className="mb-4 p-3 rounded-xl bg-[#ff453a]/10 border border-[#ff453a]/25 text-xs text-[#ff453a] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{googleProfileError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCompleteGoogleProfile} className="space-y-4">
+              {/* Edad */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-[#86868b]">Edad <span className="text-[#ff453a]">*</span></label>
+                <div className="relative">
+                  <Calendar className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="number"
+                    min="12"
+                    max="120"
+                    required
+                    placeholder="Ej. 28"
+                    value={googleProfileData.age}
+                    onChange={(e) => setGoogleProfileData((p) => ({ ...p, age: e.target.value }))}
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#111318] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] focus:ring-1 focus:ring-[#2997ff]/40 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Teléfono */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-[#86868b]">Número de Teléfono <span className="text-[#ff453a]">*</span></label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Ej. +505 8888 1234"
+                    value={googleProfileData.phone}
+                    onChange={(e) => setGoogleProfileData((p) => ({ ...p, phone: e.target.value }))}
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#111318] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] focus:ring-1 focus:ring-[#2997ff]/40 transition-all"
+                  />
+                </div>
+                <p className="text-[10px] text-[#86868b]">Incluye el código de país. Ej: +505 para Nicaragua.</p>
+              </div>
+
+              {/* Dirección */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-[#86868b]">Dirección de Entrega <span className="text-[#ff453a]">*</span></label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 text-[#86868b] absolute left-3.5 top-3 pointer-events-none" />
+                  <textarea
+                    rows={2}
+                    required
+                    placeholder="Ej. Barrio El Carmen, de la farmacia 2c al norte, casa azul"
+                    value={googleProfileData.direccion}
+                    onChange={(e) => setGoogleProfileData((p) => ({ ...p, direccion: e.target.value }))}
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#111318] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#ff9f0a] focus:ring-1 focus:ring-[#ff9f0a]/40 transition-all resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Referencias */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-[#86868b]">Referencias del Domicilio <span className="text-[10px] text-[#6e6e73]">(opcional)</span></label>
+                <div className="relative">
+                  <Home className="w-4 h-4 text-[#86868b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Portón negro, muro verde, casa esquinera..."
+                    value={googleProfileData.referencias}
+                    onChange={(e) => setGoogleProfileData((p) => ({ ...p, referencias: e.target.value }))}
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#111318] border border-white/[0.1] text-xs text-white placeholder-[#6e6e73] focus:outline-none focus:border-[#2997ff] focus:ring-1 focus:ring-[#2997ff]/40 transition-all"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={googleProfileLoading}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#2997ff] to-[#30d158] text-white text-xs font-semibold flex items-center justify-center gap-2 mt-2 disabled:opacity-60 hover:opacity-90 transition-opacity shadow-lg shadow-[#2997ff]/20"
+              >
+                {googleProfileLoading ? (
+                  <span>Guardando datos...</span>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Guardar y Continuar</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="text-[10px] text-[#6e6e73] text-center mt-4">
+              Tus datos se guardan de forma segura y nunca se comparten con terceros.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Contenedor invisible para reCAPTCHA de Firebase */}
       <div id="login-recaptcha-container" />
 
