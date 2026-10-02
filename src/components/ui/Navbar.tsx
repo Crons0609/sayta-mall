@@ -37,7 +37,7 @@ interface NavbarProps {
 
 export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
   const pathname = usePathname();
-  const { user, claims, logout, phoneVerified } = useAuth();
+  const { user, claims, logout, phoneVerified, loading: authLoading } = useAuth();
   const { totalItems, toggleCart } = useCart();
   const { currentBranch, branchCount } = useBranch();
   const { theme, setTheme, resolvedTheme, toggleTheme } = useTheme();
@@ -300,15 +300,19 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 type="button"
                 className="flex items-center gap-1.5 p-1 text-[#86868b] hover:text-[#f5f5f7] text-xs transition-colors"
+                title={user.displayName || user.email || 'Mi Cuenta'}
               >
                 {user.photoURL ? (
                   <img
                     src={user.photoURL}
-                    alt=""
-                    className="w-5 h-5 rounded-full object-cover"
+                    alt={user.displayName || 'Avatar'}
+                    className="w-6 h-6 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/20"
+                    referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <User className="w-4 h-4" />
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
+                    {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                  </span>
                 )}
                 <ChevronDown className="w-3 h-3 text-[#6e6e73]" />
               </button>
@@ -396,10 +400,12 @@ export function Navbar({ onOpenSearch, onOpenBranchModal }: NavbarProps) {
                 </div>
               )}
             </div>
+          ) : authLoading ? (
+            <div className="w-16 h-7 rounded-full bg-black/[0.05] dark:bg-white/[0.08] animate-pulse" />
           ) : (
             <Link
               href="/login"
-              className="apple-pill-btn apple-btn-primary px-3 py-1 text-xs font-medium flex items-center gap-1"
+              className="apple-pill-btn apple-btn-primary px-3 py-1 text-xs font-medium flex items-center gap-1 shadow-sm"
             >
               <LogIn className="w-3 h-3" />
               <span>{navLabels.login}</span>

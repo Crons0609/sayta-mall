@@ -249,16 +249,17 @@ function LoginForm() {
     }
   };
 
-  const [justSignedInWithGoogle, setJustSignedInWithGoogle] = React.useState(false);
-
   const handleGoogleLogin = async () => {
     setErrorMessage(null);
     try {
       setLoading(true);
-      setJustSignedInWithGoogle(true);
-      await signInWithGoogle();
+      const googleUser = await signInWithGoogle();
+      if (googleUser) {
+        // Redirección inmediata y limpia (0ms)
+        router.replace(redirectUrl || '/');
+        return;
+      }
     } catch (err: any) {
-      setJustSignedInWithGoogle(false);
       if (err?.code === 'auth/unauthorized-domain') {
         const host = typeof window !== 'undefined' ? window.location.hostname : 'esta IP';
         setErrorMessage(`El dominio o IP (${host}) no está autorizado en Firebase. Agrégalo en Firebase Console → Authentication → Configuración → Dominios autorizados.`);
@@ -271,13 +272,6 @@ function LoginForm() {
       setLoading(false);
     }
   };
-
-  // Si entró con Google y ya tiene perfil completo → redirigir
-  React.useEffect(() => {
-    if (justSignedInWithGoogle && !needsProfileCompletion && !loading) {
-      router.push(redirectUrl || '/');
-    }
-  }, [justSignedInWithGoogle, needsProfileCompletion, loading, router, redirectUrl]);
 
   const handleCompleteGoogleProfile = async (e: React.FormEvent) => {
     e.preventDefault();

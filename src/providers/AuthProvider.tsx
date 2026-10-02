@@ -38,7 +38,7 @@ interface AuthContextValue {
   needsProfileCompletion: boolean;
   phoneVerified: boolean;
   phoneNumber: string | null;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<User | null>;
   signInWithEmail: (email: string, password: string) => Promise<UserClaims | null>;
   signUpWithEmail: (email: string, password: string, displayName?: string, age?: number | string, direccion?: string, referencias?: string) => Promise<UserClaims | null>;
   completeGoogleProfile: (data: { age: number; phone: string; direccion: string; referencias?: string }) => Promise<void>;
@@ -52,9 +52,30 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  // Hidratación instantánea (SWR) desde caché para evitar que la UI parpadee con el botón [Entrar]
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem('sayta_cached_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.uid) {
+          return {
+            uid: parsed.uid,
+            email: parsed.email || null,
+            displayName: parsed.displayName || null,
+            photoURL: parsed.photoURL || null,
+            getIdToken: async () => '',
+            getIdTokenResult: async () => ({ claims: {} } as any),
+          } as any as User;
+        }
+      }
+    } catch {}
+    return null;
+  });
+
   const [claims, setClaims] = useState<UserClaims | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
   const router = useRouter();
 
@@ -161,34 +182,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // 1. Asignar rol si es la primera vez (la API es idempotente)
-        await assignRole(firebaseUser);
-
-        // 2. Obtener los claims actualizados (con forceRefresh)
-        const tokenResult = await getIdTokenResult(firebaseUser, true);
-        const userClaims: UserClaims = {
-          role: (tokenResult.claims.role as UserClaims['role']) ?? ROLES.CUSTOMER,
-          branchIds: (tokenResult.claims.branchIds as string[]) ?? [],
-          area: tokenResult.claims.area as UserClaims['area'],
-          suspended: tokenResult.claims.suspended === true,
-          ownerId: tokenResult.claims.ownerId as string | undefined,
-        };
-
-        // 3. Actualizar el documento en Firestore
-        await upsertUserDocument(firebaseUser, userClaims);
-
+        // 1. ASIGNACIÓN INMEDIATA (0ms): La interfaz reacciona al instante sin esperar peticiones
         setUser(firebaseUser);
-        setClaims(userClaims);
-        // Sincronizar cookies para proxy y APIs
-        document.cookie = `sayta_simulated_role=${userClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+        setLoading(false);
+
+        try {
+          localStorage.setItem(
+            'sayta_cached_user',
+            JSON.stringify({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+            })
+          );
+        } catch {}
+
+        // Sincronizar cookies inmediatamente
         document.cookie = `sayta_user_id=${firebaseUser.uid}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `sayta_user_email=${encodeURIComponent(firebaseUser.email || '')}; path=/; max-age=604800; SameSite=Lax`;
         if (firebaseUser.displayName) {
           document.cookie = `sayta_user_name=${encodeURIComponent(firebaseUser.displayName)}; path=/; max-age=604800; SameSite=Lax`;
         }
-        if (userClaims.area) {
-          document.cookie = `sayta_user_area=${encodeURIComponent(userClaims.area)}; path=/; max-age=604800; SameSite=Lax`;
-        }
+
+        // Obtener rol rápido desde token en memoria sin forzar red
+        try {
+          const quickToken = await getIdTokenResult(firebaseUser, false);
+          if (quickToken?.claims?.role) {
+            const quickClaims: UserClaims = {
+              role: quickToken.claims.role as UserClaims['role'],
+              branchIds: (quickToken.claims.branchIds as string[]) ?? [],
+              area: quickToken.claims.area as UserClaims['area'],
+              suspended: quickToken.claims.suspended === true,
+              ownerId: quickToken.claims.ownerId as string | undefined,
+            };
+            setClaims(quickClaims);
+            document.cookie = `sayta_simulated_role=${quickClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+          }
+        } catch {}
+
+        // 2. Sincronización en segundo plano (asíncrona y no bloqueante)
+        (async () => {
+          try {
+            await assignRole(firebaseUser);
+            const tokenResult = await getIdTokenResult(firebaseUser, true);
+            const userClaims: UserClaims = {
+              role: (tokenResult.claims.role as UserClaims['role']) ?? ROLES.CUSTOMER,
+              branchIds: (tokenResult.claims.branchIds as string[]) ?? [],
+              area: tokenResult.claims.area as UserClaims['area'],
+              suspended: tokenResult.claims.suspended === true,
+              ownerId: tokenResult.claims.ownerId as string | undefined,
+            };
+            setClaims(userClaims);
+            document.cookie = `sayta_simulated_role=${userClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+            if (userClaims.area) {
+              document.cookie = `sayta_user_area=${encodeURIComponent(userClaims.area)}; path=/; max-age=604800; SameSite=Lax`;
+            }
+            await upsertUserDocument(firebaseUser, userClaims);
+          } catch (e) {
+            console.warn('[AuthProvider] Sincronización en segundo plano:', e);
+          }
+        })();
       } else {
         // Verificar si existe sesión activa en cookies (por correo y contraseña)
         const getCookie = (name: string) => {
@@ -230,6 +284,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setUser(null);
           setClaims(null);
+          try {
+            localStorage.removeItem('sayta_cached_user');
+          } catch {}
         }
       }
       setLoading(false);
@@ -238,19 +295,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [assignRole, upsertUserDocument]);
 
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithGoogle = useCallback(async (): Promise<User | null> => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      if (result?.user) {
+        const googleUser = result.user;
+        // 1. Actualización inmediata del estado React (0ms)
+        setUser(googleUser);
+        setLoading(false);
+
+        // 2. Guardar inmediatamente en caché local y cookies
+        try {
+          localStorage.setItem(
+            'sayta_cached_user',
+            JSON.stringify({
+              uid: googleUser.uid,
+              email: googleUser.email,
+              displayName: googleUser.displayName,
+              photoURL: googleUser.photoURL,
+            })
+          );
+        } catch {}
+
+        document.cookie = `sayta_user_id=${googleUser.uid}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sayta_user_email=${encodeURIComponent(googleUser.email || '')}; path=/; max-age=604800; SameSite=Lax`;
+        if (googleUser.displayName) {
+          document.cookie = `sayta_user_name=${encodeURIComponent(googleUser.displayName)}; path=/; max-age=604800; SameSite=Lax`;
+        }
+        document.cookie = `sayta_simulated_role=customer; path=/; max-age=604800; SameSite=Lax`;
+
+        // 3. Sincronización en segundo plano sin congelar la interfaz
+        (async () => {
+          try {
+            await assignRole(googleUser);
+            const tokenResult = await getIdTokenResult(googleUser, false);
+            const userClaims: UserClaims = {
+              role: (tokenResult.claims.role as UserClaims['role']) ?? ROLES.CUSTOMER,
+              branchIds: (tokenResult.claims.branchIds as string[]) ?? [],
+              area: tokenResult.claims.area as UserClaims['area'],
+              suspended: tokenResult.claims.suspended === true,
+              ownerId: tokenResult.claims.ownerId as string | undefined,
+            };
+            setClaims(userClaims);
+            document.cookie = `sayta_simulated_role=${userClaims.role}; path=/; max-age=604800; SameSite=Lax`;
+            await upsertUserDocument(googleUser, userClaims);
+          } catch (err) {
+            console.warn('[AuthProvider] Sincronización fondo Google:', err);
+          }
+        })();
+
+        return googleUser;
+      }
+      return null;
     } catch (error: unknown) {
       const firebaseError = error as { code?: string };
       if (firebaseError.code !== 'auth/popup-closed-by-user') {
         console.error('[AuthProvider] Error en login con Google:', error);
         throw error;
       }
+      return null;
     }
-  }, []);
+  }, [assignRole, upsertUserDocument]);
 
   const signInWithEmail = useCallback(
     async (emailInput: string, passwordInput: string): Promise<UserClaims | null> => {
@@ -530,6 +637,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     document.cookie = 'sayta_user_id=; path=/; max-age=0';
     document.cookie = 'sayta_user_area=; path=/; max-age=0';
     document.cookie = 'sayta_user_store=; path=/; max-age=0';
+    try {
+      localStorage.removeItem('sayta_cached_user');
+    } catch {}
     setUser(null);
     setClaims(null);
     router.push('/');
