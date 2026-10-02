@@ -96,10 +96,10 @@ export default function ProgramadorDashboardPage() {
                 SUPERADMIN ACCESS
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-950 dark:text-white tracking-tight mt-1">
               {t('prog_title', 'Panel de Control Maestro')}
             </h1>
-            <p className="text-xs text-[#86868b] mt-1 max-w-2xl">
+            <p className="text-xs text-zinc-600 dark:text-[#86868b] mt-1 max-w-2xl">
               {t('prog_desc', 'Monitoreo integral de Firebase Auth, gestión de programadores, roles privilegiados, invitaciones de dueños y registro de empleados.')}
             </p>
           </div>
@@ -107,21 +107,21 @@ export default function ProgramadorDashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('programmers')}
-              className="apple-pill-btn bg-white/[0.08] hover:bg-white/[0.14] text-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 border border-white/[0.1] transition-all"
+              className="apple-pill-btn bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.14] text-zinc-900 dark:text-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 border border-black/10 dark:border-white/[0.1] transition-all shadow-sm"
             >
-              <Code className="w-3.5 h-3.5 text-[#2997ff]" />
+              <Code className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff]" />
               <span>{t('prog_btn_add_prog', '+ Programadores')}</span>
             </button>
             <Link
               href="/programador/delivery"
-              className="apple-pill-btn bg-white/[0.08] hover:bg-white/[0.14] text-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 border border-white/[0.1] transition-all"
+              className="apple-pill-btn bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.14] text-zinc-900 dark:text-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 border border-black/10 dark:border-white/[0.1] transition-all shadow-sm"
             >
-              <Truck className="w-3.5 h-3.5 text-[#30d158]" />
+              <Truck className="w-3.5 h-3.5 text-[#059669] dark:text-[#30d158]" />
               <span>{t('prog_btn_delivery', 'Delivery')}</span>
             </Link>
             <Link
               href="/programador/duenos"
-              className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-[#2997ff]/20"
+              className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-[#0071e3]/20"
             >
               <Users className="w-4 h-4" />
               <span>{t('prog_btn_owners', 'Dueños')}</span>
@@ -130,78 +130,78 @@ export default function ProgramadorDashboardPage() {
         </div>
 
         {/* Pestañas de la Consola con scroll táctil suave */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-white/[0.04] rounded-2xl border border-white/[0.06] w-full sm:w-fit overflow-x-auto no-scrollbar touch-pan-x -mx-1 sm:mx-0">
+        <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.04] dark:bg-white/[0.04] rounded-2xl border border-black/[0.08] dark:border-white/[0.06] w-full sm:w-fit overflow-x-auto no-scrollbar touch-pan-x -mx-1 sm:mx-0">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
               activeTab === 'overview'
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-white text-black shadow-md border border-black/5 dark:border-transparent'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             {t('prog_tab_overview', 'Resumen General')}
           </button>
           <button
             onClick={() => setActiveTab('programmers')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'programmers'
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-white text-black shadow-md border border-black/5 dark:border-transparent'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
-            <Code className="w-3.5 h-3.5 text-[#2997ff]" />
+            <Code className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff]" />
             <span>{t('prog_tab_programmers', 'Equipo de Programadores')} ({programmerCount})</span>
           </button>
           <Link
             href="/programador/duenos"
-            className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 text-[#86868b] hover:text-white hover:bg-white/[0.04] flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] flex items-center gap-1.5"
           >
-            <Users className="w-3.5 h-3.5 text-[#2997ff]" />
+            <Users className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff]" />
             <span>{t('prog_tab_owners', 'Jefes & Dueños')}</span>
           </Link>
           <Link
             href="/programador/delivery"
-            className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 text-[#86868b] hover:text-white hover:bg-white/[0.04] flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] flex items-center gap-1.5"
           >
-            <Truck className="w-3.5 h-3.5 text-[#30d158]" />
+            <Truck className="w-3.5 h-3.5 text-[#059669] dark:text-[#30d158]" />
             <span>{t('prog_tab_delivery', 'Empresas de Delivery')}</span>
           </Link>
           <button
             onClick={() => setActiveTab('employees')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
               activeTab === 'employees'
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-white text-black shadow-md border border-black/5 dark:border-transparent'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             {t('prog_tab_staff', 'Trabajadores & Empleados')}
           </button>
           <button
             onClick={() => setActiveTab('system')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
               activeTab === 'system'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-white text-black shadow-md border border-black/5 dark:border-transparent'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             {t('prog_tab_system', 'Estado del Sistema')}
           </button>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
               activeTab === 'logs'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-white text-black shadow-md border border-black/5 dark:border-transparent'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             {t('prog_tab_logs', 'Logs de Auditoría')}
           </button>
           <button
             onClick={() => setActiveTab('audit')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'audit'
-                ? 'bg-[#ff9f0a] text-black font-semibold shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-[#ff9f0a] text-black font-semibold shadow-md'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             <ShieldAlert className="w-3 h-3" />
@@ -209,10 +209,10 @@ export default function ProgramadorDashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'users'
-                ? 'bg-[#2997ff] text-white font-semibold shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-[#0071e3] text-white font-semibold shadow-md shadow-[#0071e3]/20'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             <Users className="w-3 h-3" />
@@ -220,10 +220,10 @@ export default function ProgramadorDashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('referral')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'referral'
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-white text-black shadow-md border border-black/5 dark:border-transparent'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             <Link2 className="w-3 h-3" />
@@ -231,10 +231,10 @@ export default function ProgramadorDashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('cronjobs')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'cronjobs'
-                ? 'bg-[#ffd60a] text-black font-semibold shadow-sm shadow-[#ffd60a]/20'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-[#ffd60a] text-black font-semibold shadow-md shadow-[#ffd60a]/20'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             <Clock className="w-3 h-3" />
@@ -242,10 +242,10 @@ export default function ProgramadorDashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('qr')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
               activeTab === 'qr'
-                ? 'bg-[#30d158] text-black font-semibold shadow-sm shadow-[#30d158]/20'
-                : 'text-[#86868b] hover:text-white'
+                ? 'bg-[#30d158] text-black font-semibold shadow-md shadow-[#30d158]/20'
+                : 'text-zinc-600 dark:text-[#86868b] hover:text-black dark:hover:text-white'
             }`}
           >
             <QrCode className="w-3.5 h-3.5 text-[#30d158]" />
@@ -259,60 +259,60 @@ export default function ProgramadorDashboardPage() {
             {/* Métricas del Sistema */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
               <div className="apple-card p-4">
-                <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
+                <span className="text-[11px] text-zinc-600 dark:text-[#86868b] uppercase tracking-wider block font-semibold">
                   {t('prog_stat_owners', 'Dueños Registrados')}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
+                <span className="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-white mt-1 block">
                   {ownerCount}
                 </span>
-                <Link href="/programador/duenos" className="text-[11px] text-[#2997ff] mt-1 block hover:underline">
+                <Link href="/programador/duenos" className="text-[11px] text-[#0071e3] dark:text-[#2997ff] mt-1 block hover:underline font-medium">
                   {t('prog_stat_owners_link', 'Ver directorio ›')}
                 </Link>
               </div>
 
               <div className="apple-card p-4">
-                <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
+                <span className="text-[11px] text-zinc-600 dark:text-[#86868b] uppercase tracking-wider block font-semibold">
                   {t('prog_stat_branches', 'Sucursales Activas')}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
+                <span className="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-white mt-1 block">
                   {branchCount}
                 </span>
-                <span className="text-[11px] text-[#30d158] mt-1 block">{t('prog_stat_branches_sub', 'Operativas')}</span>
+                <span className="text-[11px] text-[#059669] dark:text-[#30d158] mt-1 block font-semibold">{t('prog_stat_branches_sub', 'Operativas')}</span>
               </div>
 
-              <div className="apple-card p-4 ring-1 ring-[#2997ff]/20 bg-gradient-to-b from-[#2997ff]/10 to-transparent">
-                <span className="text-[11px] text-[#2997ff] uppercase tracking-wider block font-semibold">
+              <div className="apple-card p-4 ring-1 ring-[#0071e3]/20 bg-gradient-to-b from-[#0071e3]/10 to-transparent">
+                <span className="text-[11px] text-[#0071e3] dark:text-[#2997ff] uppercase tracking-wider block font-bold">
                   {t('prog_stat_users', 'Usuarios Registrados')}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
+                <span className="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-white mt-1 block">
                   {registeredUsersCount || '...'}
                 </span>
                 <button
                   onClick={() => setActiveTab('users')}
-                  className="text-[11px] text-[#2997ff] mt-1 block hover:underline font-medium text-left"
+                  className="text-[11px] text-[#0071e3] dark:text-[#2997ff] mt-1 block hover:underline font-semibold text-left"
                 >
                   {t('prog_stat_users_link', 'Ver tabla y claves ›')}
                 </button>
               </div>
 
               <div className="apple-card p-4">
-                <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
+                <span className="text-[11px] text-zinc-600 dark:text-[#86868b] uppercase tracking-wider block font-semibold">
                   {t('prog_stat_firebase', 'Firebase Admin SDK')}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold text-[#30d158] mt-1 block">
+                <span className="text-xl sm:text-2xl font-bold text-[#059669] dark:text-[#30d158] mt-1 block">
                   {t('prog_stat_firebase_status', 'Conectado')}
                 </span>
-                <span className="text-[11px] text-[#86868b] mt-1 block">Claims & Auth API</span>
+                <span className="text-[11px] text-zinc-500 dark:text-[#86868b] mt-1 block">Claims & Auth API</span>
               </div>
 
               <div className="apple-card p-4">
-                <span className="text-[11px] text-[#86868b] uppercase tracking-wider block font-medium">
+                <span className="text-[11px] text-zinc-600 dark:text-[#86868b] uppercase tracking-wider block font-semibold">
                   {t('prog_stat_roles', 'Seguridad de Roles')}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold text-white mt-1 block">
+                <span className="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-white mt-1 block">
                   {t('prog_stat_roles_status', 'Activa')}
                 </span>
-                <span className="text-[11px] text-[#2997ff] mt-1 block">Proxy Middleware</span>
+                <span className="text-[11px] text-[#0071e3] dark:text-[#2997ff] mt-1 block font-medium">Proxy Middleware</span>
               </div>
             </div>
 
@@ -320,22 +320,22 @@ export default function ProgramadorDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Tarjeta Gestión de Programadores */}
               <div className="apple-card p-6 space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-white/[0.08]">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center">
+                <div className="flex items-center gap-3 pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-300 flex items-center justify-center">
                     <Code className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">{t('prog_card_prog_title', 'Equipo de Programadores')}</h3>
-                    <p className="text-[11px] text-[#86868b]">{t('prog_card_prog_sub', 'Alta de desarrolladores con credenciales')}</p>
+                    <h3 className="text-sm font-bold text-zinc-950 dark:text-white">{t('prog_card_prog_title', 'Equipo de Programadores')}</h3>
+                    <p className="text-[11px] text-zinc-600 dark:text-[#86868b]">{t('prog_card_prog_sub', 'Alta de desarrolladores con credenciales')}</p>
                   </div>
                 </div>
-                <p className="text-xs text-[#86868b] leading-relaxed">
-                  {t('prog_card_prog_desc', 'Crea y administra accesos de programadores.')}
+                <p className="text-xs text-zinc-600 dark:text-[#86868b] leading-relaxed">
+                  {t('prog_card_prog_desc', 'Crea y administra accesos de programadores con contraseñas seguras y roles especializados para colaborar en la administración de la plataforma.')}
                 </p>
                 <div className="pt-2">
                   <button
                     onClick={() => setActiveTab('programmers')}
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-purple-400 hover:underline"
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline"
                   >
                     <span>{t('prog_card_prog_btn', 'Gestionar Programadores')} ({programmerCount})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -345,22 +345,22 @@ export default function ProgramadorDashboardPage() {
 
               {/* Tarjeta Gestión de Dueños */}
               <div className="apple-card p-6 space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-white/[0.08]">
-                  <div className="w-10 h-10 rounded-xl bg-[#2997ff]/20 text-[#2997ff] flex items-center justify-center">
+                <div className="flex items-center gap-3 pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
+                  <div className="w-10 h-10 rounded-xl bg-[#0071e3]/15 text-[#0071e3] dark:text-[#2997ff] flex items-center justify-center">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">{t('prog_card_owners_title', 'Directorio de Dueños')}</h3>
-                    <p className="text-[11px] text-[#86868b]">{t('prog_card_owners_sub', 'Control de franquicias y tiendas')}</p>
+                    <h3 className="text-sm font-bold text-zinc-950 dark:text-white">{t('prog_card_owners_title', 'Directorio de Dueños')}</h3>
+                    <p className="text-[11px] text-zinc-600 dark:text-[#86868b]">{t('prog_card_owners_sub', 'Control de franquicias y tiendas')}</p>
                   </div>
                 </div>
-                <p className="text-xs text-[#86868b] leading-relaxed">
-                  {t('prog_card_owners_desc', 'Genera invitaciones con token único de 7 días.')}
+                <p className="text-xs text-zinc-600 dark:text-[#86868b] leading-relaxed">
+                  {t('prog_card_owners_desc', 'Genera invitaciones con token único de 7 días, activa el modo soporte para inspeccionar la tienda como el dueño, o revoca credenciales de manera auditada.')}
                 </p>
                 <div className="pt-2">
                   <Link
                     href="/programador/duenos"
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#2997ff] hover:underline"
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#0071e3] dark:text-[#2997ff] hover:underline"
                   >
                     <span>{t('prog_card_owners_btn', 'Ir a Dueños')} ({ownerCount})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -370,22 +370,22 @@ export default function ProgramadorDashboardPage() {
 
               {/* Tarjeta Empleados */}
               <div className="apple-card p-6 space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-white/[0.08]">
-                  <div className="w-10 h-10 rounded-xl bg-[#30d158]/20 text-[#30d158] flex items-center justify-center">
+                <div className="flex items-center gap-3 pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
+                  <div className="w-10 h-10 rounded-xl bg-[#059669]/15 text-[#059669] dark:text-[#30d158] flex items-center justify-center">
                     <Briefcase className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">{t('prog_card_emp_title', 'Registro de Empleados')}</h3>
-                    <p className="text-[11px] text-[#86868b]">{t('prog_card_emp_sub', 'Altas directas con área personalizada')}</p>
+                    <h3 className="text-sm font-bold text-zinc-950 dark:text-white">{t('prog_card_emp_title', 'Registro de Empleados')}</h3>
+                    <p className="text-[11px] text-zinc-600 dark:text-[#86868b]">{t('prog_card_emp_sub', 'Altas directas con área personalizada')}</p>
                   </div>
                 </div>
-                <p className="text-xs text-[#86868b] leading-relaxed">
-                  {t('prog_card_emp_desc', 'Crea credenciales operativas asignando áreas de trabajo.')}
+                <p className="text-xs text-zinc-600 dark:text-[#86868b] leading-relaxed">
+                  {t('prog_card_emp_desc', 'Crea credenciales operativas asignando áreas de trabajo estándar o personalizadas por ti para una mejor administración.')}
                 </p>
                 <div className="pt-2">
                   <button
                     onClick={() => setActiveTab('employees')}
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#30d158] hover:underline"
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#059669] dark:text-[#30d158] hover:underline"
                   >
                     <span>{t('prog_card_emp_btn', 'Abrir Módulo de Empleados')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -394,49 +394,49 @@ export default function ProgramadorDashboardPage() {
               </div>
 
               {/* Tarjeta Tabla de Usuarios & Credenciales (Exclusivo Programador) */}
-              <div className="apple-card p-6 space-y-4 md:col-span-3 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-transparent border-[#2997ff]/20">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
+              <div className="apple-card p-6 space-y-4 md:col-span-3 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-transparent border-[#0071e3]/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#2997ff]/20 text-[#2997ff] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#0071e3]/15 text-[#0071e3] dark:text-[#2997ff] flex items-center justify-center">
                       <Users className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-2">
                         <span>{t('prog_card_users_title', 'Directorio Central de Usuarios Registrados')}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#2997ff]/15 text-[#2997ff] border border-[#2997ff]/30 uppercase">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#0071e3]/15 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/30 uppercase">
                           {t('prog_card_users_badge', 'Exclusivo Programador')}
                         </span>
                       </h3>
-                      <p className="text-[11px] text-[#86868b]">
-                        {t('prog_card_users_sub', 'Tabla con nombre, correo, edad, dirección, contraseña y control de modificaciones.')}
+                      <p className="text-[11px] text-zinc-600 dark:text-[#86868b]">
+                        {t('prog_card_users_sub', 'Tabla con nombre, correo, edad, dirección, contraseña y control de modificaciones por mes y año.')}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setActiveTab('users')}
-                    className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-lg shadow-[#2997ff]/20"
+                    className="apple-pill-btn apple-btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-lg shadow-[#0071e3]/20"
                   >
                     <Users className="w-4 h-4" />
                     <span>{t('prog_card_users_btn', 'Ver Tabla de Usuarios')} ({registeredUsersCount || '...'})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-[#86868b]">
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">📋 {t('prog_card_users_feat1_title', 'Vista en Tabla')}</span>
-                    <span className="text-[11px]">{t('prog_card_users_feat1_sub', 'Diseño responsive con columnas organizadas')}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.05] shadow-xs">
+                    <span className="text-zinc-950 dark:text-white font-semibold block">📋 {t('prog_card_users_feat1_title', 'Vista en Tabla')}</span>
+                    <span className="text-[11px] text-zinc-600 dark:text-[#86868b] block mt-0.5 leading-snug">{t('prog_card_users_feat1_sub', 'Diseño responsive con columnas organizadas')}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">📅 {t('prog_card_users_feat2_title', 'Filtro Mes y Año')}</span>
-                    <span className="text-[11px]">{t('prog_card_users_feat2_sub', 'Explora altas por fecha o período temporal')}</span>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.05] shadow-xs">
+                    <span className="text-zinc-950 dark:text-white font-semibold block">📅 {t('prog_card_users_feat2_title', 'Filtro Mes y Año')}</span>
+                    <span className="text-[11px] text-zinc-600 dark:text-[#86868b] block mt-0.5 leading-snug">{t('prog_card_users_feat2_sub', 'Explora altas por fecha o período temporal')}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">🔑 {t('prog_card_users_feat3_title', 'Contraseñas & Cambios')}</span>
-                    <span className="text-[11px]">{t('prog_card_users_feat3_sub', 'Visualiza clave original o fecha de modificación')}</span>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.05] shadow-xs">
+                    <span className="text-zinc-950 dark:text-white font-semibold block">🔑 {t('prog_card_users_feat3_title', 'Contraseñas & Cambios')}</span>
+                    <span className="text-[11px] text-zinc-600 dark:text-[#86868b] block mt-0.5 leading-snug">{t('prog_card_users_feat3_sub', 'Visualiza clave original o fecha de modificación')}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-white font-medium block">📍 {t('prog_card_users_feat4_title', 'Dirección y Edad')}</span>
-                    <span className="text-[11px]">{t('prog_card_users_feat4_sub', 'Datos de perfil y entrega de todos los usuarios')}</span>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.05] shadow-xs">
+                    <span className="text-zinc-950 dark:text-white font-semibold block">📍 {t('prog_card_users_feat4_title', 'Dirección y Edad')}</span>
+                    <span className="text-[11px] text-zinc-600 dark:text-[#86868b] block mt-0.5 leading-snug">{t('prog_card_users_feat4_sub', 'Datos de perfil y entrega de todos los usuarios')}</span>
                   </div>
                 </div>
               </div>

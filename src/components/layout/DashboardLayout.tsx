@@ -321,7 +321,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           <button
             onClick={() => setSidebarOpen(true)}
             className={`lg:hidden p-2 rounded-xl transition-colors ${
-              isLight ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]' : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
+              isLight ? 'text-zinc-700 hover:text-black hover:bg-black/[0.05]' : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             <Menu className="w-5 h-5" />
@@ -351,7 +351,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           <div className="relative">
             {branchLoading && branchCount === 0 ? (
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border animate-pulse ${
-                isLight ? 'bg-black/[0.04] text-[#515154] border-black/[0.08]' : 'bg-white/[0.06] text-[#86868b] border-white/[0.08]'
+                isLight ? 'bg-black/[0.04] text-zinc-700 border-black/[0.08]' : 'bg-white/[0.06] text-[#86868b] border-white/[0.08]'
               }`}>
                 <Store className="w-3 h-3 text-[#2997ff] animate-spin" />
                 <span>Sincronizando sucursal...</span>
@@ -363,10 +363,10 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
               </span>
             ) : branchCount === 1 ? (
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
-                isLight ? 'bg-black/[0.04] text-[#515154] border-black/[0.08]' : 'bg-white/[0.06] text-[#86868b] border-white/[0.08]'
+                isLight ? 'bg-black/[0.04] text-zinc-700 border-black/[0.08]' : 'bg-white/[0.06] text-[#86868b] border-white/[0.08]'
               }`}>
                 <Store className="w-3 h-3 text-[#30d158]" />
-                <span className={`font-medium ${isLight ? 'text-black' : 'text-white'}`}>{currentBranch?.name || 'Sucursal Principal'}</span>
+                <span className={`font-medium ${isLight ? 'text-black font-semibold' : 'text-white'}`}>{currentBranch?.name || 'Sucursal Principal'}</span>
               </span>
             ) : (
               // 2 o más sucursales: Dropdown
@@ -428,7 +428,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             onClick={() => setSearchOpen(true)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all ${
               isLight
-                ? 'bg-black/[0.04] hover:bg-black/[0.08] border-black/[0.08] text-[#515154] hover:text-black'
+                ? 'bg-black/[0.04] hover:bg-black/[0.08] border-black/[0.08] text-zinc-700 hover:text-black'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-[#86868b] hover:text-white'
             }`}
           >
@@ -436,7 +436,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             <span className="hidden md:inline">{t('search_placeholder', 'Buscar...')}</span>
             <kbd className={`hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded border ${
               isLight
-                ? 'bg-black/[0.06] text-[#515154] border-black/[0.1]'
+                ? 'bg-black/[0.06] text-zinc-800 font-semibold border-black/[0.12]'
                 : 'bg-white/[0.08] text-[#86868b] border-white/[0.1]'
             }`}>
               ⌘K
@@ -448,7 +448,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             title={t('tab_chat', 'Notificaciones')}
             className={`p-2 rounded-xl transition-colors relative ${
               isLight
-                ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]'
+                ? 'text-zinc-700 hover:text-black hover:bg-black/[0.05]'
                 : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
             }`}
           >
@@ -462,7 +462,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
             title={t('settings_title', 'Ajustes del Dashboard')}
             className={`p-2 rounded-xl transition-colors relative group ${
               isLight
-                ? 'text-[#515154] hover:text-black hover:bg-black/[0.05]'
+                ? 'text-zinc-700 hover:text-black hover:bg-black/[0.05]'
                 : 'text-[#86868b] hover:text-white hover:bg-white/[0.06]'
             }`}
           >
@@ -473,7 +473,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           {/* Indicador de Verificación telefónica */}
           {phoneVerified ? (
             <span
-              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/25 text-[11px] font-medium"
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#30d158]/10 text-[#059669] dark:text-[#30d158] border border-[#30d158]/25 text-[11px] font-semibold"
               title="Cuenta con teléfono verificado en Firebase"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -484,7 +484,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
               onClick={() => setPhoneModalOpen(true)}
               className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
                 isLight
-                  ? 'bg-black/[0.04] hover:bg-[#30d158]/15 text-[#515154] hover:text-[#059669] border border-black/[0.08] hover:border-[#30d158]/30'
+                  ? 'bg-black/[0.04] hover:bg-[#30d158]/15 text-zinc-700 hover:text-[#059669] border border-black/[0.08] hover:border-[#30d158]/30 font-medium'
                   : 'bg-white/[0.04] hover:bg-[#30d158]/15 text-[#86868b] hover:text-[#30d158] border border-white/[0.08] hover:border-[#30d158]/30'
               }`}
               title="Verificar cuenta mediante SMS de Firebase"
@@ -500,11 +500,13 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
           }`}>
             <div className="text-right hidden sm:block">
               <span className={`block text-xs font-semibold max-w-[120px] truncate ${
-                isLight ? 'text-black' : 'text-white'
+                isLight ? 'text-black font-semibold' : 'text-white'
               }`}>
                 {user?.displayName || user?.email || 'Administrador'}
               </span>
-              <span className="block text-[10px] uppercase font-semibold text-[#86868b] tracking-wider">
+              <span className={`block text-[10px] uppercase font-semibold tracking-wider ${
+                isLight ? 'text-zinc-500' : 'text-[#86868b]'
+              }`}>
                 {effectiveRole === 'programmer' ? t('superadmin', 'Superadmin') : effectiveRole === 'owner' ? t('role_owner', 'Dueño') : t('role_employee', 'Empleado')}
               </span>
             </div>
@@ -549,7 +551,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                         ? 'bg-[#0071e3] text-white font-semibold shadow-md shadow-[#0071e3]/20'
                         : 'bg-white text-black font-semibold shadow-sm'
                       : isLight
-                        ? 'text-[#515154] hover:text-black hover:bg-black/[0.04]'
+                        ? 'text-zinc-700 hover:text-black hover:bg-black/[0.05]'
                         : 'text-[#86868b] hover:text-white hover:bg-white/[0.04]'
                   }`}
                   title={collapsed ? item.label : undefined}
@@ -563,7 +565,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                           className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
                             active
                               ? isLight ? 'bg-white/20 text-white' : 'bg-black/10 text-black'
-                              : isLight ? 'bg-black/[0.06] text-[#515154]' : 'bg-white/[0.08] text-[#86868b]'
+                              : isLight ? 'bg-black/[0.06] text-zinc-700 font-semibold border border-black/5' : 'bg-white/[0.08] text-[#86868b]'
                           }`}
                         >
                           {item.badge}
@@ -582,7 +584,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
               href="/"
               className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-medium transition-colors ${
                 isLight
-                  ? 'text-[#515154] hover:text-black hover:bg-black/[0.04]'
+                  ? 'text-zinc-700 hover:text-black hover:bg-black/[0.05]'
                   : 'text-[#86868b] hover:text-white hover:bg-white/[0.04]'
               }`}
             >
@@ -641,7 +643,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium ${
                           active
                             ? isLight ? 'bg-[#0071e3] text-white font-semibold' : 'bg-white text-black font-semibold'
-                            : isLight ? 'text-[#515154] hover:text-black' : 'text-[#86868b] hover:text-white'
+                            : isLight ? 'text-zinc-700 hover:text-black font-medium' : 'text-[#86868b] hover:text-white'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -656,7 +658,7 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
                 <Link
                   href="/"
                   className={`flex items-center gap-2 text-xs px-2 py-1 ${
-                    isLight ? 'text-[#515154] hover:text-black' : 'text-[#86868b] hover:text-white'
+                    isLight ? 'text-zinc-700 hover:text-black font-medium' : 'text-[#86868b] hover:text-white'
                   }`}
                 >
                   <ArrowLeft className="w-4 h-4" />

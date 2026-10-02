@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
 /* ============================================================
    SAYTA MALL — Design System & Precision Tokens
    ============================================================ */
@@ -282,119 +284,189 @@ html.light ::-webkit-scrollbar-track { background: #f0f0f2; }
 html.light ::-webkit-scrollbar-thumb { background: #c0c0c4; }
 
 /* ============================================================
-   LIGHT MODE — Broad text & background overrides
-   These target common Tailwind utility colors throughout the app.
+   LIGHT MODE DEFINITIVE CONTRAST SYSTEM
+   Garantiza texto oscuro de alto contraste y legibilidad impecable
    ============================================================ */
 
-/* Main screen and containers in light mode */
+/* 1. Base y contenedores principales */
+html.light,
+[data-theme="light"],
+html.light body,
+[data-theme="light"] body {
+  background-color: #f5f5f7 !important;
+  color: #1d1d1f !important;
+}
+
 html.light .min-h-screen,
 [data-theme="light"] .min-h-screen {
   background-color: #f5f5f7 !important;
 }
 
-/* Dark arbitrary bg classes → light */
-html.light *[class*="bg-[#000"]:not([class*="apple-btn"]):not([class*="ring-"]):not(button):not([role="button"]),
-html.light *[class*="bg-[#0a"],
-html.light *[class*="bg-[#0A"],
-html.light *[class*="bg-[#05"],
-html.light *[class*="bg-[#16"],
-html.light *[class*="bg-[#1c"],
-html.light *[class*="bg-[#11"] {
+/* 2. Fondos oscuros arbitrarios en dark mode → fondos claros */
+html.light *[class*="bg-[#000"]:not([class*="apple-btn"]):not([class*="ring-"]):not(button):not([role="button"]):not(a),
+[data-theme="light"] *[class*="bg-[#000"]:not([class*="apple-btn"]):not([class*="ring-"]):not(button):not([role="button"]):not(a),
+html.light *[class*="bg-[#0a"]:not(button):not(a),
+[data-theme="light"] *[class*="bg-[#0a"]:not(button):not(a),
+html.light *[class*="bg-[#0A"]:not(button):not(a),
+[data-theme="light"] *[class*="bg-[#0A"]:not(button):not(a),
+html.light *[class*="bg-[#05"]:not(button):not(a),
+[data-theme="light"] *[class*="bg-[#05"]:not(button):not(a),
+html.light *[class*="bg-[#16"]:not(button):not(a),
+[data-theme="light"] *[class*="bg-[#16"]:not(button):not(a),
+html.light *[class*="bg-[#1c"]:not(button):not(a),
+[data-theme="light"] *[class*="bg-[#1c"]:not(button):not(a),
+html.light *[class*="bg-[#11"]:not(button):not(a),
+[data-theme="light"] *[class*="bg-[#11"]:not(button):not(a) {
   background-color: #f5f5f7 !important;
 }
 
-/* Gradients that fade to black → light transparent */
+/* 3. Degradados oscuros que terminan en negro → transparentes suaves */
 html.light *[class*="to-black"],
-html.light *[class*="to-[#000"] {
+[data-theme="light"] *[class*="to-black"],
+html.light *[class*="to-[#000"],
+[data-theme="light"] *[class*="to-[#000"] {
   --tw-gradient-to: rgba(0, 0, 0, 0.02) !important;
 }
 html.light *[class*="from-purple-950"],
+[data-theme="light"] *[class*="from-purple-950"],
 html.light *[class*="from-blue-950"],
-html.light *[class*="from-gray-950"] {
+[data-theme="light"] *[class*="from-blue-950"],
+html.light *[class*="from-gray-950"],
+[data-theme="light"] *[class*="from-gray-950"] {
   --tw-gradient-from: rgba(0, 113, 227, 0.05) !important;
 }
-html.light *[class*="via-blue-950"] {
+html.light *[class*="via-blue-950"],
+[data-theme="light"] *[class*="via-blue-950"] {
   --tw-gradient-stops: var(--tw-gradient-from), rgba(191, 90, 242, 0.04), var(--tw-gradient-to) !important;
 }
 
-/* Subtle transparent-white → transparent-black */
-html.light *[class*="bg-white\/"]:not(.apple-btn-primary):not([class*="bg-[#2997ff]"]):not([class*="bg-[#30d158]"]) {
+/* 4. Elementos translúcidos de fondo blanco (bg-white/...) → fondo gris translúcido suave con borde */
+html.light [class*="bg-white/"]:not(.apple-btn-primary):not([class*="bg-[#2997ff]"]):not([class*="bg-[#30d158]"]):not([class*="bg-[#0071e3]"]),
+[data-theme="light"] [class*="bg-white/"]:not(.apple-btn-primary):not([class*="bg-[#2997ff]"]):not([class*="bg-[#30d158]"]):not([class*="bg-[#0071e3]"]) {
   background-color: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
-html.light *[class*="bg-black\/"] {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-/* White borders → dark borders */
-html.light *[class*="border-white\/"] {
+html.light [class*="border-white/"],
+[data-theme="light"] [class*="border-white/"] {
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Text-white, text-[#f5f5f7] → dark general */
-html.light *[class*="text-white"]:not([class*="text-white/[0"]) {
+/* 5. TÍTULOS Y TEXTOS BLANCOS GENERALES → NEGRO GRAFITO (#1d1d1f) */
+html.light h1, [data-theme="light"] h1,
+html.light h2, [data-theme="light"] h2,
+html.light h3, [data-theme="light"] h3,
+html.light h4, [data-theme="light"] h4,
+html.light h5, [data-theme="light"] h5,
+html.light h6, [data-theme="light"] h6,
+html.light [class*="text-white"]:not(.apple-btn-primary):not([class*="apple-btn-primary"]):not([class*="bg-[#2997ff]"]):not([class*="bg-[#0071e3]"]):not([class*="bg-[#30d158]"]),
+[data-theme="light"] [class*="text-white"]:not(.apple-btn-primary):not([class*="apple-btn-primary"]):not([class*="bg-[#2997ff]"]):not([class*="bg-[#0071e3]"]):not([class*="bg-[#30d158]"]),
+html.light [class*="text-[#f5f5f7]"], [data-theme="light"] [class*="text-[#f5f5f7]"],
+html.light [class*="text-[#F5F5F7]"], [data-theme="light"] [class*="text-[#F5F5F7]"] {
   color: #1d1d1f !important;
-}
-html.light *[class*="text-[#f5f5f7]"] {
-  color: #1d1d1f !important;
-}
-html.light *[class*="text-[#F5F5F7]"] {
-  color: #1d1d1f !important;
-}
-html.light *[class*="text-[#86868b]"] {
-  color: #515154 !important;
-}
-html.light *[class*="text-[#6e6e73]"] {
-  color: #515154 !important;
 }
 
-/* Preserve pure white text on dark/colored buttons, badges and pills in light mode */
-html.light .apple-btn-primary,
-html.light .apple-btn-primary *,
-html.light [class*="apple-btn-primary"],
-html.light [class*="apple-btn-primary"] *,
-html.light [class*="bg-[#2997ff]"],
-html.light [class*="bg-[#2997ff]"] *,
-html.light [class*="bg-[#0071e3]"],
-html.light [class*="bg-[#0071e3]"] *,
-html.light [class*="bg-[#30d158]"],
-html.light [class*="bg-[#30d158]"] *,
-html.light [class*="bg-[#ff453a]"],
-html.light [class*="bg-[#ff453a]"] *,
-html.light [class*="bg-emerald-600"],
-html.light [class*="bg-emerald-600"] *,
-html.light [class*="bg-blue-600"],
-html.light [class*="bg-blue-600"] *,
-html.light [class*="bg-purple-600"],
-html.light [class*="bg-purple-600"] *,
-html.light [class*="bg-red-600"],
-html.light [class*="bg-red-600"] *,
-html.light .keep-white-text,
-html.light .keep-white-text * {
+/* 6. SUBTÍTULOS, LABELS Y TEXTOS SECUNDARIOS → GRIS OSCURO LEGIBLE (#374151) */
+html.light [class*="text-[#86868b]"], [data-theme="light"] [class*="text-[#86868b]"],
+html.light [class*="text-[#6e6e73]"], [data-theme="light"] [class*="text-[#6e6e73]"],
+html.light [class*="text-[#9AA3AF]"], [data-theme="light"] [class*="text-[#9AA3AF]"],
+html.light [class*="text-zinc-400"], [data-theme="light"] [class*="text-zinc-400"],
+html.light [class*="text-zinc-500"], [data-theme="light"] [class*="text-zinc-500"],
+html.light [class*="text-gray-400"], [data-theme="light"] [class*="text-gray-400"],
+html.light [class*="text-gray-500"], [data-theme="light"] [class*="text-gray-500"] {
+  color: #374151 !important;
+}
+
+/* 7. TARJETAS .apple-card → FONDO BLANCO PURO CON BORDE SUTIL */
+html.light .apple-card,
+[data-theme="light"] .apple-card {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .apple-card [class*="text-white"],
+[data-theme="light"] .apple-card [class*="text-white"] {
+  color: #1d1d1f !important;
+}
+html.light .apple-card [class*="text-[#86868b]"],
+[data-theme="light"] .apple-card [class*="text-[#86868b]"] {
+  color: #374151 !important;
+}
+
+/* 8. BOTONES SECUNDARIOS (+ Programadores, Delivery, etc.) → TEXTO OSCURO */
+html.light button[class*="bg-white/"], [data-theme="light"] button[class*="bg-white/"],
+html.light a[class*="bg-white/"], [data-theme="light"] a[class*="bg-white/"] {
+  color: #1d1d1f !important;
+}
+html.light button[class*="bg-white/"] span, [data-theme="light"] button[class*="bg-white/"] span,
+html.light a[class*="bg-white/"] span, [data-theme="light"] a[class*="bg-white/"] span {
+  color: #1d1d1f !important;
+}
+
+/* 9. PESTAÑAS (TABS) EN MODO CLARO */
+html.light div[class*="rounded-2xl"] > button,
+[data-theme="light"] div[class*="rounded-2xl"] > button,
+html.light div[class*="rounded-2xl"] > a,
+[data-theme="light"] div[class*="rounded-2xl"] > a {
+  color: #374151 !important;
+}
+html.light div[class*="rounded-2xl"] > button:hover,
+[data-theme="light"] div[class*="rounded-2xl"] > button:hover,
+html.light div[class*="rounded-2xl"] > a:hover,
+[data-theme="light"] div[class*="rounded-2xl"] > a:hover {
+  color: #000000 !important;
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+html.light button.bg-white,
+[data-theme="light"] button.bg-white,
+html.light button[class~="bg-white"],
+[data-theme="light"] button[class~="bg-white"],
+html.light div[class*="rounded-2xl"] > button[class*="bg-white"],
+[data-theme="light"] div[class*="rounded-2xl"] > button[class*="bg-white"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 10. BOTONES PRIMARIOS Y ACCENTS (TEXTO BLANCO SOBRE FONDO DE COLOR) */
+html.light .apple-btn-primary, [data-theme="light"] .apple-btn-primary,
+html.light .apple-btn-primary *, [data-theme="light"] .apple-btn-primary *,
+html.light [class*="apple-btn-primary"], [data-theme="light"] [class*="apple-btn-primary"],
+html.light [class*="apple-btn-primary"] *, [data-theme="light"] [class*="apple-btn-primary"] *,
+html.light a.apple-btn-primary, [data-theme="light"] a.apple-btn-primary,
+html.light a.apple-btn-primary *, [data-theme="light"] a.apple-btn-primary *,
+html.light button.apple-btn-primary, [data-theme="light"] button.apple-btn-primary,
+html.light button.apple-btn-primary *, [data-theme="light"] button.apple-btn-primary *,
+html.light aside a[class*="bg-[#0071e3]"], [data-theme="light"] aside a[class*="bg-[#0071e3]"],
+html.light aside a[class*="bg-[#0071e3]"] *, [data-theme="light"] aside a[class*="bg-[#0071e3]"] *,
+html.light .keep-white-text, [data-theme="light"] .keep-white-text,
+html.light .keep-white-text *, [data-theme="light"] .keep-white-text * {
   color: #ffffff !important;
 }
 
-/* Restore accents */
-html.light *[class*="text-[#30d158]"] { color: #059669 !important; }
-html.light *[class*="text-[#2997ff]"] { color: #0071e3 !important; }
-html.light *[class*="text-[#ffd60a]"] { color: #b7860d !important; }
-html.light *[class*="text-[#ff453a]"] { color: #c0392b !important; }
-html.light *[class*="text-[#bf5af2]"] { color: #9b59b6 !important; }
+/* 11. RESTAURAR COLORES DE ACENTO EXACTOS EN ICONOS Y TEXTOS DE ESTADO */
+html.light [class*="text-[#30d158]"], [data-theme="light"] [class*="text-[#30d158]"] { color: #059669 !important; }
+html.light [class*="text-[#2997ff]"], [data-theme="light"] [class*="text-[#2997ff]"] { color: #0071e3 !important; }
+html.light [class*="text-[#ffd60a]"], [data-theme="light"] [class*="text-[#ffd60a]"] { color: #b45309 !important; }
+html.light [class*="text-[#ff453a]"], [data-theme="light"] [class*="text-[#ff453a]"] { color: #dc2626 !important; }
+html.light [class*="text-[#bf5af2]"], [data-theme="light"] [class*="text-[#bf5af2]"] { color: #7c3aed !important; }
+html.light [class*="text-[#ff9f0a]"], [data-theme="light"] [class*="text-[#ff9f0a]"] { color: #d97706 !important; }
 
-/* Inputs in light mode */
-html.light input,
-html.light textarea,
-html.light select {
-  background-color: rgba(0, 0, 0, 0.05) !important;
+/* 12. INPUTS Y CAMPOS EN MODO CLARO */
+html.light input, [data-theme="light"] input,
+html.light textarea, [data-theme="light"] textarea,
+html.light select, [data-theme="light"] select {
+  background-color: rgba(0, 0, 0, 0.04) !important;
   color: #1d1d1f !important;
   border-color: rgba(0, 0, 0, 0.12) !important;
 }
-html.light input::placeholder,
-html.light textarea::placeholder {
-  color: #86868b !important;
+html.light input::placeholder, [data-theme="light"] input::placeholder,
+html.light textarea::placeholder, [data-theme="light"] textarea::placeholder {
+  color: #636366 !important;
 }
 
 /* KBD */
-html.light kbd {
+html.light kbd, [data-theme="light"] kbd {
   background-color: rgba(0, 0, 0, 0.06) !important;
   color: #1d1d1f !important;
   border-color: rgba(0, 0, 0, 0.12) !important;
