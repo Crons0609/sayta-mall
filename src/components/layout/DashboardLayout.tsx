@@ -677,7 +677,13 @@ function DashboardLayoutInner({ children, role }: DashboardLayoutProps) {
         )}
 
         {/* Contenido Principal con Centrado y Márgenes adaptados para móviles */}
-        <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 lg:pb-8 overflow-x-hidden">
+        <main
+          className={`flex-1 w-full max-w-7xl mx-auto overflow-x-hidden ${
+            pathname === '/empleado/chat'
+              ? 'px-2 sm:px-6 lg:px-8 py-2 sm:py-4 pb-20 lg:pb-6'
+              : 'px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 lg:pb-8'
+          }`}
+        >
           {children}
         </main>
       </div>

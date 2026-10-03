@@ -23,113 +23,8 @@ export interface FullRegisteredUser {
   area?: string;
 }
 
-// Usuarios de muestra con fechas variadas (años y meses) para enriquecer el panel del Programador
-const SEED_CUSTOMERS: FullRegisteredUser[] = [
-  {
-    uid: 'cust-1001',
-    displayName: 'Sofía Elena Mendoza',
-    email: 'sofia.mendoza@gmail.com',
-    role: 'customer',
-    age: 27,
-    direccion: 'Reparto San Juan, Casa #142, Managua',
-    password: 'SofiaPass2026!*',
-    passwordModified: true,
-    passwordModifiedAt: '2026-03-12T14:30:00.000Z',
-    createdAt: '2026-01-10T10:15:00.000Z',
-    phone: '+505 8899-1122',
-  },
-  {
-    uid: 'cust-1002',
-    displayName: 'Carlos Alberto Rugama',
-    email: 'carlos.rugama@yahoo.com',
-    role: 'customer',
-    age: 34,
-    direccion: 'Barrio El Coyolar, del Parque San Juan 2c al lago, León',
-    password: 'RugamaLeon99.',
-    passwordModified: false,
-    passwordModifiedAt: null,
-    createdAt: '2026-02-18T16:45:00.000Z',
-    phone: '+505 8744-5566',
-  },
-  {
-    uid: 'cust-1003',
-    displayName: 'Valeria Beatriz Fonseca',
-    email: 'valeria.fonseca@outlook.com',
-    role: 'customer',
-    age: 22,
-    direccion: 'Calle Real Xalteva, de la Capilla 1c al sur, Granada',
-    password: 'Granada*2026',
-    passwordModified: true,
-    passwordModifiedAt: '2026-03-28T09:12:00.000Z',
-    createdAt: '2026-03-05T11:20:00.000Z',
-    phone: '+505 8655-4433',
-  },
-  {
-    uid: 'cust-1004',
-    displayName: 'Marcos Antonio Blandón',
-    email: 'marcos.blandon@gmail.com',
-    role: 'customer',
-    age: 41,
-    direccion: 'Costado oeste de la Catedral, Estelí',
-    password: 'BlandonEsteli#41',
-    passwordModified: false,
-    passwordModifiedAt: null,
-    createdAt: '2025-11-20T15:10:00.000Z',
-    phone: '+505 8233-7788',
-  },
-  {
-    uid: 'cust-1005',
-    displayName: 'Daniela Lucia Jarquín',
-    email: 'daniela.jarquin@gmail.com',
-    role: 'customer',
-    age: 29,
-    direccion: 'Villa Tiscapa, Módulo C-12, Managua',
-    password: 'ManaguaSecure!89',
-    passwordModified: true,
-    passwordModifiedAt: '2025-12-05T18:22:00.000Z',
-    createdAt: '2025-08-14T09:40:00.000Z',
-    phone: '+505 8922-3344',
-  },
-  {
-    uid: 'cust-1006',
-    displayName: 'José Ricardo Palacios',
-    email: 'jose.palacios@hotmail.com',
-    role: 'customer',
-    age: 38,
-    direccion: 'Barrio Monimbó, Frente a la Escuela Folklórica, Masaya',
-    password: 'MonimboMasaya#24',
-    passwordModified: false,
-    passwordModifiedAt: null,
-    createdAt: '2025-05-19T13:00:00.000Z',
-    phone: '+505 8111-9988',
-  },
-  {
-    uid: 'cust-1007',
-    displayName: 'Alejandra María Toruño',
-    email: 'alejandra.toruno@gmail.com',
-    role: 'customer',
-    age: 25,
-    direccion: 'Bello Horizonte, VI Etapa, Grupo M, Casa #19, Managua',
-    password: 'AleToru2024!',
-    passwordModified: false,
-    passwordModifiedAt: null,
-    createdAt: '2024-10-10T14:00:00.000Z',
-    phone: '+505 8777-6655',
-  },
-  {
-    uid: 'cust-1008',
-    displayName: 'Kevin Eduardo Zamora',
-    email: 'kevin.zamora@gmail.com',
-    role: 'customer',
-    age: 31,
-    direccion: 'Salida a Jinotega, Km 132, Matagalpa',
-    password: 'ZamoraMata24..',
-    passwordModified: true,
-    passwordModifiedAt: '2024-12-02T16:15:00.000Z',
-    createdAt: '2024-04-12T10:00:00.000Z',
-    phone: '+505 8444-2211',
-  },
-];
+// Solo se muestran clientes reales que se hayan registrado en la plataforma (RTDB o Firestore)
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -274,12 +169,34 @@ export async function GET(req: NextRequest) {
       console.warn('Error reading registered_users from RTDB:', e);
     }
 
-    // 6. Merge con SEED_CUSTOMERS para garantizar variedad histórica
-    SEED_CUSTOMERS.forEach((seed) => {
-      if (!userMap.has(seed.uid)) {
-        userMap.set(seed.uid, seed);
+    // 6. Clientes registrados en Firestore (si existen)
+    try {
+      const { adminDb } = await import('@/lib/firebase/admin');
+      if (adminDb) {
+        const snap = await adminDb.collection('users').where('role', '==', 'customer').get();
+        snap.forEach((doc) => {
+          const u = doc.data();
+          const uid = doc.id || u.uid || u.email;
+          if (uid && !userMap.has(uid)) {
+            userMap.set(uid, {
+              uid,
+              displayName: u.displayName || u.email?.split('@')[0] || 'Cliente',
+              email: u.email || '',
+              role: 'customer',
+              age: u.age || null,
+              direccion: u.direccion || u.address || 'Sin dirección',
+              password: u.password || '••••••••',
+              passwordModified: Boolean(u.passwordModified),
+              passwordModifiedAt: u.passwordModifiedAt || null,
+              createdAt: u.createdAt?.toDate ? u.createdAt.toDate().toISOString() : (u.createdAt || new Date().toISOString()),
+              phone: u.phone || '',
+            });
+          }
+        });
       }
-    });
+    } catch (e) {
+      // Ignorar si Firestore no está inicializado
+    }
 
     let users = Array.from(userMap.values());
 

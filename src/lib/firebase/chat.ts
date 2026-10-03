@@ -1,57 +1,11 @@
 // src/lib/firebase/chat.ts
-// Gestión de mensajes y canales del Chat Corporativo de Empleados en Realtime Database.
-// Usa el Admin SDK en el servidor para escrituras autenticadas con privilegios de administrador.
+// Funciones de servidor para el Chat Corporativo (SOLO servidor — API Routes).
+// Los tipos y constantes están en ./chat-types.ts (cliente+servidor seguros).
+import 'server-only';
 
-export interface ChatMessage {
-  id: string;
-  channelId: string;
-  senderId: string;
-  senderName: string;
-  senderRole: string; // 'employee', 'owner', 'programmer'
-  senderArea?: string; // 'caja', 'bodega', 'ferreteria', etc.
-  text: string;
-  type?: 'text' | 'urgent' | 'shift' | 'stock_alert';
-  createdAt: string;
-}
-
-export interface ChatChannel {
-  id: string;
-  name: string;
-  description: string;
-  isDirect?: boolean;
-  targetUserId?: string;
-  targetUserName?: string;
-  badge?: string;
-  iconName?: string;
-}
-
-// Canales predeterminados de la empresa
-export const DEFAULT_CHANNELS: ChatChannel[] = [
-  {
-    id: 'general',
-    name: '📢 Sala General del Equipo',
-    description: 'Comunicaciones globales, avisos y anuncios para todo el personal.',
-    badge: 'Todos',
-  },
-  {
-    id: 'ferreteria',
-    name: '🔧 Ferretería & Mostrador',
-    description: 'Consultas de herramientas, precios, especificaciones y clientes en tienda.',
-    badge: 'Área',
-  },
-  {
-    id: 'caja',
-    name: '💳 Caja & Facturación',
-    description: 'Arqueos, comprobantes de pago, tickets y confirmación de retiros.',
-    badge: 'Área',
-  },
-  {
-    id: 'bodega',
-    name: '📦 Bodega & Despacho',
-    description: 'Control de existencias, recepción de paquetes y pedidos listos para entrega.',
-    badge: 'Área',
-  },
-];
+export type { ChatMessage, ChatChannel } from './chat-types';
+export { DEFAULT_CHANNELS } from './chat-types';
+import type { ChatMessage } from './chat-types';
 
 const RTDB_REST_URL =
   process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ||

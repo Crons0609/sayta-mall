@@ -14,8 +14,8 @@ export default function EmpleadoChatPage() {
 
   return (
     <DashboardLayout role={role}>
-      <div className="space-y-4 animate-fade-in">
-        <div>
+      <div className="space-y-2 sm:space-y-4 animate-fade-in">
+        <div className="hidden sm:block">
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             {t('chat_title', 'Chat Interno del Personal')}
           </h1>
