@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({
         success: true,
         role: 'programmer',
+        userId: 'prog-root-christhiam',
         email: cleanEmail,
         displayName: 'Programador Superadmin',
         branchIds: [],
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
         const response = NextResponse.json({
           success: true,
           role: 'programmer',
+          userId: foundProgrammer.id,
           email: cleanEmail,
           displayName: foundProgrammer.name || 'Programador del Sistema',
           branchIds: [],
@@ -158,6 +160,7 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({
         success: true,
         role: 'owner',
+        userId: foundOwner.id || foundOwner.uid || `owner-${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
         email: cleanEmail,
         displayName: foundOwner.name || cleanEmail.split('@')[0],
         branchIds: foundOwner.branchIds || [],
@@ -222,6 +225,7 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({
         success: true,
         role: 'employee',
+        userId: foundEmployee.id || foundEmployee.uid || `emp-${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
         area: foundEmployee.area || 'general',
         branchIds: foundEmployee.branchId ? [foundEmployee.branchId] : (foundEmployee.branchIds || []),
         email: cleanEmail,
@@ -258,9 +262,11 @@ export async function POST(request: NextRequest) {
 
     // ── 4. Cliente regular (cualquier correo con password ≥ 6) ────────────────
     if (password.length >= 6) {
+      const custId = `cust-${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
       const response = NextResponse.json({
         success: true,
         role: 'customer',
+        userId: custId,
         email: cleanEmail,
         displayName: cleanEmail.split('@')[0],
         branchIds: [],

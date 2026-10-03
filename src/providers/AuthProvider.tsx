@@ -412,7 +412,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setClaims(resolvedClaims);
         setUser({
-          uid: data.userId || `emp-${Date.now()}`,
+          uid: data.userId || (data.email ? data.email.toLowerCase().replace(/[^a-z0-9]/g, '_') : `user-${Date.now()}`),
           email: data.email || emailInput.trim(),
           displayName: data.displayName || emailInput.trim().split('@')[0],
           getIdToken: async () => '',

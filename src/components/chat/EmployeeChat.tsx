@@ -21,14 +21,20 @@ import {
   Wrench,
   Sparkles,
 } from 'lucide-react';
-import { ChatMessage, ChatChannel, DEFAULT_CHANNELS } from '@/lib/firebase/chat-types';
+import { ChatMessage, ChatChannel, DEFAULT_CHANNELS, buildDirectChannelId } from '@/lib/firebase/chat-types';
 
 interface Contact {
   id: string;
   displayName: string;
+  email?: string;
   area: string;
   role: string;
   branchName?: string;
+  isOnline?: boolean;
+  lastSeen?: number | null;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  hasUnread?: boolean;
 }
 
 export function EmployeeChat() {
@@ -268,24 +274,47 @@ export function EmployeeChat() {
     isInitialLoadRef.current = true;
   };
 
-  // Cambiar a chat privado 1 a 1
+  // Cambiar a chat privado 1 a 1 determinista
   const handleSelectContact = (contact: Contact) => {
-    const myId = user?.uid || 'me';
-    const sortedIds = [myId, contact.id].sort();
-    const directChannelId = `dm_${sortedIds[0]}_${sortedIds[1]}`;
+    const directChannelId = buildDirectChannelId(
+      { id: user?.uid, email: user?.email || undefined },
+      { id: contact.id, email: contact.email }
+    );
 
     setActiveChannelId(directChannelId);
     setActiveChannelTitle(`💬 ${contact.displayName}`);
-    setActiveChannelSubtitle(`Chat directo · ${contact.area.toUpperCase()} (${contact.branchName || 'Sucursal'})`);
+    setActiveChannelSubtitle(
+      `Chat directo · ${contact.area.toUpperCase()} (${
+        contact.role === 'owner' ? 'Jefe / Dueño' : contact.role === 'programmer' ? 'Programador' : 'Colaborador'
+      })`
+    );
     setMobileView('chat');
     setUserScrolledUp(false);
     isInitialLoadRef.current = true;
   };
 
-  const filteredContacts = contacts.filter((c) =>
-    c.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.area.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const myEmail = (user?.email || '').toLowerCase().trim();
+  const myId = user?.uid || '';
+  const myName = (user?.displayName || '').toLowerCase().trim();
+
+  // Filtrar para NUNCA mostrar al usuario actual en su propia lista de contactos
+  const filteredContacts = contacts.filter((c) => {
+    const cEmail = (c.email || '').toLowerCase().trim();
+    const cId = c.id || '';
+    const cName = (c.displayName || '').toLowerCase().trim();
+
+    // 1. Excluirse a sí mismo
+    if (myEmail && cEmail && myEmail === cEmail) return false;
+    if (myId && cId && myId === cId) return false;
+    if (myName && cName && myName === cName) return false;
+
+    // 2. Filtro de búsqueda
+    return (
+      c.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <div className="apple-card border border-white/[0.08] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-[#0a0a0c] flex h-[calc(100dvh-8.5rem)] sm:h-[calc(100dvh-12rem)] md:h-[750px] md:max-h-[82vh] relative">
@@ -376,7 +405,7 @@ export function EmployeeChat() {
           {/* Contactos / Empleados */}
           <div className="space-y-1">
             <span className="text-[10px] text-[#86868b] font-semibold uppercase tracking-wider px-2 block">
-              {t('chat_coworkers', 'Compañeros de Turno')} ({filteredContacts.length})
+              {t('chat_coworkers', 'Equipo y Colaboradores')} ({filteredContacts.length})
             </span>
             {filteredContacts.length === 0 ? (
               <p className="text-[11px] text-[#86868b] px-2 py-1">
@@ -392,7 +421,7 @@ export function EmployeeChat() {
                     onClick={() => handleSelectContact(contact)}
                     className={`w-full text-left p-2.5 rounded-2xl flex items-center gap-2.5 transition-all ${
                       isSelected
-                        ? 'bg-[#30d158]/15 border border-[#30d158]/30 text-white shadow-md'
+                        ? 'bg-[#2997ff]/15 border border-[#2997ff]/30 text-white shadow-md'
                         : 'hover:bg-white/[0.04] text-[#86868b] hover:text-white border border-transparent'
                     }`}
                   >
@@ -400,18 +429,47 @@ export function EmployeeChat() {
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/[0.08] text-white flex items-center justify-center font-bold text-xs">
                         {contact.displayName.slice(0, 2).toUpperCase()}
                       </div>
-                      <span className="w-2 h-2 rounded-full bg-[#30d158] absolute -bottom-0.5 -right-0.5 ring-2 ring-[#0a0a0c]" />
+                      {contact.isOnline ? (
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#30d158] absolute -bottom-0.5 -right-0.5 ring-2 ring-[#0a0a0c] shadow-sm shadow-[#30d158]/50 animate-pulse" />
+                      ) : (
+                        <span className="w-2 h-2 rounded-full bg-zinc-600 absolute -bottom-0.5 -right-0.5 ring-2 ring-[#0a0a0c]" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold truncate text-white">{contact.displayName}</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.06] text-[#86868b] uppercase">
-                          {contact.area}
+                        <span
+                          className={`text-[9px] px-1.5 py-0.2 rounded uppercase font-medium ${
+                            contact.role === 'owner'
+                              ? 'bg-[#ffd60a]/15 text-[#ffd60a]'
+                              : contact.role === 'programmer'
+                              ? 'bg-[#bf5af2]/15 text-[#bf5af2]'
+                              : 'bg-white/[0.06] text-[#86868b]'
+                          }`}
+                        >
+                          {contact.role === 'owner' ? 'Dueño' : contact.role === 'programmer' ? 'Admin' : contact.area}
                         </span>
                       </div>
-                      <p className="text-[10px] text-[#30d158] mt-0.5 flex items-center gap-1 font-medium">
-                        <span>{t('chat_on_shift', 'En turno')}</span>
-                      </p>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="text-[10px] truncate max-w-[150px]">
+                          {contact.lastMessage ? (
+                            <span className={contact.hasUnread ? 'text-[#2997ff] font-semibold' : 'text-[#86868b]'}>
+                              {contact.lastMessage}
+                            </span>
+                          ) : contact.isOnline ? (
+                            <span className="text-[#30d158] font-medium flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#30d158] inline-block" /> En línea
+                            </span>
+                          ) : (
+                            <span className="text-[#86868b]">Desconectado</span>
+                          )}
+                        </p>
+                        {contact.hasUnread && (
+                          <span className="px-1.5 py-0.2 rounded-full bg-[#2997ff] text-white text-[9px] font-bold shadow-md shadow-[#2997ff]/40 animate-pulse">
+                            Nuevo
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );

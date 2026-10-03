@@ -1,4 +1,4 @@
-﻿// src/lib/firebase/chat-types.ts
+// src/lib/firebase/chat-types.ts
 // Tipos y constantes del Chat -- SEGUROS para cliente y servidor.
 // NO importar aquí ningún módulo de servidor (firebase-admin, server-only, etc.)
 
@@ -52,3 +52,27 @@ export const DEFAULT_CHANNELS: ChatChannel[] = [
     badge: 'Área',
   },
 ];
+
+/**
+ * Genera un ID de canal 1 a 1 determinista y bidireccional.
+ * Prioriza el correo electrónico (es 100% idéntico en todos los dispositivos y sesiones).
+ */
+export function buildDirectChannelId(
+  userA: { id?: string; email?: string } | string,
+  userB: { id?: string; email?: string } | string
+): string {
+  const getKey = (u: { id?: string; email?: string } | string): string => {
+    if (!u) return 'unknown';
+    if (typeof u === 'string') {
+      return u.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+    }
+    const val = u.email || u.id || 'unknown';
+    return val.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+  };
+
+  const keyA = getKey(userA);
+  const keyB = getKey(userB);
+  const sorted = [keyA, keyB].sort();
+  return `dm_${sorted[0]}__${sorted[1]}`;
+}
+
