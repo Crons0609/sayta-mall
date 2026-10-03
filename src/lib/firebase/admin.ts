@@ -9,6 +9,7 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
+import { getDatabase, Database } from 'firebase-admin/database';
 
 function getAdminApp(): App | null {
   if (getApps().length > 0) {
@@ -21,6 +22,7 @@ function getAdminApp(): App | null {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
       return initializeApp({
         credential: cert(serviceAccount),
+        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://saytamall-default-rtdb.firebaseio.com',
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
     } catch (e) {
@@ -41,6 +43,7 @@ function getAdminApp(): App | null {
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
           privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         }),
+        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://saytamall-default-rtdb.firebaseio.com',
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
     } catch (e) {
@@ -56,6 +59,7 @@ const adminApp = getAdminApp();
 export const adminAuth = adminApp ? getAuth(adminApp) : (null as unknown as Auth);
 export const adminDb = adminApp ? getFirestore(adminApp) : (null as unknown as Firestore);
 export const adminStorage = adminApp ? getStorage(adminApp) : (null as unknown as Storage);
+export const adminRtdb = adminApp ? getDatabase(adminApp) : (null as unknown as Database);
 export const isFirebaseAdminConfigured = !!adminApp;
 
 export default adminApp;

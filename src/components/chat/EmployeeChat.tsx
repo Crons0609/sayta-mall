@@ -49,8 +49,10 @@ export function EmployeeChat() {
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [mobileView, setMobileView] = useState<'sidebar' | 'chat'>('sidebar');
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Helper para headers
@@ -102,10 +104,23 @@ export function EmployeeChat() {
     return () => clearInterval(interval);
   }, [activeChannelId, loadMessages]);
 
-  // Desplazar automáticamente al fondo al recibir mensajes
+  // Auto-scroll inteligente: solo baja si el usuario ya estaba cerca del fondo
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom < 120) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
+
+  // Detectar si el usuario subió manualmente
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    setUserScrolledUp(distanceFromBottom > 120);
+  };
 
   // Enviar mensaje
   const handleSend = async (e?: React.FormEvent) => {
@@ -185,7 +200,7 @@ export function EmployeeChat() {
   );
 
   return (
-    <div className="apple-card border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl bg-[#0a0a0c] flex h-[760px] max-h-[85vh]">
+    <div className="apple-card border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl bg-[#0a0a0c] flex h-[calc(100dvh-5rem)] md:h-[760px] md:max-h-[85vh]">
       {/* ── BARRA LATERAL (Canales y Contactos) ── */}
       <div
         className={`w-full md:w-80 shrink-0 border-r border-white/[0.08] flex flex-col bg-[#0d0d10] ${
@@ -356,7 +371,11 @@ export function EmployeeChat() {
         </div>
 
         {/* Historial de Mensajes */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-black via-[#0a0a0c] to-[#070708]">
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-black via-[#0a0a0c] to-[#070708]"
+        >
           {loading ? (
             <div className="h-full flex items-center justify-center text-xs text-[#86868b] gap-2">
               <div className="w-4 h-4 border-2 border-[#2997ff] border-t-transparent rounded-full animate-spin" />
